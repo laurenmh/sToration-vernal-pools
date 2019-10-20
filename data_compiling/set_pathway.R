@@ -5,7 +5,8 @@
 # If you have a Mac, run this line:
 datpath <- "~/Dropbox/sToration/VP_data/"
 
-#datpath <- "~/Dropbox/Shared/sToration/VP_data/"
+#LGS pathway 
+# datpath <- "~/Dropbox/Shared/sToration/VP_data/"
 
 # If you have a PC, create your own version below and run it
 
