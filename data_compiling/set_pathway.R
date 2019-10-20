@@ -11,3 +11,6 @@ datpath <- "~/Dropbox/sToration/VP_data/"
 # If you have a PC, create your own version below and run it
 
 datpath <- "C:/Users/Lina/sToration/VP_data/"
+
+# AMF pathway
+# datpath <- "C:/Users/akash/Dropbox/sToration/VP_data/"
