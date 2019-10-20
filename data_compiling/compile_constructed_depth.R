@@ -76,10 +76,12 @@ construct_seed_depth_2012 <- read_csv(paste(datpath, "Environmental weekly water
          Duration.days = `Duration (days)`) %>%
   mutate(Year = 2012, Location = "SeedPlot") 
 
+# Compile all the depth data
 constructed_depth <- rbind(construct_center_depth_2000, construct_seed_depth_2000, construct_center_depth_2002, construct_seed_depth_2002,
                            construct_center_depth_2009, construct_seed_depth_2009, construct_seed_depth_2010, construct_seed_depth_2011,
                            construct_seed_depth_2012)
 
+# Distill down to unique duration data
 constructed_duration <- constructed_depth %>%
   select(Pool:Duration.days, Year, Location) %>%
   unique()
