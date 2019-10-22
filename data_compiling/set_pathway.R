@@ -17,3 +17,6 @@ datpath <- "C:/Users/Lina/sToration/VP_data/"
 
 ##LL pathway
 #datpath <- "C:/Users/llari/Dropbox/sToration/VP_data/"
+
+# LA pathway
+datpath <- "C:/Users/Lina/Dropbox/sToration/VP_data/"
