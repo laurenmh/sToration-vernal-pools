@@ -20,3 +20,6 @@ datpath <- "C:/Users/Lina/sToration/VP_data/"
 
 # LA pathway
 datpath <- "C:/Users/Lina/Dropbox/sToration/VP_data/"
+
+# NAS pathway
+datpath <- "C:\\Users\\Nancy\\Dropbox\\sToration (1)\\VP_data\\"
