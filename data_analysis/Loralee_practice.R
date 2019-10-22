@@ -7,3 +7,5 @@ source("data_compiling/compile_reference_depth.R")
 ggplot(constructed_duration, aes(x = Year, y = Duration.weeks)) + geom_point()+facet_wrap(~Size)
 
 head(constructed_duration)
+
+#
