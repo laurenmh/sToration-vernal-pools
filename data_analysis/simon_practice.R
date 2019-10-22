@@ -6,4 +6,3 @@ source("data_compiling/compile_reference_depth.R")
 
 # graph constructed pond duration over time
 ggplot(construct_com, aes(x = VIVI, y = VISA)) + geom_point()
-
