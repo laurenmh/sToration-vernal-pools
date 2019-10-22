@@ -29,3 +29,7 @@ datpath <- "C:/Users/Vicky Temperton/Dropbox/sToration/VP_data/"
 
 # Stan
 datpath <- "~/Dropbox (iDiv)/sToration/VP_data/"
+
+#Ben
+datpath<-"C:/Users/Benjamin/Dropbox (Personal)/Research/SDiv coexistence restoration/sToration/VP_data/"
+
