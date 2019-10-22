@@ -23,3 +23,9 @@ datpath <- "C:/Users/Lina/Dropbox/sToration/VP_data/"
 
 # NAS pathway
 datpath <- "C:\\Users\\Nancy\\Dropbox\\sToration (1)\\VP_data\\"
+
+# VT pathway 
+datpath <- "C:/Users/Vicky Temperton/Dropbox/sToration/VP_data/"
+
+# Stan
+datpath <- "~/Dropbox (iDiv)/sToration/VP_data/"
