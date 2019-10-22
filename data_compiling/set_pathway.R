@@ -14,3 +14,6 @@ datpath <- "C:/Users/Lina/sToration/VP_data/"
 
 # AMF pathway
 # datpath <- "C:/Users/akash/Dropbox/sToration/VP_data/"
+
+##LL pathway
+#datpath <- "C:/Users/llari/Dropbox/sToration/VP_data/"
