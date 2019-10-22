@@ -1,6 +1,9 @@
+# source the data
 source("data_compiling/compile_composition.R")
 source("data_compiling/compile_constructed_depth.R")
 source("data_compiling/compile_reference_depth.R")
 
 # graph constructed pond duration over time
-ggplot(ref_depth, aes(x = Date, y = Depth)) + geom_point() + facet_grid (.~ Year)
+ggplot(constructed_depth, aes(x = Year, y = Duration.days)) + geom_point()+ facet_wrap(~Size)
+
+head(constructed_depth)
