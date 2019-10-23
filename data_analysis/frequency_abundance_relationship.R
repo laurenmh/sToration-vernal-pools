@@ -6,11 +6,12 @@
 library(tidyverse)
 library(gridExtra)
 
-# source the data
+### Source the data
 source("data_compiling/compile_composition.R")
 source("data_compiling/compile_constructed_depth.R")
 source("data_compiling/compile_reference_depth.R")
 
+### Get model for LACO
 # Isolate LACO as species of interest
 lasth <- const_com %>%
   select(Year, Pool, Complex, 
@@ -89,3 +90,9 @@ ggplot(lasth_pres) +
   scale_x_continuous(trans = "log")
   
 # Dude, that's pretty awesome.
+a <- as.numeric(coefficients(m2)[1])
+b <- as.numeric(coefficients(m2)[2])
+
+### Predicting abundance for reference data
+ref_com$LACOdens <- exp(a) * ref_com$LACO ^ b
+write.csv(ref_com, "data_analysis//Predicted_Ref_Com.csv")
