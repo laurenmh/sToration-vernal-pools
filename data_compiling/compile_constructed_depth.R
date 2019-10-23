@@ -79,7 +79,8 @@ construct_seed_depth_2012 <- read_csv(paste(datpath, "Environmental weekly water
 # Compile all the depth data
 const_depth <- rbind(construct_center_depth_2000, construct_seed_depth_2000, construct_center_depth_2002, construct_seed_depth_2002,
                            construct_center_depth_2009, construct_seed_depth_2009, construct_seed_depth_2010, construct_seed_depth_2011,
-                           construct_seed_depth_2012)
+                           construct_seed_depth_2012) %>%
+  mutate(Size = tolower(Size))
 
 # Distill down to unique duration data
 const_duration <- constructed_depth %>%
