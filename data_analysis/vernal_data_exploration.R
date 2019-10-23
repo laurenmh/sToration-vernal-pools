@@ -55,12 +55,23 @@ ggarrange(f1, f2, f3, f4, f5, ncol = 1, nrow = 5,
           font.label = list(size = 10))
 
 # LACO vs ERVA timeseries
-
+ggplot(const_com_tr_2, aes(x = Year, y = meanLACOdens)) +
+  facet_wrap(.~treatment) +
+  geom_line(col = "blue") + 
+  geom_point(col = "blue") +
+  geom_errorbar(aes(ymin=meanLACOdens-se_LACOdens, ymax=meanLACOdens+se_LACOdens), col = "blue", width=.2) +
+  geom_line(data = const_com_tr_2, aes(x = Year, y = meanERVAdens), col = "orange") +
+  geom_point(data = const_com_tr_2, aes(x = Year, y = meanERVAdens), col = "orange") +
+  geom_errorbar(aes(ymin=meanERVAdens-se_ERVAdens, ymax=meanERVAdens+se_ERVAdens), col = "orange", width = 0.2)
 
 # calculate freq of LACO / non-native ratio
 const_com_ig <- const_com_tr %>%
-        mutate(ig = AVFA + BRDI + BRHO + AICA + ALCA + BRMI + HOMA + LOMU + PHMI + POMA + TACA + VUBR)
-ggplot(const_com_ig, aes(x = Year, y = LACO)) +
-        geom_point(aes(col = as.factor(treatment)))
+        mutate(ig = AVFA + BRDI + BRHO + AICA + ALCA + BRMI + HOMA + LOMU + PHMI + POMA + TACA + VUBR) %>%
+        filter(!is.na(LACO), !is.na(ig))
+ggplot(const_com_ig, aes(x = Year, y = LACO/ig)) +
+        geom_point(aes(col = as.factor(treatment))) 
 
-                                                                                                                                             
+# variation by plot
+
+
+                                                                                                                         
