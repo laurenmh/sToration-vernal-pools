@@ -3,9 +3,18 @@
 library(tidyverse)
 
 ## Read in data from the constructed vernal pools
-construct_com <- read_csv(paste(datpath, "Aboveground annual vegetation data/dat_csv_constructed_pools.csv", sep="")) %>%
+const_com <- read_csv(paste(datpath, "Aboveground annual vegetation data/dat_csv_constructed_pools.csv", sep="")) %>%
   rename(Treatment.1999 = `Treatment 1999`,
          Treatment.2000 = `Treatment 2000`) 
 
 ## Read in data from the reference vernal pools
 ref_com <- read_csv(paste(datpath, "Aboveground annual vegetation data/dat_csv_reference_pools.csv", sep="")) 
+## Read in the species list and traits - constructed
+const_spp <- read_csv(paste(datpath, "Aboveground annual vegetation data/Constructed pool metadata.csv", sep=""), skip = 29) %>%
+  filter(!is.na(Genus))
+
+## Read in the species list and traits - reference
+ref_spp <- read_excel(paste(datpath, "Aboveground annual vegetation data/Reference pool metadata.xlsx", sep=""), skip = 26) %>%
+  filter(!is.na(Genus)) %>%
+  select(1:7)
+

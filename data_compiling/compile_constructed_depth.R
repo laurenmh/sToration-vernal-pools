@@ -82,7 +82,7 @@ constructed_depth <- rbind(construct_center_depth_2000, construct_seed_depth_200
                            construct_seed_depth_2012)
 
 # Distill down to unique duration data
-constructed_duration <- constructed_depth %>%
+const_duration <- constructed_depth %>%
   select(Pool:Duration.days, Year, Location) %>%
   unique()
 
