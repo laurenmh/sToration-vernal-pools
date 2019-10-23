@@ -64,14 +64,14 @@ ggplot(const_com_tr_2, aes(x = Year, y = meanLACOdens)) +
   geom_point(data = const_com_tr_2, aes(x = Year, y = meanERVAdens), col = "orange") +
   geom_errorbar(aes(ymin=meanERVAdens-se_ERVAdens, ymax=meanERVAdens+se_ERVAdens), col = "orange", width = 0.2)
 
-# calculate freq of LACO / non-native ratio
+# calculate freq of LACO / non-native grass ratio
 const_com_ig <- const_com_tr %>%
         mutate(ig = AVFA + BRDI + BRHO + AICA + ALCA + BRMI + HOMA + LOMU + PHMI + POMA + TACA + VUBR) %>%
         filter(!is.na(LACO), !is.na(ig))
 ggplot(const_com_ig, aes(x = Year, y = LACO/ig)) +
         geom_point(aes(col = as.factor(treatment))) 
 
-# variation by plot
+# Non-native grass variation over time
 const_com_tr_3 <- const_com_tr %>%
   filter(!is.na(AVFA), !is.na(BRDI), !is.na(BRHO), !is.na(AICA), !is.na(ALCA), !is.na(BRMI), !is.na(HOMA), 
          !is.na(LOMU), !is.na(PHMI), !is.na(POMA), !is.na(TACA), !is.na(VUBR)) %>%
@@ -96,7 +96,7 @@ ggplot(const_com_tr_3, aes(x = Pool, y = meanBRDI, col = as.factor(treatment))) 
   geom_point() +
   geom_errorbar(aes(ymin=meanBRDI-se_BRDI, ymax=meanBRDI+se_BRDI)) +
   facet_wrap(.~treatment)
-#BRHO variable over time
+# BRHO variable over time
 ggplot(const_com_tr_3, aes(x = Pool, y = meanBRHO, col = as.factor(treatment))) +
   geom_point() +
   geom_errorbar(aes(ymin=meanBRHO-se_BRHO, ymax=meanBRHO+se_BRHO)) +
@@ -113,12 +113,12 @@ ggplot(const_com_tr_3, aes(x = Pool, y = meanBRMI, col = as.factor(treatment))) 
   geom_point() +
   geom_errorbar(aes(ymin=meanBRMI-se_BRMI, ymax=meanBRMI+se_BRMI)) +
   facet_wrap(.~treatment)
-#HOMA variable over time
+# HOMA variable over time
 ggplot(const_com_tr_3, aes(x = Pool, y = meanHOMA, col = as.factor(treatment))) +
   geom_point() +
   geom_errorbar(aes(ymin=meanHOMA-se_HOMA, ymax=meanHOMA+se_HOMA)) +
   facet_wrap(.~treatment)
-#LOMU variable over time
+# LOMU variable over time
 ggplot(const_com_tr_3, aes(x = Pool, y = meanLOMU, col = as.factor(treatment))) +
   geom_point() +
   geom_errorbar(aes(ymin=meanLOMU-se_LOMU, ymax=meanLOMU+se_LOMU)) +
@@ -131,12 +131,12 @@ ggplot(const_com_tr_3, aes(x = Pool, y = meanPOMA, col = as.factor(treatment))) 
   geom_point() +
   geom_errorbar(aes(ymin=meanPOMA-se_POMA, ymax=meanPOMA+se_POMA)) +
   facet_wrap(.~treatment)
-#TACA sort of variable over time
+# TACA sort of variable over time
 ggplot(const_com_tr_3, aes(x = Pool, y = meanTACA, col = as.factor(treatment))) +
   geom_point() +
   geom_errorbar(aes(ymin=meanTACA-se_TACA, ymax=meanTACA+se_TACA)) +
   facet_wrap(.~treatment)
-#VUBR sort of variable over time
+# VUBR sort of variable over time
 ggplot(const_com_tr_3, aes(x = Pool, y = meanVUBR, col = as.factor(treatment))) +
   geom_point() +
   geom_errorbar(aes(ymin=meanVUBR-se_VUBR, ymax=meanVUBR+se_VUBR)) +
