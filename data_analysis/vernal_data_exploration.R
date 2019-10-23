@@ -72,6 +72,72 @@ ggplot(const_com_ig, aes(x = Year, y = LACO/ig)) +
         geom_point(aes(col = as.factor(treatment))) 
 
 # variation by plot
-
-
-                                                                                                                         
+const_com_tr_3 <- const_com_tr %>%
+  filter(!is.na(AVFA), !is.na(BRDI), !is.na(BRHO), !is.na(AICA), !is.na(ALCA), !is.na(BRMI), !is.na(HOMA), 
+         !is.na(LOMU), !is.na(PHMI), !is.na(POMA), !is.na(TACA), !is.na(VUBR)) %>%
+  group_by(Pool, treatment) %>%
+  summarise(meanAVFA = mean(AVFA), se_AVFA = calcSE(AVFA),
+            meanBRDI = mean(BRDI), se_BRDI = calcSE(BRDI),
+            meanBRHO = mean(BRHO), se_BRHO = calcSE(BRHO),
+            meanAICA = mean(AICA), se_AICA = calcSE(AICA),
+            meanALCA = mean(ALCA), se_ALCA = calcSE(ALCA),
+            meanBRMI = mean(BRMI), se_BRMI = calcSE(BRMI),
+            meanHOMA = mean(HOMA), se_HOMA = calcSE(HOMA),
+            meanLOMU = mean(LOMU), se_LOMU = calcSE(LOMU),
+            meanPHMI = mean(PHMI), se_PHMI = calcSE(PHMI),
+            meanPOMA = mean(POMA), se_POMA = calcSE(POMA),
+            meanTACA = mean(TACA), se_TACA = calcSE(TACA),
+            meanVUBR = mean(VUBR), se_VUBR = calcSE(VUBR))
+ggplot(const_com_tr_3, aes(x = Pool, y = meanAVFA, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanAVFA-se_AVFA, ymax=meanAVFA+se_AVFA)) +
+  facet_wrap(.~treatment)
+ggplot(const_com_tr_3, aes(x = Pool, y = meanBRDI, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanBRDI-se_BRDI, ymax=meanBRDI+se_BRDI)) +
+  facet_wrap(.~treatment)
+#BRHO variable over time
+ggplot(const_com_tr_3, aes(x = Pool, y = meanBRHO, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanBRHO-se_BRHO, ymax=meanBRHO+se_BRHO)) +
+  facet_wrap(.~treatment)
+ggplot(const_com_tr_3, aes(x = Pool, y = meanAICA, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanAICA-se_AICA, ymax=meanAICA+se_AICA)) +
+  facet_wrap(.~treatment)
+ggplot(const_com_tr_3, aes(x = Pool, y = meanALCA, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanALCA-se_ALCA, ymax=meanALCA+se_ALCA)) +
+  facet_wrap(.~treatment)                                                                                                                         
+ggplot(const_com_tr_3, aes(x = Pool, y = meanBRMI, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanBRMI-se_BRMI, ymax=meanBRMI+se_BRMI)) +
+  facet_wrap(.~treatment)
+#HOMA variable over time
+ggplot(const_com_tr_3, aes(x = Pool, y = meanHOMA, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanHOMA-se_HOMA, ymax=meanHOMA+se_HOMA)) +
+  facet_wrap(.~treatment)
+#LOMU variable over time
+ggplot(const_com_tr_3, aes(x = Pool, y = meanLOMU, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanLOMU-se_LOMU, ymax=meanLOMU+se_LOMU)) +
+  facet_wrap(.~treatment)
+ggplot(const_com_tr_3, aes(x = Pool, y = meanPHMI, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanPHMI-se_PHMI, ymax=meanPHMI+se_PHMI)) +
+  facet_wrap(.~treatment)
+ggplot(const_com_tr_3, aes(x = Pool, y = meanPOMA, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanPOMA-se_POMA, ymax=meanPOMA+se_POMA)) +
+  facet_wrap(.~treatment)
+#TACA sort of variable over time
+ggplot(const_com_tr_3, aes(x = Pool, y = meanTACA, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanTACA-se_TACA, ymax=meanTACA+se_TACA)) +
+  facet_wrap(.~treatment)
+#VUBR sort of variable over time
+ggplot(const_com_tr_3, aes(x = Pool, y = meanVUBR, col = as.factor(treatment))) +
+  geom_point() +
+  geom_errorbar(aes(ymin=meanVUBR-se_VUBR, ymax=meanVUBR+se_VUBR)) +
+  facet_wrap(.~treatment)
