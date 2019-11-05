@@ -18,22 +18,26 @@ data{
     vector[n.pools] pool.id; // pool id
     int n.years; // number of years
     vector[n.years] year; // year
-    vector[n] obs.LACO; // LACOdens
-    vector[n] g.LACO; // growth rate of LACO
-    vector[n] s.LACO; // survival rate of LACO
-    vector[n] obs.EG; // exotic grass density
-    vector[n] obs.ERVA; // ERVAdens
-    vector[n] obs.NF; // non-native forb density
+    int [n.pools, year] obs.LACO; // LACOdens
+    int [n.pools, year] obs.EG; // exotic grass density
+    int [n.pools, year] obs.ERVA; // ERVAdens
+    int [n.pools, year] obs.NF; // non-native forb density
+    vector[year] g.LACO; // growth rate of LACO
+    real s.LACO; // survival rate of LACO
 }
-
 parameters{
-    vector<lower = 0>[pool.id, year] lambda; // max finite rate of LACO increase in absence of competition
-    alpha.LACO;
-    alpha.EG;
-    alpha.ERVA;
-    alpha.NF;
+    matrix<lower = 0>[n.pools, year] lambda; // max growth rate of LACO in absence of competition
+    matrix<lower = 0>[n.pools, year] alpha.LACO; // competition term for LACO-LACO
+    matrix<lower = 0>[n.pools, year] alpha.EG; // competition term for LACO-exotic grass
+    matrix<lower = 0>[n.pools, year] alpha.ERVA;// competition term for LACO-ERVA
+    matrix<lower = 0>[n.pools, year] alpha.NF; // competition term for LACO-non-native forb
 }
 model{
-  
+    for(j in 1:n.pools){
+        obs.LACO[j,] ~ dpois(100, g.LACO[1]); // this g.LACO[1] is just first year's growth rate
+    }
+    for(i in 1:n.years){
+
+    }
 }")
 
