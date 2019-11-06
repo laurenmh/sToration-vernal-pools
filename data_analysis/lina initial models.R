@@ -44,9 +44,9 @@ parameters{
 }
 model{
     for(j in 1:n_pools){
-        obs_LACO[j,] ~ poisson(100, g_LACO); // this g_LACO[1] is just first year's growth rate
+        obs_LACO[j,] ~ poisson(g_LACO); // this g_LACO[1] is just first year's growth rate
     }
-    for(i in 1:n.years){
+    for(i in 1:n_years){
         obs_LACO[,i] ~ (g_LACO[i-1] * obs_LACO[,i-1] * lambda[,i-1])/(1 + obs_LACO[,i-1] * alpha_LACO[,i-1] + 
         obs_EG[,i-1] * alpha_EG[,i-1] + obs_ERVA[,i-1] * alpha_ERVA[,i-1] + obs_NF[,i-1] * alpha_NF[,i-1]) + 
         s_LACO * (1 - g_LACO[i-1]) * obs_LACO[,i-1]);
