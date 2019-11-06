@@ -16,6 +16,10 @@ hist(restoredLACO$X..Potentially.Viable)
 mean(restoredLACO$X..Potentially.Viable)
 sd(restoredLACO$X..Potentially.Viable)
 
+# set up data
+
+
+
 # Stan model
 BH_model <- stan_model(model_code="
 data{
@@ -54,3 +58,16 @@ model{
     alpha_NF ~ normal(0,1);
 }")
 
+#run the model 
+stan_fit <- rstan::optimizing(object = BH_model, 
+                              data = list(n = ,
+                                          n_pools = ,
+                                          pool_id = ,
+                                          n_years = ,
+                                          year = ,
+                                          obs_LACO = ,
+                                          obs_EG = ,
+                                          obs_ERVA = ,
+                                          obs_NF = ,
+                                          g_LACO = ,
+                                          s_LACO = ), iter= 1000)
