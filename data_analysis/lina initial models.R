@@ -36,19 +36,19 @@ data{
     real s_LACO; // survival rate of LACO
 }
 parameters{
-    matrix<lower = 0>[n_pools, n_years] lambda; // max growth rate of LACO in absence of competition
-    matrix<lower = 0>[n_pools, n_years] alpha_LACO; // competition term for LACO-LACO
-    matrix<lower = 0>[n_pools, n_years] alpha_EG; // competition term for LACO-exotic grass
-    matrix<lower = 0>[n_pools, n_years] alpha_ERVA;// competition term for LACO-ERVA
-    matrix<lower = 0>[n_pools, n_years] alpha_NF; // competition term for LACO-non-native forb
+    vector<lower = 0>[n_years] lambda; // max growth rate of LACO in absence of competition
+    vector<lower = 0>[n_years] alpha_LACO; // competition term for LACO-LACO
+    vector<lower = 0>[n_years] alpha_EG; // competition term for LACO-exotic grass
+    vector<lower = 0>[n_years] alpha_ERVA;// competition term for LACO-ERVA
+    vector<lower = 0>[n_years] alpha_NF; // competition term for LACO-non-native forb
 }
 model{
     for(j in 1:n_pools){
         obs_LACO[j,] ~ poisson(g_LACO); // this g_LACO[1] is just first year's growth rate
     }
     for(i in 1:n_years){
-        obs_LACO[,i] ~ (g_LACO[i-1] * obs_LACO[,i-1] * lambda[,i-1])/(1 + obs_LACO[,i-1] * alpha_LACO[,i-1] + 
-        obs_EG[,i-1] * alpha_EG[,i-1] + obs_ERVA[,i-1] * alpha_ERVA[,i-1] + obs_NF[,i-1] * alpha_NF[,i-1]) + 
+        obs_LACO[,i] ~ (g_LACO[i-1] * obs_LACO[,i-1] * lambda[i-1])/(1 + obs_LACO[,i-1] * alpha_LACO[i-1] + 
+        obs_EG[,i-1] * alpha_EG[i-1] + obs_ERVA[,i-1] * alpha_ERVA[i-1] + obs_NF[,i-1] * alpha_NF[i-1]) + 
         s_LACO * (1 - g_LACO[i-1]) * obs_LACO[,i-1]);
     }
     lambda ~ normal(122.2561,83.95284);
