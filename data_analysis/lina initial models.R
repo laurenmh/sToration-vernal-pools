@@ -9,7 +9,7 @@ library(rstan)
 source("data_compiling/compile_composition.R")
 LACOseeds <- read.csv(paste(datpath, "/Seed count data/Vernal Pool LACO seed count data.csv", sep="")) 
 
-# get distribution the seed production of LACO to inform prior for lambda
+# this is for later: seed production of LACO to check the model
 restoredLACO <- LACOseeds %>%
   filter(Pool.Type == "Restored")
 hist(restoredLACO$X..Potentially.Viable)
@@ -44,14 +44,14 @@ parameters{
 }
 model{
     for(j in 1:n_pools){
-        obs_LACO[j,] ~ poisson(g_LACO); // this g_LACO[1] is just first year's growth rate
+        obs_LACO[j,] ~ binomial(100, g_LACO); //
     }
     for(i in 1:n_years){
         obs_LACO[,i] ~ (g_LACO[i-1] * obs_LACO[,i-1] * lambda[i-1])/(1 + obs_LACO[,i-1] * alpha_LACO[i-1] + 
         obs_EG[,i-1] * alpha_EG[i-1] + obs_ERVA[,i-1] * alpha_ERVA[i-1] + obs_NF[,i-1] * alpha_NF[i-1]) + 
         s_LACO * (1 - g_LACO[i-1]) * obs_LACO[,i-1]);
     }
-    lambda ~ normal(122.2561,83.95284);
+    lambda ~ normal(122.2561,83.95284); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
