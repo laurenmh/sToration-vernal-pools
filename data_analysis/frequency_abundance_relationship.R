@@ -5,6 +5,7 @@
 
 library(tidyverse)
 library(gridExtra)
+library(extrafont)
 
 ### Source the data
 source("data_compiling/compile_composition.R")
@@ -86,8 +87,19 @@ ggplot(lasth_pres) +
                   ymax = exp(predict + se))) +
   geom_line(aes(x = LACO, y = exp(predict)),
             color = "red") +
-  scale_y_continuous(trans = "log") +
-  scale_x_continuous(trans = "log")
+  scale_y_continuous(trans = "log", 
+                     breaks = c(8, 150, 2980)) +
+  scale_x_continuous(trans = "log",
+                     breaks = c(1, 3, 7, 10, 55)) +
+  xlab("LACO frequency (log)") +
+  ylab("LACO density (log)") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 18,
+                                 family = "Garamond"),
+        axis.title = element_text(size = 18,
+                                  family = "Garamond")) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
   
 # Dude, that's pretty awesome.
 a <- as.numeric(coefficients(m2)[1])
