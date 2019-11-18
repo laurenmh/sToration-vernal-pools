@@ -32,8 +32,8 @@ data{
     int obs_EG [n_pools, n_years]; // exotic grass density
     int obs_ERVA [n_pools, n_years]; // ERVAdens
     int obs_NF [n_pools, n_years]; // non-native forb density
-    vector[n_years] g_LACO; // growth rate of LACO
-    real s_LACO; // survival rate of LACO
+    vector[n_years] g_LACO; // per seed germination rate of LACO
+    real s_LACO; // seed survival of LACO seedbank
 }
 parameters{
     vector<lower = 0>[n_years] lambda; // max growth rate of LACO in absence of competition
