@@ -25,12 +25,11 @@ BH_model <- stan_model(model_code="
 data{
     int n_pools; // number of pools
     int n_years; // number of years
-    matrix[n_pools, n_years] obs_LACO; // LACOdens
+    matrix[n_pools, n_years] obs_LACO; // LACO density
     matrix[n_pools, n_years] obs_EG; // exotic grass density
-    matrix[n_pools, n_years] obs_ERVA; // ERVAdens
+    matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
     vector[n_years] g_LACO; // per seed germination rate of LACO
-    real s_LACO; // seed survival of LACO seedbank
 }
 parameters{
     vector<lower = 0>[n_years] lambda; // max growth rate of LACO in absence of competition
@@ -38,13 +37,14 @@ parameters{
     vector<lower = 0>[n_years] alpha_EG; // competition term for LACO-exotic grass
     vector<lower = 0>[n_years] alpha_ERVA;// competition term for LACO-ERVA
     vector<lower = 0>[n_years] alpha_NF; // competition term for LACO-non-native forb
+    real s_LACO; // seed survival of LACO seedbank
 }
 transformed parameters{
-vector<lower = 0>[n_years] N_LACO;// population of LACO
+matrix[n_pools, n_years] N_LACO;// population of LACO in time t+1
 for(i in 1:n_years){
-        N_LACO[i] = (g_LACO[i-1] * obs_LACO[,i-1] * lambda[i-1])./(1 + obs_LACO[,i-1] * alpha_LACO[i-1] + 
+        N_LACO[,i] = (g_LACO[i-1] * obs_LACO[,i-1] * lambda[i-1])./(1 + obs_LACO[,i-1] * alpha_LACO[i-1] + 
         obs_EG[,i-1] * alpha_EG[i-1] + obs_ERVA[,i-1] * alpha_ERVA[i-1] + obs_NF[,i-1] * alpha_NF[i-1]) + 
-        s_LACO * (1 - g_LACO[i-1]) * obs_LACO[,i-1]) ;
+        s_LACO * (1 - g_LACO[i-1]) * obs_LACO[,i-1]);
     }
 }
 model{
@@ -56,6 +56,7 @@ model{
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
     alpha_NF ~ normal(0,1);
+    s_LACO ~ normal(0,1);
 }")
 
 #run the model 
