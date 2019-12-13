@@ -40,10 +40,10 @@ true_param <- list(sim_lambda = 120,
                    sim_alpha_ERVA = .1,
                    sim_alpha_NF = .2,
                    sim_s_LACO = .8) #list "true" lambda, alpha, and s parameter values here. start with constant parameters. 
-#check that the model estimates parameters close to these values.
+                                    #check that the model estimates parameters close to these values.
 
-sim_N_LACO <- matrix(nrow=sim_n_pools, ncol=sim_n_years)
-sim_mu <- matrix(nrow=sim_n_pools, ncol=sim_n_years)
+sim_N_LACO <- matrix(nrow=sim_n_pools, ncol=sim_n_years) #make a matrix of total population LACO
+sim_mu <- matrix(nrow=sim_n_pools, ncol=sim_n_years) #make a matrix of mean population LACO
 for(t in 1:17){
   sim_mu[,t+1] = (sim_g_LACO[t] * sim_obs_LACO[,t] * true_param$sim_lambda)/
     (1 + sim_obs_LACO[,t] * true_param$sim_alpha_LACO * sim_g_LACO[t] + 
@@ -56,7 +56,7 @@ for(t in 1:17){
 for(t in 1:17){
   for(p in 1:3){
     sim_N_LACO[p,t+1] = rpois(1, lambda = sim_mu[p,t+1]) + rnorm(1, 0, 5)
-  }}
+  }} #for every pool in year
 
 hist(sim_N_LACO)
 
