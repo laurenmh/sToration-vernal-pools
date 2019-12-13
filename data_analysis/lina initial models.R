@@ -39,7 +39,7 @@ BH_model <- "
 data{
     int n_pools; // number of pools
     int n_years; // number of years
-    matrix[n_pools, n_years] obs_LACO; // LACO density
+    matrix[n_pools, n_years] obs_LACO; // observed LACO density
     matrix[n_pools, n_years] obs_EG; // exotic grass density
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
@@ -54,7 +54,7 @@ parameters{
     real<lower = 0, upper = 1> s_LACO; // seed survival of LACO seedbank
 }
 transformed parameters{
-matrix[n_pools, n_years] N_LACO;// population of LACO in time t
+matrix[n_pools, n_years] N_LACO;// total population (observed + unobserved) of LACO at time t
 for(i in 2:n_years){
         N_LACO[,i] = (g_LACO[i-1] * obs_LACO[,i-1] * lambda[i-1])./(1 + obs_LACO[,i-1] * alpha_LACO[i-1] * g_LACO[i-1]+ 
         obs_EG[,i-1] * alpha_EG[i-1] + obs_ERVA[,i-1] * alpha_ERVA[i-1] + obs_NF[,i-1] * alpha_NF[i-1]) + 
