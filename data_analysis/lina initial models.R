@@ -17,22 +17,42 @@ hist(restoredLACO$X..Potentially.Viable)
 mean(restoredLACO$X..Potentially.Viable)
 sd(restoredLACO$X..Potentially.Viable)
 
-# set up data
+# set up the data
 
 
-# simulated data
+# simulate data
 sim_n_pools <- 3 #number of pools
 sim_n_years <- 18 #years of data
 set.seed(125) #this helps create simulated values that are reproducible
-sim_obs_LACO <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 4), ncol=sim_n_years) #simulate poisson distributed LACO population
+sim_obs_LACO <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed LACO density with mean of 100
 set.seed(124)
-sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 4), ncol=sim_n_years)
+sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 150), ncol=sim_n_years) 
 set.seed(123)
-sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 4), ncol=sim_n_years)
+sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 10), ncol=sim_n_years)
 set.seed(122)
-sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 4), ncol=sim_n_years)
+sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_years)
 set.seed(121)
 sim_g_LACO <- as.vector(rbeta(sim_n_years, 2, 4)) #simulate germination rate of seedbank from a beta distribution
+
+true_param <- list(sim_lambda = 120,
+                   sim_alpha_LACO = .05,
+                   sim_alpha_EG = .4,
+                   sim_alpha_ERVA = .1,
+                   sim_alpha_NF = .2,
+                   sim_s_LACO = .8) #list "true" lambda, alpha, and s parameter values here. start with constant parameters. 
+                                    #check that the model estimates parameters close to these values.
+
+sim_N_LACO <- matrix(nrow=sim_n_pools, ncol=sim_n_years)
+for(t in 1:17){
+  sim_N_LACO[,t+1] = (sim_g_LACO[t] * sim_obs_LACO[,t] * true_param$sim_lambda)/
+    (1 + sim_obs_LACO[,t] * true_param$sim_alpha_LACO * sim_g_LACO[t] + 
+       sim_obs_EG[,t] * true_param$sim_alpha_EG + 
+       sim_obs_ERVA[,t] * true_param$sim_alpha_ERVA + 
+       sim_obs_NF[,t] * true_param$sim_alpha_NF) + 
+    true_param$sim_s_LACO * (1 - sim_g_LACO[t]) * sim_obs_LACO[,t]  / sim_g_LACO[t]
+}
+
+hist(sim_N_LACO)
 
 # Stan model
 BH_model <- "
