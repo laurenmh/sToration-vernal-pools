@@ -15,15 +15,17 @@ sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 10), ncol=sim_n_y
 set.seed(122)
 sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_years)
 
+sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
+
 bh.sim <- function(init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
-  sim.laco <- 0*EG; sim.laco[,1] <- init
-  for(i in 1:nrow(sim.laco)){
-    for(j in 2:ncol(sim.laco)){
-      tmp <- lambda*sim.laco[i,j-1]/(1+sim.laco[i,j-1]*aii+EG[i,j-1]*a1+ERVA[i,j-1]*a2+NF[i,j-1]*a3)
-      sim.laco[i,j-1] <- rpois(1, lambda=tmp)
+  sim_obs_LACO[,1]<- init
+  for(i in 1:nrow(sim_obs_LACO)){
+    for(j in 2:ncol(sim_obs_LACO)){
+      mu <- lambda*sim_obs_LACO[i,j-1]/(1+sim_obs_LACO[i,j-1]*aii+EG[i,j-1]*a1+ERVA[i,j-1]*a2+NF[i,j-1]*a3)
+      sim_obs_LACO[i,j] <- rpois(1, lambda=mu)
     }
   }
- return(sim.laco)
+ return(sim_obs_LACO)
 }
 
 sim_obs_LACO <- bh.sim(init = 100,
@@ -31,11 +33,10 @@ sim_obs_LACO <- bh.sim(init = 100,
                        ERVA = sim_obs_ERVA,
                        NF = sim_obs_NF,
                        aii = 1,
-                       a1 = 0.2,
-                       a2 = 0.4, 
-                       a3 = 0.7,
+                       a1 = 0.1,
+                       a2 = 0.2, 
+                       a3 = 0.5,
                        lambda = 40)
-
 #list "true" lambda and alpha parameter values here. start with constant parameters. 
 #check that the model estimates parameters close to these values.
 
@@ -71,7 +72,7 @@ transformed parameters{
 model{
     for(i in 1:n_pools){
       for(j in 1:1){
-          N_LACO[,j] = obs_LACO[,1]; #SYNTAX ERROR here - look up how to set up the first column
+          N_LACO[i,j] = obs_LACO[i,1]; #SYNTAX ERROR here - look up how to set up the first column
       }
       for(j in 2:n_years){
           N_LACO[i,j] ~ poisson(mu_LACO[i,j]); #ERROR here too - poisson only for int but N_LACO is matrix of real numbers.
