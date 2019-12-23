@@ -57,17 +57,26 @@ parameters{
     real <lower = 0, upper = 1> alpha_EG; // competition term for LACO-exotic grass
     real <lower = 0, upper = 1> alpha_ERVA;// competition term for LACO-ERVA
     real <lower = 0, upper = 1> alpha_NF; // competition term for LACO-non-native forb
-    matrix[n_pools, n_years] N_LACO;// total population (observed + unobserved) of LACO at time t
+    matrix [n_pools, n_years] N_LACO ;// total population (observed + unobserved) of LACO at time t
 }
 transformed parameters{
     matrix[n_pools, n_years] mu_LACO;// total population (observed + unobserved) of LACO at time t
-    for(i in 2:n_years){
-        mu_LACO[,i] = (obs_LACO[,i-1] * lambda[i-1])./(1 + obs_LACO[,i-1] * alpha_LACO[i-1] + 
-        obs_EG[,i-1] * alpha_EG[i-1] + obs_ERVA[,i-1] * alpha_ERVA[i-1] + obs_NF[,i-1] * alpha_NF[i-1]);
+    for(i in 1:n_pools){
+      for(j in 2:n_years){
+          mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda)./(1 + obs_LACO[i,j-1] * alpha_LACO + 
+          obs_EG[i,j-1] * alpha_EG + obs_ERVA[i,j-1] * alpha_ERVA + obs_NF[i,j-1] * alpha_NF);
+      }
     }
 }
 model{
-    N_LACO 
+    for(i in 1:n_pools){
+      for(j in 1:1){
+          N_LACO[,j] = obs_LACO[,1]; #SYNTAX ERROR here - look up how to set up the first column
+      }
+      for(j in 2:n_years){
+          N_LACO[i,j] ~ poisson(mu_LACO[i,j]); #ERROR here too - poisson only for int but N_LACO is matrix of real numbers.
+      }
+    }
     lambda ~ normal(122.2561,83.95284); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
