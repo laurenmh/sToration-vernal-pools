@@ -43,11 +43,11 @@ sim_obs_LACO <- bh.sim(init = 100,
 hist(sim_obs_LACO)
 
 # Stan model
-BH_model <- "
+BH_model_block <- "
 data{
     int n_pools; // number of pools
     int n_years; // number of years
-    matrix[n_pools, n_years] obs_LACO; // observed LACO density
+    int obs_LACO [n_pools, n_years] ; // observed LACO density // this is an array of integers because N_LACO is also an array (see model)
     matrix[n_pools, n_years] obs_EG; // exotic grass density
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
@@ -58,11 +58,13 @@ parameters{
     real <lower = 0, upper = 1> alpha_EG; // competition term for LACO-exotic grass
     real <lower = 0, upper = 1> alpha_ERVA;// competition term for LACO-ERVA
     real <lower = 0, upper = 1> alpha_NF; // competition term for LACO-non-native forb
-    matrix [n_pools, n_years] N_LACO ;// total population (observed + unobserved) of LACO at time t
 }
 transformed parameters{
-    matrix[n_pools, n_years] mu_LACO;// total population (observed + unobserved) of LACO at time t
+    matrix <lower = 0, upper = 200> [n_pools, n_years] mu_LACO;// total population (observed + unobserved) of LACO at time t
     for(i in 1:n_pools){
+      for(j in 1:1){
+          mu_LACO[i,j] = 100;
+      }
       for(j in 2:n_years){
           mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda)./(1 + obs_LACO[i,j-1] * alpha_LACO + 
           obs_EG[i,j-1] * alpha_EG + obs_ERVA[i,j-1] * alpha_ERVA + obs_NF[i,j-1] * alpha_NF);
@@ -70,12 +72,13 @@ transformed parameters{
     }
 }
 model{
+    int N_LACO [n_pools, n_years]; // total population (observed + unobserved) of LACO at time t
     for(i in 1:n_pools){
       for(j in 1:1){
-          N_LACO[i,j] = obs_LACO[i,1]; #SYNTAX ERROR here - look up how to set up the first column
+          N_LACO[i,j] = obs_LACO[i,1]; //the first column of N_LACO is first year's obs_LACO
       }
       for(j in 2:n_years){
-          N_LACO[i,j] ~ poisson(mu_LACO[i,j]); #ERROR here too - poisson only for int but N_LACO is matrix of real numbers.
+          N_LACO[i,j] ~ poisson(mu_LACO[i,j]); //the rest of the N_LACO is from mu_LACO. Poisson works only on integers so N_LACO is an array.
       }
     }
     lambda ~ normal(122.2561,83.95284); //get partially-informed priors from lit
@@ -86,7 +89,8 @@ model{
 }"
 
 #run the model with simulated data
-stan_fit <- stan(model_code = BH_model,
+BH_model <- stan_model(model_code = BH_model_block)
+BH_fit <- sampling(BH_model,
                  data = list(n_pools = sim_n_pools,
                              n_years = sim_n_years,
                              obs_LACO = sim_obs_LACO,
