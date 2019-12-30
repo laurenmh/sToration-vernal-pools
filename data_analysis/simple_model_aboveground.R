@@ -32,7 +32,7 @@ sim_obs_LACO <- bh.sim(init = 100,
                        EG = sim_obs_EG,
                        ERVA = sim_obs_ERVA,
                        NF = sim_obs_NF,
-                       aii = 1,
+                       aii = 0.9,
                        a1 = 0.1,
                        a2 = 0.2, 
                        a3 = 0.5,
@@ -47,45 +47,47 @@ BH_model_block <- "
 data{
     int n_pools; // number of pools
     int n_years; // number of years
-    int obs_LACO [n_pools, n_years] ; // observed LACO density // this is an array of integers because N_LACO is also an array (see model)
+    int obs_LACO [n_pools, n_years] ; // observed LACO density // this is an array of integers because the model is a discrete poisson model (see below)
     matrix[n_pools, n_years] obs_EG; // exotic grass density
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
 }
 parameters{
-    real <lower = 0, upper = 1> lambda; // max growth rate of LACO in absence of competition
+    real <lower = 0> lambda; // max growth rate of LACO in absence of competition
     real <lower = 0, upper = 1> alpha_LACO; // competition term for LACO-LACO
     real <lower = 0, upper = 1> alpha_EG; // competition term for LACO-exotic grass
     real <lower = 0, upper = 1> alpha_ERVA;// competition term for LACO-ERVA
     real <lower = 0, upper = 1> alpha_NF; // competition term for LACO-non-native forb
+    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO on t=1
+    real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
 }
 transformed parameters{
-    matrix <lower = 0, upper = 200> [n_pools, n_years] mu_LACO;// total population (observed + unobserved) of LACO at time t
-    for(i in 1:n_pools){
-      for(j in 1:1){
-          mu_LACO[i,j] = 100;
-      }
-      for(j in 2:n_years){
-          mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda)./(1 + obs_LACO[i,j-1] * alpha_LACO + 
-          obs_EG[i,j-1] * alpha_EG + obs_ERVA[i,j-1] * alpha_ERVA + obs_NF[i,j-1] * alpha_NF);
-      }
+    matrix [n_pools, n_years] mu_LACO;// expected value of LACO at time t
+    for(i in 1:n_pools){  
+        for(j in 1:1){
+            mu_LACO[i,j] = 100;
+        }
+        for(j in 2:n_years){
+            mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda)./(1 + obs_LACO[i,j-1] * alpha_LACO + 
+            obs_EG[i,j-1] * alpha_EG + obs_ERVA[i,j-1] * alpha_ERVA + obs_NF[i,j-1] * alpha_NF); // Beverton Holt model
+        }
     }
 }
 model{
-    int N_LACO [n_pools, n_years]; // total population (observed + unobserved) of LACO at time t
     for(i in 1:n_pools){
-      for(j in 1:1){
-          N_LACO[i,j] = obs_LACO[i,1]; //the first column of N_LACO is first year's obs_LACO
-      }
-      for(j in 2:n_years){
-          N_LACO[i,j] ~ poisson(mu_LACO[i,j]); //the rest of the N_LACO is from mu_LACO. Poisson works only on integers so N_LACO is an array.
-      }
+        for(j in 1:1){
+            obs_LACO[i,j] ~ binomial(100, germ_LACO); //the first year's obs_LACO is the initial germination of 100 seeds
+        }
+        for(j in 2:n_years){
+            obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+        }
     }
-    lambda ~ normal(122.2561,83.95284); //get partially-informed priors from lit
+    lambda ~ normal(40,1); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
     alpha_NF ~ normal(0,1);
+    sigma ~ normal(0,0.01);
 }"
 
 #run the model with simulated data
@@ -100,12 +102,12 @@ BH_fit <- sampling(BH_model,
                  iter= 1000)
 
 #check if there is enough iteration
-stan_trace(stan_fit, pars = c("lambda"))
+stan_trace(BH_fit, pars = c("lambda"))
 
 #mean posterior estimates of parameters
-get_posterior_mean(stan_fit, pars = c("lambda"))
+get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF"))
 
 #zoom into posterior distribution of parameters
-plot(stan_fit, pars = c("lambda", "alpha_LACO", "s_LACO"))
+plot(BH_fit, pars = c("alpha_LACO"))
 
 
