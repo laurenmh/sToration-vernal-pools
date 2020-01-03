@@ -6,7 +6,7 @@ library(rstan)
 library(StanHeaders)
 
 # simulated data
-sim_n_pools <- 30 #number of pools
+sim_n_pools <- 50 #number of pools
 sim_n_years <- 18 #years of data
 set.seed(124) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
@@ -18,8 +18,8 @@ sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_yea
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 
-bh.sim <- function(init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
-  sim_obs_LACO[,1]<- rbinom(30,100,0.8)
+bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
+  sim_obs_LACO[,1]<- rbinom(n_pools,100,0.8)
   sim_mu[,1]<- init
   for(i in 1:nrow(sim_obs_LACO)){
     for(j in 2:ncol(sim_obs_LACO)){
@@ -30,7 +30,8 @@ bh.sim <- function(init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
  return(sim_obs_LACO)
 }
 
-sim_obs_LACO <- bh.sim(init = 100,
+sim_obs_LACO <- bh.sim(n_pools = sim_n_pools,
+                       init = 100,
                        EG = sim_obs_EG,
                        ERVA = sim_obs_ERVA,
                        NF = sim_obs_NF,
