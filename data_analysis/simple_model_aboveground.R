@@ -6,23 +6,25 @@ library(rstan)
 library(StanHeaders)
 
 # simulated data
-sim_n_pools <- 3 #number of pools
+sim_n_pools <- 30 #number of pools
 sim_n_years <- 18 #years of data
 set.seed(124) #this helps create simulated values that are reproducible
-sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 150), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
+sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
 set.seed(123)
-sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 10), ncol=sim_n_years)
+sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 30), ncol=sim_n_years)
 set.seed(122)
 sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_years)
 
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
+sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 
 bh.sim <- function(init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
-  sim_obs_LACO[,1]<- init
+  sim_obs_LACO[,1]<- rbinom(30,100,0.8)
+  sim_mu[,1]<- init
   for(i in 1:nrow(sim_obs_LACO)){
     for(j in 2:ncol(sim_obs_LACO)){
-      mu <- lambda*sim_obs_LACO[i,j-1]/(1+sim_obs_LACO[i,j-1]*aii+EG[i,j-1]*a1+ERVA[i,j-1]*a2+NF[i,j-1]*a3)
-      sim_obs_LACO[i,j] <- rpois(1, lambda=mu)
+      sim_mu[i,j] <- lambda*sim_obs_LACO[i,j-1]/(1+sim_obs_LACO[i,j-1]*aii+EG[i,j-1]*a1+ERVA[i,j-1]*a2+NF[i,j-1]*a3)
+      sim_obs_LACO[i,j] <- rpois(1, lambda=sim_mu[i,j])
     }
   }
  return(sim_obs_LACO)
@@ -33,9 +35,9 @@ sim_obs_LACO <- bh.sim(init = 100,
                        ERVA = sim_obs_ERVA,
                        NF = sim_obs_NF,
                        aii = 0.9,
-                       a1 = 0.1,
+                       a1 = 0.3,
                        a2 = 0.2, 
-                       a3 = 0.5,
+                       a3 = 0.1,
                        lambda = 40)
 #list "true" lambda and alpha parameter values here. start with constant parameters. 
 #check that the model estimates parameters close to these values.
@@ -108,6 +110,6 @@ stan_trace(BH_fit, pars = c("lambda"))
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF"))
 
 #zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_LACO"))
+plot(BH_fit, pars = c("alpha_NF"))
 
 
