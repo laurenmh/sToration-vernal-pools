@@ -6,8 +6,9 @@ library(rstan)
 library(StanHeaders)
 
 # simulated data
-sim_n_pools <- 50 #number of pools
+sim_n_pools <- 256 #number of pools
 sim_n_years <- 18 #years of data
+
 set.seed(124) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
 set.seed(123)
@@ -15,14 +16,14 @@ sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 30), ncol=sim_n_y
 set.seed(122)
 sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_years)
 
+sim_aii <- as.vector(rbeta(sim_n_years, 3, 1))
+sim_a1 <- as.vector(rbeta(sim_n_years, 1, 2))
+sim_a2 <- as.vector(rbeta(sim_n_years, 2, 5))
+sim_a3 <- as.vector(rbeta(sim_n_years, 1, 5))
+sim_lambda <- as.vector(rpois(sim_n_years, 40))
+
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
-
-sim_aii <- as.vector(rbeta(sim_n_years, 5, 1))
-sim_a1 <- as.vector(rbeta(sim_n_years, 2, 2))
-sim_a2 <- as.vector(rbeta(sim_n_years, 2, 4))
-sim_a3 <- as.vector(rbeta(sim_n_years, 2, 5))
-sim_lambda <- as.vector(rpois(sim_n_years, 40))
 
 bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
   sim_obs_LACO[,1]<- rbinom(n_pools,100,0.8)
@@ -36,6 +37,8 @@ bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
   return(sim_obs_LACO)
 }
 
+#list "true" lambda and alpha parameter values here. 
+#check that the model estimates parameters close to these values.
 sim_obs_LACO <- bh.sim(n_pools = sim_n_pools,
                        init = 100,
                        EG = sim_obs_EG,
@@ -46,8 +49,6 @@ sim_obs_LACO <- bh.sim(n_pools = sim_n_pools,
                        a2 = sim_a2, 
                        a3 = sim_a3,
                        lambda = sim_lambda)
-#list "true" lambda and alpha parameter values here. start with constant parameters. 
-#check that the model estimates parameters close to these values.
 
 hist(sim_obs_LACO)
 
@@ -91,7 +92,7 @@ model{
                 obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
           }
     }
-    lambda ~ normal(40,1); //get partially-informed priors from lit
+    lambda ~ normal(40,10); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
