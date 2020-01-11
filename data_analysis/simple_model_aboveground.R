@@ -61,14 +61,14 @@ parameters{
     real <lower = 0, upper = 1> alpha_EG; // competition term for LACO-exotic grass
     real <lower = 0, upper = 1> alpha_ERVA;// competition term for LACO-ERVA
     real <lower = 0, upper = 1> alpha_NF; // competition term for LACO-non-native forb
-    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO on t=1
+    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO at t=1
     real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
 }
 transformed parameters{
     matrix [n_pools, n_years] mu_LACO;// expected value of LACO at time t
     for(i in 1:n_pools){  
         for(j in 1:1){
-            mu_LACO[i,j] = 100;
+            mu_LACO[i,j] = 100; // this column does not get used in the model
         }
         for(j in 2:n_years){
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda)./(1 + obs_LACO[i,j-1] * alpha_LACO + 

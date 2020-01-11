@@ -77,23 +77,23 @@ parameters{
 transformed parameters{
     matrix [n_pools, n_years] mu_LACO;// expected value of LACO at time t
     for(i in 1:n_pools){  
-          for(j in 1:1){
-                mu_LACO[i,j] = 100;
-          }
-          for(j in 2:n_years){
-                mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
-                obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-                survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // Beverton Holt model
-          }
+        for(j in 1:1){
+            mu_LACO[i,j] = 100;
+        }
+        for(j in 2:n_years){
+            mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
+            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // Beverton Holt model
+        }
     }
 }
 model{
     for(i in 1:n_pools){
         for(j in 1:1){
-              obs_LACO[i,j] ~ binomial(100, germ_LACO); //the first year's obs_LACO is the initial germination of 100 seeds
+            obs_LACO[i,j] ~ binomial(100, germ_LACO); //the first year's obs_LACO is the initial germination of 100 seeds
         }
         for(j in 2:n_years){
-              obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+            obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
         }
     }
     lambda ~ normal(40,10); //get partially-informed priors from lit

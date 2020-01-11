@@ -6,13 +6,13 @@ library(rstan)
 library(StanHeaders)
 
 # simulated data
-sim_n_pools <- 50 #number of pools
-sim_n_years <- 18 #years of data
-set.seed(124) #this helps create simulated values that are reproducible
+sim_n_pools <- 250 #number of pools
+sim_n_years <- 3 #years of data
+set.seed(125) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
-set.seed(123)
+set.seed(126)
 sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 30), ncol=sim_n_years)
-set.seed(122)
+set.seed(127)
 sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_years)
 
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
@@ -71,12 +71,12 @@ transformed parameters{
     matrix [n_pools, n_years] mu_LACO;// expected value of LACO at time t
     for(i in 1:n_pools){  
         for(j in 1:1){
-            mu_LACO[i,j] = 100;
+            mu_LACO[i,j] = 100;// this column does not get used in the model
         }
         for(j in 2:n_years){
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda)./(1 + obs_LACO[i,j-1] * alpha_LACO + 
             obs_EG[i,j-1] * alpha_EG + obs_ERVA[i,j-1] * alpha_ERVA + obs_NF[i,j-1] * alpha_NF) +
-            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // Beverton Holt model
+            (survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO); // Beverton Holt model
         }
     }
 }
@@ -107,7 +107,7 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sim_obs_EG,
                                obs_ERVA = sim_obs_ERVA,
                                obs_NF = sim_obs_NF), 
-                   iter= 1000)
+                   iter= 1000, control = list(adapt_delta = 0.99))
 
 #check if there is enough iteration
 stan_trace(BH_fit, pars = c("lambda"))
