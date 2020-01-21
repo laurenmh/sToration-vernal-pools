@@ -6,20 +6,20 @@ library(rstan)
 library(StanHeaders)
 
 # simulated data
-sim_n_pools <- 50 #number of pools
-sim_n_years <- 18 #years of data
-set.seed(124) #this helps create simulated values that are reproducible
+sim_n_pools <- 250 #number of pools
+sim_n_years <- 3 #years of data
+set.seed(125) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
-set.seed(123)
+set.seed(126)
 sim_obs_ERVA <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 30), ncol=sim_n_years)
-set.seed(122)
+set.seed(127)
 sim_obs_NF <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 50), ncol=sim_n_years)
 
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 
 bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda){
-  sim_obs_LACO[,1]<- rbinom(n_pools,100,0.8)
+  sim_obs_LACO[,1]<- rbinom(n_pools,100,0.7)
   sim_mu[,1]<- init
   for(i in 1:nrow(sim_obs_LACO)){
     for(j in 2:ncol(sim_obs_LACO)){
@@ -108,9 +108,9 @@ BH_fit <- sampling(BH_model,
 stan_trace(BH_fit, pars = c("lambda"))
 
 #mean posterior estimates of parameters
-get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF"))
+get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "germ_LACO"))
 
 #zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_NF"))
+plot(BH_fit, pars = c("alpha_NF", "germ_LACO"))
 
 

@@ -19,7 +19,7 @@ sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 
 bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
-  sim_obs_LACO[,1]<- rbinom(n_pools,100,0.8)
+  sim_obs_LACO[,1]<- rbinom(n_pools,100,0.7)
   sim_mu[,1]<- init
   for(i in 1:nrow(sim_obs_LACO)){
     for(j in 2:ncol(sim_obs_LACO)){
@@ -113,9 +113,9 @@ BH_fit <- sampling(BH_model,
 stan_trace(BH_fit, pars = c("lambda"))
 
 #mean posterior estimates of parameters
-get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
+get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO", "germ_LACO"))
 
 #zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_NF"))
+plot(BH_fit, pars = c("alpha_NF", "survival_LACO", "germ_LACO"))
 
 
