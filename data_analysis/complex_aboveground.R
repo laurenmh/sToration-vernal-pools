@@ -118,6 +118,6 @@ stan_trace(BH_fit, pars = c("lambda"))
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF"))
 
 #zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_NF"))
+plot(BH_fit, pars = c("alpha_EG", "alpha_LACO", "alpha_ERVA"))
 
 
