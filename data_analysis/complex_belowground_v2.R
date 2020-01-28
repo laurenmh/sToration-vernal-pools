@@ -129,4 +129,21 @@ get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_E
 #zoom into posterior distribution of parameters
 plot(BH_fit, pars = c("alpha_NF"))
 
+#are the parameters correlated?
+list_of_draws <- extract(BH_fit) #extract the list of draws
+print(names(list_of_draws)) #see the names of parameters
+head(list_of_draws$lambda) #see the first 6 draws of lambda
+
+lambda_draws <- list_of_draws$lambda
+alpha_LACO_draws <- list_of_draws$alpha_LACO
+
+plot(lambda_draws[,1], alpha_LACO_draws[,1]) #lambda vs alpha_LACO at time 1
+plot(lambda_draws[,2], alpha_LACO_draws[,2]) #lambda vs alpha_LACO at time 2
+plot(lambda_draws[,3], alpha_LACO_draws[,3]) #lambda vs alpha_LACO at time 3
+
+mean_lambda <- summary(BH_fit, pars = c("lambda"))$summary[,"mean"]
+mean_alpha_LACO <- summary(BH_fit, pars = c("alpha_LACO"))$summary[,"mean"]
+
+plot(mean_lambda, mean_alpha_LACO)
+
 
