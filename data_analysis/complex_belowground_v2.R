@@ -8,7 +8,7 @@ library(StanHeaders)
 
 # simulated data
 sim_n_pools <- 256 #number of pools
-sim_n_years <- 4 #years of data
+sim_n_years <- 10 #years of data
 
 set.seed(124) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 150
