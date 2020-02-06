@@ -3,6 +3,7 @@
 #2. count the number of years
 #3. fill in the missing data
 #4. convert frequency to abundance data
+#5. spread the dataset
 
 #set data pathway!
 
@@ -20,13 +21,13 @@ n_years <- length(unique(const_com$Year))
 #For now, I will just replace missing values with the mean value within each year
 const_com_mean <- const_com %>%
   group_by(Year) %>%
-  summarize(mean_LACOdens = mean(LACOdens, na.rm = TRUE),
-         mean_ERVAdens = mean(ERVAdens, na.rm = TRUE),
-         mean_BRHO = mean(BRHO, na.rm = TRUE),
-         mean_HOMA = mean(HOMA, na.rm = TRUE),
-         mean_LOMU = mean(LOMU, na.rm = TRUE),
-         mean_PLST = mean(PLST, na.rm = TRUE),
-         mean_DOCO = mean(DOCO, na.rm = TRUE))
+  summarize(mean_LACOdens = round(mean(LACOdens, na.rm = TRUE)),
+         mean_ERVAdens = round(mean(ERVAdens, na.rm = TRUE)),
+         mean_BRHO = round(mean(BRHO, na.rm = TRUE)),
+         mean_HOMA = round(mean(HOMA, na.rm = TRUE)),
+         mean_LOMU = round(mean(LOMU, na.rm = TRUE)),
+         mean_PLST = round(mean(PLST, na.rm = TRUE)),
+         mean_DOCO = round(mean(DOCO, na.rm = TRUE)))
 
 const_com_revised <- const_com %>%
   mutate(LACOdens_filled = ifelse(is.na(LACOdens), const_com_mean$mean_LACOdens[match(const_com$Year, const_com_mean$Year)], LACOdens),
@@ -45,8 +46,27 @@ const_com_revised <- const_com %>%
 
 #Exotic grass (EG) group contains BRHO, HOMA, and LOMU:
 const_com_revised$sum_EG <- rowSums(cbind(const_com_revised$BRHO_filled, const_com_revised$HOMA_filled, const_com_revised$LOMU_filled))
-const_com_revised$sum_EGdens <- exp(-0.415) * const_com_revised$sum_EG ^ 1.356
+const_com_revised$sum_EGdens <- round(exp(-0.415) * const_com_revised$sum_EG ^ 1.356)
 
 #Native forb (NF) group contains PLST and DOCO:
 const_com_revised$sum_NF <- rowSums(cbind(const_com_revised$PLST_filled, const_com_revised$DOCO_filled))
-const_com_revised$sum_NFdens <- exp(-0.415) * const_com_revised$sum_NF ^ 1.356
+const_com_revised$sum_NFdens <- round(exp(-0.415) * const_com_revised$sum_NF ^ 1.356)
+
+#5. spread the dataset
+#each matrix should have [n_pools x n_years] dimension
+LACOdens <- const_com_revised %>%
+  select(Year, Pool, LACOdens_filled) %>%
+  spread(key = Year, value = LACOdens_filled) %>%
+  select(-Pool)
+ERVAdens <- const_com_revised %>%
+  select(Year, Pool, ERVAdens_filled) %>%
+  spread(key = Year, value = ERVAdens_filled) %>%
+  select(-Pool)
+sumEGdens <- const_com_revised %>%
+  select(Year, Pool, sum_EGdens) %>%
+  spread(key = Year, value = sum_EGdens) %>%
+  select(-Pool)
+sumNFdens <- const_com_revised %>%
+  select(Year, Pool, sum_NFdens) %>%
+  spread(key = Year, value = sum_NFdens) %>%
+  select(-Pool)

@@ -91,7 +91,7 @@ transformed parameters{
 model{
     for(i in 1:n_pools){
         for(j in 1:1){
-            obs_LACO[i,j] ~ binomial(100, germ_LACO); //the first year's obs_LACO is the initial germination of 100 seeds
+            obs_LACO[i,j] ~ binomial(400, germ_LACO); //the first year's obs_LACO is the initial germination of 100 seeds
         }
         for(j in 2:(n_years-1)){
             obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
@@ -127,7 +127,7 @@ summary(BH_fit)$summary[,"Rhat"]
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
 
 #zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_NF"))
+plot(BH_fit, pars = c("alpha_LACO"))
 
 #are the parameters correlated?
 list_of_draws <- extract(BH_fit) #extract the list of draws
@@ -146,4 +146,14 @@ mean_alpha_LACO <- summary(BH_fit, pars = c("alpha_LACO"))$summary[,"mean"]
 
 plot(mean_lambda, mean_alpha_LACO)
 
-
+##Run with real data ##see data prep file
+##We need to adjust the first year binomial term, because there were 4 kinds of seeding treatment by 2001. 
+##The max number of LACOdens in 2001 is 400.
+BH_fit <- sampling(BH_model,
+                   data = list(n_pools = n_pools,
+                               n_years = n_years,
+                               obs_LACO = LACOdens,
+                               obs_EG = sumEGdens,
+                               obs_ERVA = ERVAdens,
+                               obs_NF = sumNFdens), 
+                   iter= 1000)
