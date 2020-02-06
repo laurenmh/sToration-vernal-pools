@@ -140,6 +140,7 @@ alpha_LACO_draws <- list_of_draws$alpha_LACO
 plot(lambda_draws[,1], alpha_LACO_draws[,1]) #lambda vs alpha_LACO at time 1
 plot(lambda_draws[,2], alpha_LACO_draws[,2]) #lambda vs alpha_LACO at time 2
 plot(lambda_draws[,3], alpha_LACO_draws[,3]) #lambda vs alpha_LACO at time 3
+plot(lambda_draws[,4], alpha_LACO_draws[,4]) #lambda vs alpha_LACO at time 3
 
 mean_lambda <- summary(BH_fit, pars = c("lambda"))$summary[,"mean"]
 mean_alpha_LACO <- summary(BH_fit, pars = c("alpha_LACO"))$summary[,"mean"]
