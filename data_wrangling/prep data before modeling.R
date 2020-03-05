@@ -2,7 +2,7 @@
 #1. count the number of pools
 #2. count the number of years
 #3. fill in the missing data
-#4. convert frequency to abundance data
+#4. sum frequency data
 #5. spread the dataset
 
 #set data pathway!
@@ -18,6 +18,12 @@ n_pools <- length(unique(const_com$Pool))
 n_years <- length(unique(const_com$Year))
 
 #3. fill in the missing data
+#How many pools have complete data?
+const_com_LACO <- const_com %>%
+  select(Year, Pool, LACOdens) %>%
+  spread(key = Year, value = LACOdens)
+const_com_noNA <- const_com_LACO[complete.cases(const_com_LACO),] #116 pools have compete data
+  
 #For now, I will just replace missing values with the mean value within each year
 const_com_mean <- const_com %>%
   group_by(Year) %>%
@@ -40,17 +46,13 @@ const_com_revised <- const_com %>%
 
 #4. convert frequency to abundance data
 #We'll use observed abundance data for LACO and ERVA.
-#Nancy identified that log-log is the best transformation:
-#density ~ exp -0.415 + frequency ^ 1.356
-#We'll do this transformation after summing the percent cover of all species in each group 
+#We'll sum the percent cover of species in each group 
 
 #Exotic grass (EG) group contains BRHO, HOMA, and LOMU:
 const_com_revised$sum_EG <- rowSums(cbind(const_com_revised$BRHO_filled, const_com_revised$HOMA_filled, const_com_revised$LOMU_filled))
-const_com_revised$sum_EGdens <- round(exp(-0.415) * const_com_revised$sum_EG ^ 1.356)
 
 #Native forb (NF) group contains PLST and DOCO:
 const_com_revised$sum_NF <- rowSums(cbind(const_com_revised$PLST_filled, const_com_revised$DOCO_filled))
-const_com_revised$sum_NFdens <- round(exp(-0.415) * const_com_revised$sum_NF ^ 1.356)
 
 #5. spread the dataset
 #each matrix should have [n_pools x n_years] dimension
