@@ -98,9 +98,9 @@ model{
         }
        for(j in 3:(n_years-1)){
             obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
-}
-
+        }
     }
+
     lambda ~ normal(40,10); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
