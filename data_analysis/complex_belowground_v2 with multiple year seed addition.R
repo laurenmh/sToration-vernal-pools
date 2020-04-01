@@ -23,6 +23,11 @@ sim_a2 <- as.vector(rbeta(sim_n_years, 2, 5))
 sim_a3 <- as.vector(rbeta(sim_n_years, 1, 5))
 sim_lambda <- as.vector(rpois(sim_n_years, 40))
 
+sim_seedtrt <- matrix(nrow = sim_n_pools, ncol = 3)
+sim_seedtrt[,1] <- sample(c(0,200,100,100,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,2] <- sample(c(0,0,200,100,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,3] <- sample(c(0,0,0,0,200), sim_n_pools, replace = TRUE)
+
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 
@@ -64,6 +69,7 @@ data{
     matrix[n_pools, n_years] obs_EG; // exotic grass density
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
+    int seeds_added [n_pools, 3]; // number of seeds added in 1999-2001
 }
 parameters{
     vector<lower = 0>[n_years-1] lambda; // max growth rate of LACO in absence of competition
@@ -71,7 +77,7 @@ parameters{
     vector<lower = 0, upper = 1>[n_years-1] alpha_EG; // competition term for LACO-exotic grass
     vector<lower = 0, upper = 1>[n_years-1] alpha_ERVA;// competition term for LACO-ERVA
     vector<lower = 0, upper = 1>[n_years-1] alpha_NF; // competition term for LACO-non-native forb
-    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO on t=1
+    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO 
     real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
     real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
 }
@@ -89,18 +95,17 @@ transformed parameters{
     }
 }
 model{
-    for(i in 1:n_pools){
-        for(j in 1:1){
-            obs_LACO[i,j] ~ binomial(seeds.added, germ_LACO); //the first year's obs_LACO is the initial germination of 100 seeds
+    for(a in 1:n_pools){
+        for(b in 1:1){
+            obs_LACO[a,b] ~ binomial(seeds_added[a,b], germ_LACO); //the first year's obs_LACO is the initial germination of seeds added in 1999
         }
-        for(j in 2:3){
-            obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma)+binomial(seeds.added, germ_LACO); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+        for(b in 2:3){
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma) + binomial(seed_added[a,b], germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
-       for(j in 3:(n_years-1)){
-            obs_LACO[i,j] ~ poisson(mu_LACO[i,j] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+        for(b in 3:(n_years-1)){
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
         }
     }
-
     lambda ~ normal(40,10); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
@@ -119,7 +124,8 @@ BH_fit <- sampling(BH_model,
                                obs_LACO = sim_obs_LACO,
                                obs_EG = sim_obs_EG,
                                obs_ERVA = sim_obs_ERVA,
-                               obs_NF = sim_obs_NF), 
+                               obs_NF = sim_obs_NF,
+                               seeds_added = sim_seedtrt), 
                    iter= 1000)
 
 ##Run with real data ##see data prep file before running this
@@ -129,7 +135,8 @@ BH_fit <- sampling(BH_model,
                                obs_LACO = LACOdens,
                                obs_EG = sumEGdens,
                                obs_ERVA = ERVAdens,
-                               obs_NF = sumNFdens), 
+                               obs_NF = sumNFdens,
+                               seeds_added = seedtrt), 
                    iter= 1000)
 
 #check if there is enough iteration
