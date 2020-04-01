@@ -70,9 +70,18 @@ seedtrt <- const_com_subset %>%
 ##################################################################################  
 #1b. ALTERNATIVELY, replace missing values with the mean value of pre and post NA#
 ##################################################################################
-#remove rows that have more than two consecutive NAs
-const_com_revised <- const_com_LACO[-c(4,20,21,25,26,43,47,49,62,68,70,130,137,159,183,194,211,213,214,226,228,236,240,243,246,254),]
+#Remove NAs in ERVAdens column
+const_com_completeveg <- const_com[!is.na(const_com$ERVAdens),]
 
+#Make a matrix of LACO
+const_com_LACO_matrix <- const_com_completeveg %>%
+  select(Year, Pool, LACOdens) %>%
+  spread(key = Year, value = LACOdens)
+
+#remove rows that have more than two consecutive NAs
+const_com_revised <- const_com_LACO_matrix[-c(4,20,21,25,26,43,47,49,62,68,70,130,137,159,183,194,211,213,214,226,228,236,240,243,246,254),]
+
+#fill in NAs
 const_com_revised$`2000` <- ifelse(is.na(const_com_revised$`2000`), const_com_revised$`2001`, const_com_revised$`2000`)
 const_com_revised$`2002` <- ifelse(is.na(const_com_revised$`2002`), as.integer((const_com_revised$`2001`+const_com_revised$`2003`)/2), const_com_revised$`2002`)
 const_com_revised$`2004` <- ifelse(is.na(const_com_revised$`2004`), as.integer((const_com_revised$`2003`+const_com_revised$`2005`)/2), const_com_revised$`2004`)
@@ -82,10 +91,11 @@ const_com_revised$`2013` <- ifelse(is.na(const_com_revised$`2013`), as.integer((
 const_com_revised$`2016` <- ifelse(is.na(const_com_revised$`2016`), as.integer((const_com_revised$`2015`+const_com_revised$`2017`)/2), const_com_revised$`2016`)
 const_com_revised$`2017` <- ifelse(is.na(const_com_revised$`2017`), const_com_revised$`2016`, const_com_revised$`2017`)
 
+#rearrange the table
 const_com_revised <- const_com_revised %>%
   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,`2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = "Year", value = "LACOdens")
 
-const_com_nafilled <- left_join(const_com_revised, const_com, by = c("Pool", "Year"))
+const_com_nafilled <- left_join(const_com_revised, const_com_completeveg, by = c("Pool", "Year"))
 
 #2b. count the number of pools
 n_pools <- length(unique(const_com_nafilled$Pool))
@@ -108,24 +118,50 @@ const_com_nafilled$sum_NF <- rowSums(cbind(const_com_nafilled$PLST, const_com_na
 LACOdens <- const_com_nafilled %>%
   select(Year, Pool, LACOdens.x) %>%
   spread(key = Year, value = LACOdens.x) %>%
-  select(-Pool)
+  select(-Pool) #no NAs
 ERVAdens <- const_com_nafilled %>%
   select(Year, Pool, ERVAdens) %>%
   spread(key = Year, value = ERVAdens) %>%
   select(-Pool)
+ERVAdens$`2000` <- ifelse(is.na(ERVAdens$`2000`), ERVAdens$`2001`, ERVAdens$`2000`)
+ERVAdens$`2002` <- ifelse(is.na(ERVAdens$`2002`), floor((ERVAdens$`2001`+ERVAdens$`2003`)/2), ERVAdens$`2002`)
+ERVAdens$`2004` <- ifelse(is.na(ERVAdens$`2004`), floor((ERVAdens$`2003`+ERVAdens$`2005`)/2), ERVAdens$`2004`)
+ERVAdens$`2007` <- ifelse(is.na(ERVAdens$`2007`), floor((ERVAdens$`2006`+ERVAdens$`2008`)/2), ERVAdens$`2007`)
+ERVAdens$`2010` <- ifelse(is.na(ERVAdens$`2010`), floor((ERVAdens$`2009`+ERVAdens$`2011`)/2), ERVAdens$`2010`)
+ERVAdens$`2013` <- ifelse(is.na(ERVAdens$`2013`), floor((ERVAdens$`2012`+ERVAdens$`2014`)/2), ERVAdens$`2013`)
+ERVAdens$`2016` <- ifelse(is.na(ERVAdens$`2016`), floor((ERVAdens$`2015`+ERVAdens$`2017`)/2), ERVAdens$`2016`)
+ERVAdens$`2017` <- ifelse(is.na(ERVAdens$`2017`), ERVAdens$`2016`, ERVAdens$`2017`)
 sumEGdens <- const_com_nafilled %>%
   select(Year, Pool, sum_EG) %>%
   spread(key = Year, value = sum_EG) %>%
   select(-Pool)
+sumEGdens$`2000` <- ifelse(is.na(sumEGdens$`2000`), sumEGdens$`2001`, sumEGdens$`2000`)
+sumEGdens$`2002` <- ifelse(is.na(sumEGdens$`2002`), floor((sumEGdens$`2001`+sumEGdens$`2003`)/2), sumEGdens$`2002`)
+sumEGdens$`2004` <- ifelse(is.na(sumEGdens$`2004`), floor((sumEGdens$`2003`+sumEGdens$`2005`)/2), sumEGdens$`2004`)
+sumEGdens$`2007` <- ifelse(is.na(sumEGdens$`2007`), floor((sumEGdens$`2006`+sumEGdens$`2008`)/2), sumEGdens$`2007`)
+sumEGdens$`2010` <- ifelse(is.na(sumEGdens$`2010`), floor((sumEGdens$`2009`+sumEGdens$`2011`)/2), sumEGdens$`2010`)
+sumEGdens$`2013` <- ifelse(is.na(sumEGdens$`2013`), floor((sumEGdens$`2012`+sumEGdens$`2014`)/2), sumEGdens$`2013`)
+sumEGdens$`2016` <- ifelse(is.na(sumEGdens$`2016`), floor((sumEGdens$`2015`+sumEGdens$`2017`)/2), sumEGdens$`2016`)
+sumEGdens$`2017` <- ifelse(is.na(sumEGdens$`2017`), sumEGdens$`2016`, sumEGdens$`2017`)
 sumNFdens <- const_com_nafilled %>%
   select(Year, Pool, sum_NF) %>%
   spread(key = Year, value = sum_NF) %>%
   select(-Pool)
+sumNFdens$`2000` <- ifelse(is.na(sumNFdens$`2000`), sumNFdens$`2001`, sumNFdens$`2000`)
+sumNFdens$`2002` <- ifelse(is.na(sumNFdens$`2002`), floor((sumNFdens$`2001`+sumNFdens$`2003`)/2), sumNFdens$`2002`)
+sumNFdens$`2004` <- ifelse(is.na(sumNFdens$`2004`), floor((sumNFdens$`2003`+sumNFdens$`2005`)/2), sumNFdens$`2004`)
+sumNFdens$`2007` <- ifelse(is.na(sumNFdens$`2007`), floor((sumNFdens$`2006`+sumNFdens$`2008`)/2), sumNFdens$`2007`)
+sumNFdens$`2010` <- ifelse(is.na(sumNFdens$`2010`), floor((sumNFdens$`2009`+sumNFdens$`2011`)/2), sumNFdens$`2010`)
+sumNFdens$`2013` <- ifelse(is.na(sumNFdens$`2013`), floor((sumNFdens$`2012`+sumNFdens$`2014`)/2), sumNFdens$`2013`)
+sumNFdens$`2016` <- ifelse(is.na(sumNFdens$`2016`), floor((sumNFdens$`2015`+sumNFdens$`2017`)/2), sumNFdens$`2016`)
+sumNFdens$`2017` <- ifelse(is.na(sumNFdens$`2017`), sumNFdens$`2016`, sumNFdens$`2017`)
 
 #6b. create a matrix of seeds added each year
 seedtrt <- const_com_nafilled %>%
   select(Pool, Treatment.1999, Treatment.2000) %>%
+  na.omit(seedtrt$Treatment.1999) %>%
   unique(seedtrt$Pool, incomparables = FALSE) %>%
-  mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
+  mutate(Y1 = ifelse(Treatment.1999 == "Control", 100, 100)) %>%
   mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
-  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
+  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0)) %>%
+  select(-c(Pool, Treatment.1999, Treatment.2000))
