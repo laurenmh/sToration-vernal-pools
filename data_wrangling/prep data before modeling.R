@@ -11,14 +11,17 @@
 
 #load data
 source("data_compiling/compile_composition.R")
-View(const_com)
+#View(const_com)
 
-#1a. How many pools have complete data?
+########################################
+#How many pools have complete data?#
+########################################
 const_com_LACO <- const_com %>%
   select(Year, Pool, LACOdens) %>%
   spread(key = Year, value = LACOdens)
 const_com_noNA <- const_com_LACO[complete.cases(const_com_LACO),] #only 108 pools have complete data
 
+#1a. subset the complete data
 const_com_subset <- inner_join(const_com, const_com_noNA, by.y = "Pool")
 
 #2a. count the number of pools
@@ -63,8 +66,10 @@ seedtrt <- const_com_subset %>%
   mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
   mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
   mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
-  
-#1b. Alternatively, I will just replace missing values with the mean value of pre and post NA
+
+##################################################################################  
+#1b. ALTERNATIVELY, replace missing values with the mean value of pre and post NA#
+##################################################################################
 #remove rows that have more than two consecutive NAs
 const_com_revised <- const_com_LACO[-c(4,20,21,25,26,43,47,49,62,68,70,130,137,159,183,194,211,213,214,226,228,236,240,243,246,254),]
 
