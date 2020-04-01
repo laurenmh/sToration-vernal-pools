@@ -106,8 +106,10 @@ model{
     survival_LACO ~ normal(0,1);
 }"
 
-#run the model with simulated data
+#construct a stan model
 BH_model <- stan_model(model_code = BH_model_block)
+
+#run the model with SIMULATED data
 BH_fit <- sampling(BH_model,
                    data = list(n_pools = sim_n_pools,
                                n_years = sim_n_years,
@@ -115,6 +117,18 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sim_obs_EG,
                                obs_ERVA = sim_obs_ERVA,
                                obs_NF = sim_obs_NF), 
+                   iter= 1000)
+
+##Run the model with REAL data ##see data prep file before proceeding
+##Flag: we need to adjust the first year binomial term, because there were 4 kinds of seeding treatment by 2001. 
+##The max number of LACOdens in 2001 is 400.
+BH_fit <- sampling(BH_model,
+                   data = list(n_pools = n_pools,
+                               n_years = n_years,
+                               obs_LACO = LACOdens,
+                               obs_EG = sumEGdens,
+                               obs_ERVA = ERVAdens,
+                               obs_NF = sumNFdens), 
                    iter= 1000)
 
 #check if there is enough iteration
@@ -147,14 +161,3 @@ mean_alpha_LACO <- summary(BH_fit, pars = c("alpha_LACO"))$summary[,"mean"]
 
 plot(mean_lambda, mean_alpha_LACO)
 
-##Run with real data ##see data prep file
-##We need to adjust the first year binomial term, because there were 4 kinds of seeding treatment by 2001. 
-##The max number of LACOdens in 2001 is 400.
-BH_fit <- sampling(BH_model,
-                   data = list(n_pools = n_pools,
-                               n_years = n_years,
-                               obs_LACO = LACOdens,
-                               obs_EG = sumEGdens,
-                               obs_ERVA = ERVAdens,
-                               obs_NF = sumNFdens), 
-                   iter= 1000)
