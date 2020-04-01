@@ -100,7 +100,7 @@ model{
             obs_LACO[a,b] ~ binomial(seeds_added[a,b], germ_LACO); //the first year's obs_LACO is the initial germination of seeds added in 1999
         }
         for(b in 2:3){
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma) + binomial(seed_added[a,b], germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
         for(b in 3:(n_years-1)){
             obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
@@ -114,6 +114,10 @@ model{
     sigma ~ normal(0,0.01);
     survival_LACO ~ normal(0,1);
 }"
+
+
+#placeholder: obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma) + binomial(seed_added[a,b], germ_LACO); 
+
 
 BH_model <- stan_model(model_code = BH_model_block)
 
