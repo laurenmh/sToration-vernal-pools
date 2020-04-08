@@ -140,7 +140,7 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sumEGdens,
                                obs_ERVA = ERVAdens,
                                obs_NF = sumNFdens,
-                               seeds_added = seedtrt), 
+                               seeds_added = seedtrt[,4:6]), 
                    iter= 1000)
 
 #check if there is enough iteration
