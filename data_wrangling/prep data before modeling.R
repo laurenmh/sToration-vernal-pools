@@ -13,6 +13,8 @@
 source("data_compiling/compile_composition.R")
 #View(const_com)
 
+library(tidyverse)
+
 ########################################
 #How many pools have complete data?#
 ########################################
@@ -62,7 +64,7 @@ sumNFdens <- const_com_subset %>%
 #6a. create a matrix of seeds added each year
 seedtrt <- const_com_subset %>%
   select(Pool, Treatment.1999, Treatment.2000) %>%
-  unique(seedtrt$Pool, incomparables = FALSE) %>%
+  unique(const_com_subset$Pool, incomparables = FALSE) %>%
   mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
   mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
   mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
