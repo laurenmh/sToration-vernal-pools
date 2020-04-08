@@ -165,5 +165,5 @@ seedtrt <- const_com_nafilled %>%
   unique(seedtrt$Pool, incomparables = FALSE) %>%
   mutate(Y1 = ifelse(Treatment.1999 == "Control", 100, 100)) %>%
   mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
-  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0)) %>%
-  select(-c(Pool, Treatment.1999, Treatment.2000))
+  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0)) 
+
