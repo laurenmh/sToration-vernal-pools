@@ -5,7 +5,7 @@ source("data_compiling/compile_constructed_depth.R")
 source("data_compiling/compile_reference_depth.R")
 
 require(dplyr)
-# graph consted abundance of ERVA
+# graph consted abundance of LACO 
 
 ggplot(const_com, aes(x = Year, y = LACOdens,group=Size,col=Size)) + geom_smooth() +
   facet_wrap(~Treatment.1999,nrow=2)
