@@ -1,4 +1,4 @@
-# Model LACO with storage effect and environmental fluctuations 
+# Model LACO stem counts with storage effect and environmental fluctuations 
 # Multiple year seeding addition included
 
 # load packages
@@ -24,9 +24,9 @@ sim_a3 <- as.vector(rbeta(sim_n_years, 1, 5))
 sim_lambda <- as.vector(rpois(sim_n_years, 40))
 
 sim_seedtrt <- matrix(nrow = sim_n_pools, ncol = 3)
-sim_seedtrt[,1] <- sample(c(0,200,100,100,100), sim_n_pools, replace = TRUE)
-sim_seedtrt[,2] <- sample(c(0,0,200,100,100), sim_n_pools, replace = TRUE)
-sim_seedtrt[,3] <- sample(c(0,0,0,0,200), sim_n_pools, replace = TRUE)
+sim_seedtrt[,1] <- sample(c(100,100,100,100,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,2] <- sample(c(0,0,100,100,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,3] <- sample(c(0,0,0,0,100), sim_n_pools, replace = TRUE)
 
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
@@ -70,6 +70,7 @@ data{
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
     int seeds_added [n_pools, 3]; // number of seeds added in 1999-2001
+    real germ_LACO; // germination rate of LACO
 }
 parameters{
     vector<lower = 0>[n_years-1] lambda; // max growth rate of LACO in absence of competition
@@ -77,7 +78,6 @@ parameters{
     vector<lower = 0, upper = 1>[n_years-1] alpha_EG; // competition term for LACO-exotic grass
     vector<lower = 0, upper = 1>[n_years-1] alpha_ERVA;// competition term for LACO-ERVA
     vector<lower = 0, upper = 1>[n_years-1] alpha_NF; // competition term for LACO-non-native forb
-    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO 
     real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
     real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
 }
@@ -90,7 +90,7 @@ transformed parameters{
         for(j in 2:(n_years-1)){
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // Beverton Holt model
+            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
     }
 }
@@ -113,7 +113,6 @@ model{
     alpha_NF ~ normal(0,1);
     sigma ~ normal(0,0.01);
     survival_LACO ~ normal(0,1);
-    germ_LACO ~ normal(0,1);
 }"
 
 
@@ -130,7 +129,8 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sim_obs_EG,
                                obs_ERVA = sim_obs_ERVA,
                                obs_NF = sim_obs_NF,
-                               seeds_added = sim_seedtrt), 
+                               seeds_added = sim_seedtrt,
+                               germ_LACO = 0.7), 
                    iter= 1000)
 
 ##Run with real data ##see data prep file before running this
@@ -141,7 +141,8 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sumEGdens,
                                obs_ERVA = ERVAdens,
                                obs_NF = sumNFdens,
-                               seeds_added = seedtrt[,4:6]), 
+                               seeds_added = seedtrt[,4:6],
+                               germ_LACO = 0.7), 
                    iter= 1000)
 
 #check if there is enough iteration
@@ -158,6 +159,8 @@ plot(BH_fit, pars = c("alpha_LACO"))
 
 #are the parameters correlated?
 list_of_draws <- extract(BH_fit) #extract the list of draws
+#if tidyr is interfering with extract(), run this line of code: 
+#.rs.unloadPackage("tidyr")
 print(names(list_of_draws)) #see the names of parameters
 head(list_of_draws$lambda) #see the first 6 draws of lambda
 
