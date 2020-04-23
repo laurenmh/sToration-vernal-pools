@@ -1,23 +1,23 @@
-#Prep the data to fit it in the model
-#1a. subset complete data
-#1b. fill in the missing data
-#2. count the number of pools 
-#3. count the number of years
-#4. sum frequency data
-#5. spread the dataset
-#6. create a matrix of seeds added each year
+# This file preps the data to fit it in the model
+# Here is the outline of two options:
+##1a. subset complete data
+##1b. fill in the missing data
+##2. count the number of pools 
+##3. count the number of years
+##4. sum frequency data
+##5. spread the dataset
+##6. create a matrix of seeds added each year
 
-#set data pathway!
+# Remember to set your data pathway!
 
-#load data
+# Load data and package
 source("data_compiling/compile_composition.R")
-#View(const_com)
-
+# View(const_com)
 library(tidyverse)
 
-########################################
+####################################
 #How many pools have complete data?#
-########################################
+####################################
 const_com_LACO <- const_com %>%
   select(Year, Pool, LACOdens) %>%
   spread(key = Year, value = LACOdens)
