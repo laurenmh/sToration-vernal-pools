@@ -158,7 +158,7 @@ summary(BH_fit)$summary[,"Rhat"]
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
 
 # Zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_LACO"))
+plot(BH_fit, pars = c("lambda"))
 
 # Are the parameters correlated?
 list_of_draws <- extract(BH_fit) #extract the list of draws
