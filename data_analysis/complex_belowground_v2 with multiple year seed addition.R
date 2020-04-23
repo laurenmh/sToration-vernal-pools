@@ -6,7 +6,8 @@ library(dplyr)
 library(rstan)
 library(StanHeaders)
 
-# simulated data
+### CREATE SIMULATED DATA ###
+
 sim_n_pools <- 256 #number of pools
 sim_n_years <- 10 #years of data
 
@@ -43,8 +44,8 @@ bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
   return(sim_obs_LACO)
 }
 
-#list "true" lambda and alpha parameter values here. start with constant parameters. 
-#check that the model estimates parameters close to these values.
+# List "true" lambda and alpha parameter values here. Start with constant parameters. 
+# After running the model, check that the model outputs are close to these values.
 sim_obs_LACO <- bh.sim(n_pools = sim_n_pools,
                        init = 100,
                        EG = sim_obs_EG,
@@ -58,9 +59,10 @@ sim_obs_LACO <- bh.sim(n_pools = sim_n_pools,
                        s = 0.5,
                        g = 0.7)
 
-hist(sim_obs_LACO)
+hist(sim_obs_LACO) # Check distribution of simulated LACO
 
-# Stan model
+### CREATE A STAN MODEL ###
+
 BH_model_block <- "
 data{
     int n_pools; // number of pools
@@ -115,13 +117,11 @@ model{
     survival_LACO ~ normal(0,1);
 }"
 
-
-#placeholder: obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma) + binomial(seed_added[a,b], germ_LACO); 
-
-
 BH_model <- stan_model(model_code = BH_model_block)
 
-#Run the model with simulated data
+### RUN THE MODEL ###
+
+## Option 1: run with simulated data
 BH_fit <- sampling(BH_model,
                    data = list(n_pools = sim_n_pools,
                                n_years = sim_n_years,
@@ -133,7 +133,8 @@ BH_fit <- sampling(BH_model,
                                germ_LACO = 0.7), 
                    iter= 1000)
 
-##Run with real data ##see data prep file before running this
+## Option 2: run with real data 
+## See data prep file before running this
 BH_fit <- sampling(BH_model,
                    data = list(n_pools = n_pools,
                                n_years = n_years,
@@ -145,25 +146,26 @@ BH_fit <- sampling(BH_model,
                                germ_LACO = 0.7), 
                    iter= 1000)
 
-#check if there is enough iteration
+### EXTRACT MODEL OUTPUT ###
+
+# Check there is enough iteration
 stan_trace(BH_fit, pars = c("lambda"))
 
-#extract R hat (value greater than 1.1 means inadequate MCMC convergence)
+# Extract R hat (value greater than 1.1 means inadequate MCMC convergence)
 summary(BH_fit)$summary[,"Rhat"]
 
-#mean posterior estimates of parameters
+# Mean posterior estimates of parameters
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
 
-#zoom into posterior distribution of parameters
+# Zoom into posterior distribution of parameters
 plot(BH_fit, pars = c("alpha_LACO"))
 
-#are the parameters correlated?
+# Are the parameters correlated?
 list_of_draws <- extract(BH_fit) #extract the list of draws
 #if tidyr is interfering with extract(), run this line of code: 
 #.rs.unloadPackage("tidyr")
 print(names(list_of_draws)) #see the names of parameters
 head(list_of_draws$lambda) #see the first 6 draws of lambda
-
 lambda_draws <- list_of_draws$lambda
 alpha_LACO_draws <- list_of_draws$alpha_LACO
 
@@ -174,6 +176,6 @@ plot(lambda_draws[,4], alpha_LACO_draws[,4]) #lambda vs alpha_LACO at time 3
 
 mean_lambda <- summary(BH_fit, pars = c("lambda"))$summary[,"mean"]
 mean_alpha_LACO <- summary(BH_fit, pars = c("alpha_LACO"))$summary[,"mean"]
-
 plot(mean_lambda, mean_alpha_LACO)
+
 
