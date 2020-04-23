@@ -1,17 +1,12 @@
 # Run complex_belowground_v2 with multiple year seeding addition
+# Question:
+## How does the environment, namely inundation, change LACO growth rate and competition interactions?
 # Outline:
-# I. How does the trajectory of reference populations compare to constructed populations?
-# II. How does the environment namely inundation change LACO growth rate and competition interactions?
-# III. Does lambda provide a better relationship between reference and constructed than abundance of LACO?
-
+## I. Inundation vs. lambda
+## II. Inundation vs. alpha
 library(ggplot2)
 
-### I. TRAJECTORIES ###
-
-#1. Extract 
-
-
-### II. INUNDATION VS. LAMBDA ###
+### I. INUNDATION VS. LAMBDA ###
 
 #1.Extract lambda values from the model
 
@@ -90,4 +85,4 @@ ggplot(lambda_depth, aes(x = pred_max_depth, y = lambda)) +
 
 summary(lm(pred_max_depth ~ lambda, lambda_depth)) 
 
-### III. LAMBDA VS. ABUNDANCE ###
+### II. INUNDATION VS. ALPHA ###
