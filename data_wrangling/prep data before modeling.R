@@ -73,18 +73,15 @@ seedtrt <- const_com_subset %>%
 ##################################################################################  
 #1b. ALTERNATIVELY, replace missing values with the mean value of pre and post NA#
 ##################################################################################
-#Remove NAs in ERVAdens column
-const_com_completeveg <- const_com[!is.na(const_com$ERVAdens),]
 
-#Make a matrix of LACO
-const_com_LACO_matrix <- const_com_completeveg %>%
-  select(Year, Pool, LACOdens) %>%
-  spread(key = Year, value = LACOdens)
+#remove rows that have more than two NA repeats
+const_com_revised <- const_com_LACO[-c(2,18,32,96,101,113,142,156,158,159,176,178,190),]
 
-#remove rows that have more than two consecutive NAs
-const_com_revised <- const_com_LACO_matrix[-c(4,20,21,25,26,43,47,49,62,68,70,130,137,159,183,194,211,213,214,226,228,236,240,243,246,254),]
-
+#correct rows that have zeros in 2007 and the population remains zero for the rest of the timeseries
+const_com_revised$`2007` <- ifelse(const_com_revised$Pool %in% c(319,320,324,348,361,367,369,482,525,527,542,545), 0, const_com_revised$`2007`)
+  
 #fill in NAs
+#We'll use 2001 data for 2000 and 2016 data for 2017, otherwise take the average of before and after
 const_com_revised$`2000` <- ifelse(is.na(const_com_revised$`2000`), const_com_revised$`2001`, const_com_revised$`2000`)
 const_com_revised$`2002` <- ifelse(is.na(const_com_revised$`2002`), as.integer((const_com_revised$`2001`+const_com_revised$`2003`)/2), const_com_revised$`2002`)
 const_com_revised$`2004` <- ifelse(is.na(const_com_revised$`2004`), as.integer((const_com_revised$`2003`+const_com_revised$`2005`)/2), const_com_revised$`2004`)
