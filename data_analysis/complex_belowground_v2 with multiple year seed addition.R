@@ -72,7 +72,6 @@ data{
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
     int seeds_added [n_pools, 3]; // number of seeds added in 1999-2001
-    real germ_LACO; // germination rate of LACO
 }
 parameters{
     vector<lower = 0>[n_years-1] lambda; // max growth rate of LACO in absence of competition
@@ -82,6 +81,7 @@ parameters{
     vector<lower = 0, upper = 1>[n_years-1] alpha_NF; // competition term for LACO-non-native forb
     real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
     real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
+    real <lower = 0, upper = 1> germ_LACO; // germination rate of LACO
 }
 transformed parameters{
     matrix [n_pools, n_years-1] mu_LACO;// expected value of LACO at time t
