@@ -9,8 +9,8 @@ library(StanHeaders)
 
 ### CREATE SIMULATED DATA ###
 
-sim_n_pools <- 256 #number of pools
-sim_n_years <- 10 #years of data
+sim_n_pools <- 152 #number of pools
+sim_n_years <- 7 #years of data
 
 set.seed(124) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 100), ncol=sim_n_years) #simulate poisson distributed observed EG density with mean of 100
@@ -26,9 +26,9 @@ sim_a3 <- as.vector(rbeta(sim_n_years, 1, 5))
 sim_lambda <- as.vector(rpois(sim_n_years, 40))
 
 sim_seedtrt <- matrix(nrow = sim_n_pools, ncol = 3)
-sim_seedtrt[,1] <- sample(c(100,100,100,100,100), sim_n_pools, replace = TRUE)
-sim_seedtrt[,2] <- sample(c(0,0,100,100,100), sim_n_pools, replace = TRUE)
-sim_seedtrt[,3] <- sample(c(0,0,0,0,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,1] <- sample(c(100,100,100,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,2] <- sample(c(0,100,100,100), sim_n_pools, replace = TRUE)
+sim_seedtrt[,3] <- sample(c(0,0,0,100), sim_n_pools, replace = TRUE)
 
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
@@ -91,7 +91,12 @@ transformed parameters{
         for(j in 1:1){
             mu_LACO[i,j] = 100;
         }
-        for(j in 2:(n_years-1)){
+        for(j in 2:2){
+            mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
+            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
+        }
+        for(j in 3:(n_years-1)){
         if (obs_LACO[i,j-1] > 0)
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
@@ -100,7 +105,7 @@ transformed parameters{
             mu_LACO[i,j] = ((obs_LACO[i,j-2] * lambda[j-2] * lambda[j-1]) ./ 
             (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) + 
             (survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] * lambda[j-1]) ./ germ_LACO) ./
-            (1 + (alpha_LACO[j-1] * obs_LACO[i,j-2] * lambda[i,j-2]) ./ 
+            (1 + (alpha_LACO[j-1] * obs_LACO[i,j-2] * lambda[j-2]) ./ 
             (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
             (survival_LACO * (1-germ_LACO) * obs_LACO[i, j-2] * alpha_LACO[j-2]) ./ germ_LACO + 
             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
@@ -142,8 +147,7 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sim_obs_EG,
                                obs_ERVA = sim_obs_ERVA,
                                obs_NF = sim_obs_NF,
-                               seeds_added = sim_seedtrt,
-                               germ_LACO = 0.7), 
+                               seeds_added = sim_seedtrt), 
                    iter= 1000)
 
 ## Option 2: run with real data 
@@ -155,8 +159,7 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sumEGdens,
                                obs_ERVA = ERVAdens,
                                obs_NF = sumNFdens,
-                               seeds_added = seedtrt[,4:6],
-                               germ_LACO = 0.7), 
+                               seeds_added = seedtrt[,4:6]), 
                    iter= 1000)
 
 ### EXTRACT MODEL OUTPUT ###

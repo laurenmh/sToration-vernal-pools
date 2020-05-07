@@ -1,7 +1,8 @@
 # This file preps the data to fit it in the model
-# Here is the outline of two options:
-##1a. subset complete data
-##1b. fill in the missing data
+# Outline of 3 options:
+##1a. subset complete data 2000-2017 - we'll use this to plot timeseries of real observed data
+##1b. subset complete data 2000-2006 - we'll use this to parameterize the model
+##1c. fill in the missing data - we may also use this to plot timeseries of real observed data
 ##2. count the number of pools 
 ##3. count the number of years
 ##4. sum frequency data
@@ -21,7 +22,7 @@ library(tidyverse)
 const_com_LACO <- const_com %>%
   filter(Treatment.1999 != "Control") %>% #remove control plots
   select(Year, Pool, LACOdens) %>%
-  spread(key = Year, value = LACOdens) #191 pools with seeding treatment
+  spread(key = Year, value = LACOdens) #191 pools with seeding treatment #lots of missing data in 2007
 const_com_noNA <- const_com_LACO[complete.cases(const_com_LACO),] #only 72 pools have complete data
 
 #1a. subset the complete data
@@ -33,7 +34,7 @@ n_pools <- length(unique(const_com_subset$Pool))
 #3a. count the number of years
 n_years <- length(unique(const_com_subset$Year))
 
-#4a. convert frequency to abundance data
+#4a. sum frequency data
 #We'll use observed abundance data for LACO and ERVA.
 #We'll sum the percent cover of species in each group 
 
@@ -70,17 +71,68 @@ seedtrt <- const_com_subset %>%
   mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
   mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
 
-##################################################################################  
-#1b. ALTERNATIVELY, replace missing values with the mean value of pre and post NA#
-##################################################################################
+########################################## 
+#Subset complete LACO data from 2000-2006#
+##########################################
+#1b. subset complete LACO data 2000-2006
+const_com_LACO_short <- const_com_LACO %>%
+  select(Pool, `2000`, `2001`, `2002`, `2003`, `2004`, `2005`, `2006`) 
+const_com_noNA_short <- const_com_LACO_short[complete.cases(const_com_LACO_short),] #152 pools 
 
-#remove rows that have more than two NA repeats
+const_com_short <- inner_join(const_com, const_com_noNA_short, by.y = "Pool") %>%
+  filter(Year %in% c(2000, 2001, 2002, 2003, 2004, 2005, 2006))
+
+#2b. count the number of pools
+n_pools <- length(unique(const_com_short$Pool))
+
+#3b. count the number of years
+n_years <- length(unique(const_com_short$Year))
+
+#4b. sum frequency data
+#Exotic grass (EG) group contains BRHO, HOMA, and LOMU:
+const_com_short$sum_EG <- rowSums(cbind(const_com_short$BRHO, const_com_short$HOMA, const_com_short$LOMU))
+
+#Native forb (NF) group contains PLST and DOCO:
+const_com_short$sum_NF <- rowSums(cbind(const_com_short$PLST, const_com_short$DOCO))
+
+#5b. spread the dataset
+#each matrix should have a [n_pools x n_years] dimension
+LACOdens <- const_com_short %>%
+  select(Year, Pool, LACOdens) %>%
+  spread(key = Year, value = LACOdens) %>%
+  select(-Pool)
+ERVAdens <- const_com_short %>%
+  select(Year, Pool, ERVAdens) %>%
+  spread(key = Year, value = ERVAdens) %>%
+  select(-Pool)
+sumEGdens <- const_com_short %>%
+  select(Year, Pool, sum_EG) %>%
+  spread(key = Year, value = sum_EG) %>%
+  select(-Pool)
+sumNFdens <- const_com_short %>%
+  select(Year, Pool, sum_NF) %>%
+  spread(key = Year, value = sum_NF) %>%
+  select(-Pool)
+
+#6b. create a matrix of seeds added each year
+seedtrt <- const_com_short %>%
+  select(Pool, Treatment.1999, Treatment.2000) %>%
+  unique(const_com_short$Pool, incomparables = FALSE) %>%
+  mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
+  mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
+  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
+
+############################################################################## 
+#Rreplace missing values with the mean value of pre and post NA#
+##############################################################################
+
+#remove rows that have more than two consecutive NAs 
 const_com_revised <- const_com_LACO[-c(2,18,32,96,101,113,142,156,158,159,176,178,190),]
 
-#correct rows that have zeros in 2007 and the population remains zero for the rest of the timeseries
+#fill in NA in 2007 with zeros if the population remains zero for the rest of the timeseries
 const_com_revised$`2007` <- ifelse(const_com_revised$Pool %in% c(319,320,324,348,361,367,369,482,525,527,542,545), 0, const_com_revised$`2007`)
   
-#fill in NAs
+#1c.fill in the rest of NAs with the mean value of before and after NAs
 #We'll use 2001 data for 2000 and 2016 data for 2017, otherwise take the average of before and after
 const_com_revised$`2000` <- ifelse(is.na(const_com_revised$`2000`), const_com_revised$`2001`, const_com_revised$`2000`)
 const_com_revised$`2002` <- ifelse(is.na(const_com_revised$`2002`), as.integer((const_com_revised$`2001`+const_com_revised$`2003`)/2), const_com_revised$`2002`)
@@ -94,26 +146,22 @@ const_com_revised$`2017` <- ifelse(is.na(const_com_revised$`2017`), const_com_re
 #rearrange the table
 const_com_revised <- const_com_revised %>%
   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,`2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = "Year", value = "LACOdens")
-
 const_com_nafilled <- left_join(const_com_revised, const_com_completeveg, by = c("Pool", "Year"))
 
-#2b. count the number of pools
+#2c. count the number of pools
 n_pools <- length(unique(const_com_nafilled$Pool))
 
-#3b. count the number of years
+#3c. count the number of years
 n_years <- length(unique(const_com_nafilled$Year))
 
-#4b. convert frequency to abundance data
-#We'll use observed abundance data for LACO and ERVA.
-#We'll sum the percent cover of species in each group 
-
+#4c. sum frequency data
 #Exotic grass (EG) group contains BRHO, HOMA, and LOMU:
 const_com_nafilled$sum_EG <- rowSums(cbind(const_com_nafilled$BRHO, const_com_nafilled$HOMA, const_com_nafilled$LOMU))
 
 #Native forb (NF) group contains PLST and DOCO:
 const_com_nafilled$sum_NF <- rowSums(cbind(const_com_nafilled$PLST, const_com_nafilled$DOCO))
 
-#5b. spread the dataset
+#5c. spread the dataset
 #each matrix should have a [n_pools x n_years] dimension
 LACOdens <- const_com_nafilled %>%
   select(Year, Pool, LACOdens.x) %>%
@@ -156,7 +204,7 @@ sumNFdens$`2013` <- ifelse(is.na(sumNFdens$`2013`), floor((sumNFdens$`2012`+sumN
 sumNFdens$`2016` <- ifelse(is.na(sumNFdens$`2016`), floor((sumNFdens$`2015`+sumNFdens$`2017`)/2), sumNFdens$`2016`)
 sumNFdens$`2017` <- ifelse(is.na(sumNFdens$`2017`), sumNFdens$`2016`, sumNFdens$`2017`)
 
-#6b. create a matrix of seeds added each year
+#6c. create a matrix of seeds added each year
 seedtrt <- const_com_nafilled %>%
   select(Pool, Treatment.1999, Treatment.2000) %>%
   na.omit(seedtrt$Treatment.1999) %>%
