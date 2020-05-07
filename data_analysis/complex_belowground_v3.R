@@ -45,7 +45,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
       sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] + seedtrt[i,j] * g))
     }
     for(j in 4:ncol(sim_mu)){
-      if (sim_obs_LACO[i,j] > 0){
+      if (sim_obs_LACO[i,j-1] > 0){
         sim_mu[i,j] <- sim_obs_LACO[i,j-1]*lambda[j-1]/(1+sim_obs_LACO[i,j-1]*aii[j-1]+EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1])+s*(1-g)*sim_obs_LACO[i,j-1]/g
       }
       else {
@@ -55,7 +55,6 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
              s*(1-g)*sim_obs_LACO[i,j-2]*aii[j-2]/g + EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1]) +
           ((s*(1-g)*sim_obs_LACO[i,j-2]*lambda[j-2])+(s^2*(1-g)^2*sim_obs_LACO[i,j-2]/g)/g)
       }
-      sim_mu[i,j] <- sim_obs_LACO[i,j-1]*lambda[j-1]/(1+sim_obs_LACO[i,j-1]*aii[j-1]+EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1])+s*(1-g)*sim_obs_LACO[i,j-1]/g
       sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j])
     }
   }
@@ -182,3 +181,27 @@ BH_fit <- sampling(BH_model,
 
 # Check there is enough iteration
 stan_trace(BH_fit, pars = c("lambda"))
+
+# extract mean estimates 
+alpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
+alpha_EG_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
+alpha_ERVA_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_ERVA")))
+alpha_NF_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_NF")))
+lambda_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
+s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
+g_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("germ_LACO")))
+
+### COMPARE OBSERVED AND PREDICTED LACO ###
+predicted_LACO <- bh.sim(n_pools = n_pools,
+                       seedtrt = seedtrt[,4:6],
+                       EG = sumEGdens,
+                       ERVA = ERVAdens,
+                       NF = sumNFdens,
+                       aii = alpha_LACO_mean,
+                       a1 = alpha_EG_mean,
+                       a2 = alpha_ERVA_mean, 
+                       a3 = alpha_NF_mean,
+                       lambda = lambda_mean,
+                       s = s_mean,
+                       g = g_mean)
+#plot LACOdens vs predicted_LACO
