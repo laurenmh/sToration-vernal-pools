@@ -34,13 +34,29 @@ sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years)
 
 #fix this simulation to include seeding treatments and seedbank
-bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
-  sim_obs_LACO[,1]<- rbinom(n_pools,100,0.8)
-  sim_mu[,1]<- init
-  for(i in 1:nrow(sim_obs_LACO)){
-    for(j in 2:ncol(sim_obs_LACO)){
-      sim_mu[i,j] <- lambda[j-1]*sim_obs_LACO[i,j-1]/(1+sim_obs_LACO[i,j-1]*aii[j-1]+EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1])+s*(1-g)*sim_obs_LACO[i,j-1]/g
-      sim_obs_LACO[i,j] <- rpois(1, lambda=sim_mu[i,j])
+bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
+  for(i in 1:nrow(sim_mu)){
+    for(j in 1:1){
+      sim_mu[i,j] <- 100
+      sim_obs_LACO[i,j] <- rbinom(1,100,g)
+    }
+    for(j in 2:3){
+      sim_mu[i,j] <- sim_obs_LACO[i,j-1]*lambda[j-1]/(1+sim_obs_LACO[i,j-1]*aii[j-1]+EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1])+s*(1-g)*sim_obs_LACO[i,j-1]/g
+      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] + seedtrt[i,j] * g))
+    }
+    for(j in 4:ncol(sim_mu)){
+      if (sim_obs_LACO[i,j] > 0){
+        sim_mu[i,j] <- sim_obs_LACO[i,j-1]*lambda[j-1]/(1+sim_obs_LACO[i,j-1]*aii[j-1]+EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1])+s*(1-g)*sim_obs_LACO[i,j-1]/g
+      }
+      else {
+        sim_mu[i,j] <- (sim_obs_LACO[i,j-2]*lambda[j-2]*lambda[j-1]/(1+aii[i,j-2]*sim_obs_LACO[i,j-2]+EG[i,j-2]*a1[j-2]+ERVA[i,j-2]*a2[j-2]+NF[i,j-2]*a3[j-2])+
+                          (s*(1-g)*sim_obs_LACO[i,j-2]*lambda[j-1])/g)/
+          (1+(aii[j-1]*sim_obs_LACO[i,j-2]*lambda[j-2])/(1+aii[i,j-2]*sim_obs_LACO[i,j-2]+EG[i,j-2]*a1[j-2]+ERVA[i,j-2]*a2[j-2]+NF[i,j-2]*a3[j-2])+
+             s*(1-g)*sim_obs_LACO[i,j-2]*aii[j-2]/g + EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1]) +
+          ((s*(1-g)*sim_obs_LACO[i,j-2]*lambda[j-2])+(s^2*(1-g)^2*sim_obs_LACO[i,j-2]/g)/g)
+      }
+      sim_mu[i,j] <- sim_obs_LACO[i,j-1]*lambda[j-1]/(1+sim_obs_LACO[i,j-1]*aii[j-1]+EG[i,j-1]*a1[j-1]+ERVA[i,j-1]*a2[j-1]+NF[i,j-1]*a3[j-1])+s*(1-g)*sim_obs_LACO[i,j-1]/g
+      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j])
     }
   }
   return(sim_obs_LACO)
@@ -49,7 +65,7 @@ bh.sim <- function(n_pools, init, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
 # List "true" lambda and alpha parameter values here. Start with constant parameters. 
 # After running the model, check that the model outputs are close to these values.
 sim_obs_LACO <- bh.sim(n_pools = sim_n_pools,
-                       init = 100,
+                       seedtrt = sim_seedtrt,
                        EG = sim_obs_EG,
                        ERVA = sim_obs_ERVA,
                        NF = sim_obs_NF,
@@ -103,10 +119,10 @@ transformed parameters{
             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         else
             mu_LACO[i,j] = ((obs_LACO[i,j-2] * lambda[j-2] * lambda[j-1]) ./ 
-            (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) + 
+            (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) + 
             (survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] * lambda[j-1]) ./ germ_LACO) ./
             (1 + (alpha_LACO[j-1] * obs_LACO[i,j-2] * lambda[j-2]) ./ 
-            (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+            (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
             (survival_LACO * (1-germ_LACO) * obs_LACO[i, j-2] * alpha_LACO[j-2]) ./ germ_LACO + 
             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
             ((survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] * lambda[j-2]) + 
