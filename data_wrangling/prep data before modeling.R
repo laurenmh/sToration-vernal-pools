@@ -19,7 +19,7 @@ library(tidyverse)
 # Remove control plots and organize by year, pool, and LACOdens
 const_com_LACO <- const_com %>%
   filter(Treatment.1999 != "Control") %>% #remove control plots
-  select(Year, Pool, LACOdens) %>%
+  select(Year, Pool, LACOdens, Size) %>%
   spread(key = Year, value = LACOdens) #191 pools with seeding treatment #lots of missing data in 2007
 
 #############################################

@@ -6,19 +6,48 @@
 ## II. Inundation vs. alpha
 library(ggplot2)
 
+se<-function(x){
+  sd(x)/sqrt(length(x))
+} # this is a function for calculating standard error
+
+#Does the pond size matter?
+#-> what do the timeseries of LACO look like by pond size?
+ggplot(const_com, aes(x = Year, y = log(LACOdens), col = Size)) +
+  geom_jitter() #no obvious difference of and LACO counts among pond sizes
+summary_LACO_size <- const_com %>%
+  drop_na() %>%
+  group_by(Year, Size) %>%
+  summarise(mean_LACO = mean(LACOdens),
+            se_LACO = se(LACOdens))
+ggplot(summary_LACO_size, aes(x = Year, col = Size)) +
+  geom_point(aes(y = mean_LACO))+
+  geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1)
+
+#Are relative growth rates of LACO responding similarly to env fluctuations across all pond sizes?
+#-> what do the timeseries of relative growth rates look like by pond size?
+relative_GR <- const_com_noNA %>%
+  group_by(Pool, Size) %>%
+  summarize('2001' = `2001`/`2000`,
+            '2002' = `2002`/`2001`,
+            '2003' = `2003`/`2002`,
+            '2004' = `2004`/`2003`,
+            '2005' = `2005`/`2004`,
+            '2006' = `2006`/`2005`,
+            '2007' = `2007`/`2006`,
+            '2008' = `2008`/`2007`)
+long_relative_GR <- relative_GR %>% gather(`2001`, `2002`, `2003`, `2003`, `2004`, `2005`, `2006`, `2007`, `2008`, key = Year, value = GR)
+ggplot(long_relative_GR, aes(x = Year, y = log(GR), col = Size)) +
+  geom_jitter() #no difference in LACO growth rates among pond sizes
+
 ### I. INUNDATION VS. LAMBDA ###
 
 #1.Extract lambda values from the model
 
 # Run the model first
-se<-function(x){
-  sd(x)/sqrt(length(x))
-} # this is a function for calculating standard error
-
 lambda_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
 
 lambda_gather <- lambda_data %>%
-  mutate(Year = c(2001:2017)) %>%
+  mutate(Year = c(2001:2006)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = lambda)
   
