@@ -260,6 +260,14 @@ join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time"))
 
 summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.111
 ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
-  geom_point() 
+  geom_point()+
+  annotate("text", label = "R^2 = 0.111", x = 3000, y = 1500)
 
+#plot timeseries of LACOdens and predicted_LACO ####FIX THIS
+long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
+ggplot(long_join_real, aes(x = time, y = LACO, color = type)) +
+  geom_jitter() +
+  labs(y = "LACO count") +
+  scale_color_discrete(breaks = c("predicted_LACO", "observed_LACO"),
+                       labels = c("predicted", "observed"))
 
