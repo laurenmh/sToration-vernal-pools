@@ -192,16 +192,74 @@ s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
 g_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("germ_LACO")))
 
 ### COMPARE OBSERVED AND PREDICTED LACO ###
+library(tidyr)
+library(ggplot2)
+
+#Option 1: use simulated data
+#make a table of predicted LACO from estimated parameters
+predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
+                         seedtrt = sim_seedtrt,
+                         EG = sim_obs_EG,
+                         ERVA = sim_obs_ERVA,
+                         NF = sim_obs_NF,
+                         aii = alpha_LACO_mean[,5],
+                         a1 = alpha_EG_mean[,5],
+                         a2 = alpha_ERVA_mean[,5], 
+                         a3 = alpha_NF_mean[,5],
+                         lambda = lambda_mean[,5],
+                         s = s_mean[,5],
+                         g = g_mean[,5])
+
+#plot simulated LACOdens vs predicted_LACO_sim to check model fit
+colnames(predicted_LACO_sim) <- c(1:7)
+predicted_LACO_sim <- as.data.frame(predicted_LACO_sim) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, key = time, value = predicted_LACO)
+colnames(sim_obs_LACO) <- c(1:7)
+sim_obs_LACO <- as.data.frame(sim_obs_LACO) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, key = time, value = sim_LACO)
+join_sim_LACO <- left_join(predicted_LACO_sim, sim_obs_LACO, by = c("Pool", "time"))
+
+summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.875
+ggplot(join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
+  geom_point() +
+  annotate("text", label = "R^2 = 0.875", x = 50, y = 150)#looks like a good fit
+
+#plot timeseries of simulated LACOdens and predicted_LACO_sim
+long_join_sim <- join_sim_LACO %>% gather(`predicted_LACO`, `sim_LACO`, key = type, value = LACO)
+ggplot(long_join_sim, aes(x = time, y = LACO, color = type)) +
+  geom_jitter() +
+  labs(y = "LACO count") +
+  scale_color_discrete(breaks = c("predicted_LACO", "sim_LACO"),
+                       labels = c("predicted", "simulated"))
+
+#Option 2: use real data
 predicted_LACO <- bh.sim(n_pools = n_pools,
-                       seedtrt = seedtrt[,4:6],
-                       EG = sumEGdens,
-                       ERVA = ERVAdens,
-                       NF = sumNFdens,
-                       aii = alpha_LACO_mean,
-                       a1 = alpha_EG_mean,
-                       a2 = alpha_ERVA_mean, 
-                       a3 = alpha_NF_mean,
-                       lambda = lambda_mean,
-                       s = s_mean,
-                       g = g_mean)
-#plot LACOdens vs predicted_LACO
+                      seedtrt = as.matrix(seedtrt[,4:6]),
+                      EG = as.matrix(sumEGdens),
+                      ERVA = as.matrix(ERVAdens),
+                      NF = as.matrix(sumNFdens),
+                      aii = alpha_LACO_mean[,5],
+                      a1 = alpha_EG_mean[,5],
+                      a2 = alpha_ERVA_mean[,5], 
+                      a3 = alpha_NF_mean[,5],
+                      lambda = lambda_mean[,5],
+                      s = s_mean[,5],
+                      g = g_mean[,5])
+
+#plot LACOdens vs predicted_LACO for modelfit
+colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006")
+predicted_LACO <- as.data.frame(predicted_LACO) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, key = time, value = predicted_LACO)
+obs_LACO <- LACOdens %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, key = time, value = observed_LACO)
+join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time"))
+
+summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.111
+ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
+  geom_point() 
+
+

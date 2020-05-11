@@ -16,13 +16,15 @@ source("data_compiling/compile_composition.R")
 # View(const_com)
 library(tidyverse)
 
-#############################################
-#How many pools have complete LACOdens data?#
-#############################################
+# Remove control plots and organize by year, pool, and LACOdens
 const_com_LACO <- const_com %>%
   filter(Treatment.1999 != "Control") %>% #remove control plots
   select(Year, Pool, LACOdens) %>%
   spread(key = Year, value = LACOdens) #191 pools with seeding treatment #lots of missing data in 2007
+
+#############################################
+#How many pools have complete LACOdens data?#
+#############################################
 const_com_noNA <- const_com_LACO[complete.cases(const_com_LACO),] #only 72 pools have complete data
 
 #1a. subset the complete data
