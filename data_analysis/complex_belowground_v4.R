@@ -2,6 +2,7 @@
 # Multiple year seeding addition
 # Recursive modeling of seedbank to account for years where aboveground LACO is zero but seedbank persists to next year
 # Germination rate of LACO depends on the previous year's exotic grass cover
+# Germination rate is now a constant input, not an output.
 
 # load packages
 library(dplyr)
@@ -9,6 +10,7 @@ library(rstan)
 library(StanHeaders)
 
 ### CREATE SIMULATED DATA ###
+
 sim_n_pools <- 152 #number of pools
 sim_n_years <- 7 #years of data
 
@@ -45,7 +47,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
       sim_obs_LACO[i,j] <- rbinom(1,100,g)
     }
     for(j in 2:3){
-      if (EG[i,j-1]> 80){
+      if (EG[i,j-1]> 100){
         g = glow
       }
       else{g = g}
@@ -56,7 +58,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
       sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] + seedtrt[i,j] * g))
     }
     for(j in 4:ncol(sim_mu)){
-      if (EG[i,j-1]> 80){
+      if (EG[i,j-1]> 100){
         g = glow
       }
       else{g = g}
@@ -107,8 +109,6 @@ data{
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
     int seeds_added [n_pools, 3]; // number of seeds added in 1999-2001
-    real germ_LACO; // germination rate of LACO in good years
-    real low_germ_LACO; // germination rate of LACO in bad years
 }
 parameters{
     vector<lower = 0>[n_years-1] lambda; // max growth rate of LACO in absence of competition
@@ -120,48 +120,55 @@ parameters{
     real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
 }
 transformed parameters{
-    matrix [n_pools, n_years-1] mu_LACO;// expected value of LACO at time t
+    matrix [n_pools, n_years-1] mu_LACO;// mean expected value of LACO at time t from a discrete BH model
+    matrix [n_pools, n_years-1] int_LACO;// intermediate matrix of LACO at time t-1 estimated from values at t-2
     for(i in 1:n_pools){  
         for(j in 1:1){
             mu_LACO[i,j] = 100;
         }
         for(j in 2:2){
-        if (EG[i,j-1]> 80)
-            germ_LACO = low_germ_LACO;
-        else 
-            germ_LACO = germ_LACO;
+            real germ_LACO;
+            if (obs_EG[i,j-1] > 100)
+                germ_LACO = 0.2;
+            else
+                germ_LACO = 0.7;
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
-            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
+                            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+                            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
         for(j in 3:(n_years-1)){
-        if (EG[i,j-1]> 80)
-            germ_LACO = low_germ_LACO;
-        else 
-            germ_LACO = germ_LACO;
-        if (obs_LACO[i,j-1] > 0)
-            mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
-            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
-        else
-            mu_LACO[i,j] = ((obs_LACO[i,j-2] * lambda[j-2] * lambda[j-1]) ./ 
-            (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) + 
-            (survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] * lambda[j-1]) ./ germ_LACO) ./
-            (1 + (alpha_LACO[j-1] * obs_LACO[i,j-2] * lambda[j-2]) ./ 
-            (1 + alpha_LACO[j-2] * obs_LACO[i,j-2] + obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
-            (survival_LACO * (1-germ_LACO) * obs_LACO[i, j-2] * alpha_LACO[j-2]) ./ germ_LACO + 
-            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-            ((survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] * lambda[j-2]) + 
-            (survival_LACO ^ 2 * (1-germ_LACO) ^ 2 * obs_LACO[i,j-2] ./ germ_LACO))./germ_LACO; // use t-2 pop data to model t pop
+            real germ_LACO;
+            if (obs_EG[i,j-1] > 100)
+                germ_LACO = 0.2;
+            else
+                germ_LACO = 0.7;
+            if (obs_LACO[i,j-1] > 0)
+                mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
+                            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+                            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
+            else
+                int_LACO[i,j-1] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
+                            obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
+                            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] ./ germ_LACO; // modified Beverton-Holt model
+                mu_LACO[i,j] = (int_LACO[i,j-1] * lambda[j-1])./(1 + int_LACO[i,j-1] * alpha_LACO[j-1] + 
+                            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+                            survival_LACO * (1-germ_LACO) * int_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
     }
 }
 model{
     for(a in 1:n_pools){
         for(b in 1:1){
+            real germ_LACO;
+            germ_LACO = 0.7;
             obs_LACO[a,b] ~ binomial(seeds_added[a,b], germ_LACO); //the first year's obs_LACO is the initial germination of seeds added in 1999
         }
         for(b in 2:3){
+            real germ_LACO;
+            if (obs_EG[a,b-1] > 100)
+                germ_LACO = 0.2;
+            else
+                germ_LACO = 0.7;
             obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
         for(b in 4:(n_years-1)){
