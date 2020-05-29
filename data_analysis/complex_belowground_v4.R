@@ -109,6 +109,8 @@ data{
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
     int seeds_added [n_pools, 3]; // number of seeds added in 1999-2001
+    real high_germ_LACO; // germination rate of LACO in normal years
+    real low_germ_LACO; // germination rate of LACO when litter layer was high
 }
 parameters{
     vector<lower = 0>[n_years-1] lambda; // max growth rate of LACO in absence of competition
@@ -129,9 +131,9 @@ transformed parameters{
         for(j in 2:2){
             real germ_LACO;
             if (obs_EG[i,j-1] > 100)
-                germ_LACO = 0.2;
+                germ_LACO = low_germ_LACO;
             else
-                germ_LACO = 0.7;
+                germ_LACO = high_germ_LACO;
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
                             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
@@ -139,9 +141,9 @@ transformed parameters{
         for(j in 3:(n_years-1)){
             real germ_LACO;
             if (obs_EG[i,j-1] > 100)
-                germ_LACO = 0.2;
+                germ_LACO = low_germ_LACO;
             else
-                germ_LACO = 0.7;
+                germ_LACO = high_germ_LACO;
             if (obs_LACO[i,j-1] > 0)
                 mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
                             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
@@ -160,15 +162,15 @@ model{
     for(a in 1:n_pools){
         for(b in 1:1){
             real germ_LACO;
-            germ_LACO = 0.7;
+            germ_LACO = high_germ_LACO;
             obs_LACO[a,b] ~ binomial(seeds_added[a,b], germ_LACO); //the first year's obs_LACO is the initial germination of seeds added in 1999
         }
         for(b in 2:3){
             real germ_LACO;
             if (obs_EG[a,b-1] > 100)
-                germ_LACO = 0.2;
+                germ_LACO = low_germ_LACO;
             else
-                germ_LACO = 0.7;
+                germ_LACO = high_germ_LACO;
             obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
         for(b in 4:(n_years-1)){
@@ -196,7 +198,9 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sim_obs_EG,
                                obs_ERVA = sim_obs_ERVA,
                                obs_NF = sim_obs_NF,
-                               seeds_added = sim_seedtrt), 
+                               seeds_added = sim_seedtrt,
+                               low_germ_LACO = 0.2,
+                               high_germ_LACO = 0.8), 
                    iter= 1000)
 
 ## Option 2: run with real data 
@@ -208,7 +212,9 @@ BH_fit <- sampling(BH_model,
                                obs_EG = sumEGdens,
                                obs_ERVA = ERVAdens,
                                obs_NF = sumNFdens,
-                               seeds_added = seedtrt[,4:6]), 
+                               seeds_added = seedtrt[,4:6],
+                               low_germ_LACO = 0.2,
+                               high_germ_LACO = 0.8), 
                    iter= 1000)
 
 ### EXTRACT MODEL OUTPUT ###
