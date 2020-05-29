@@ -109,8 +109,8 @@ data{
     matrix[n_pools, n_years] obs_ERVA; // ERVA density
     matrix[n_pools, n_years] obs_NF; // non-native forb density
     int seeds_added [n_pools, 3]; // number of seeds added in 1999-2001
-    real high_germ_LACO; // germination rate of LACO in normal years
-    real low_germ_LACO; // germination rate of LACO when litter layer was high
+    real low_germ_LACO; // germination rate of LACO in normal years
+    real high_germ_LACO; // germination rate of LACO in high litter years
 }
 parameters{
     vector<lower = 0>[n_years-1] lambda; // max growth rate of LACO in absence of competition
@@ -123,7 +123,6 @@ parameters{
 }
 transformed parameters{
     matrix [n_pools, n_years-1] mu_LACO;// mean expected value of LACO at time t from a discrete BH model
-    matrix [n_pools, n_years-1] int_LACO;// intermediate matrix of LACO at time t-1 estimated from values at t-2
     for(i in 1:n_pools){  
         for(j in 1:1){
             mu_LACO[i,j] = 100;
@@ -139,22 +138,26 @@ transformed parameters{
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
         for(j in 3:(n_years-1)){
+            matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of LACO at time t-1 estimated from values at t-2
             real germ_LACO;
             if (obs_EG[i,j-1] > 100)
                 germ_LACO = low_germ_LACO;
             else
                 germ_LACO = high_germ_LACO;
-            if (obs_LACO[i,j-1] > 0)
+            if (obs_EG[i,j-1] > 0){
+                int_LACO[i,j-2] = 100;
                 mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
-                            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-                            survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
-            else
-                int_LACO[i,j-1] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
+                                obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
+                                survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
+            }
+            else{
+                int_LACO[i,j-2] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
                             obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] ./ germ_LACO; // modified Beverton-Holt model
-                mu_LACO[i,j] = (int_LACO[i,j-1] * lambda[j-1])./(1 + int_LACO[i,j-1] * alpha_LACO[j-1] + 
+                mu_LACO[i,j] = (int_LACO[i,j-2] * lambda[j-1])./(1 + int_LACO[i,j-2] * alpha_LACO[j-1] + 
                             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-                            survival_LACO * (1-germ_LACO) * int_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
+                            survival_LACO * (1-germ_LACO) * int_LACO[i,j-2] ./ germ_LACO; // modified Beverton-Holt model
+            }
         }
     }
 }
@@ -200,7 +203,7 @@ BH_fit <- sampling(BH_model,
                                obs_NF = sim_obs_NF,
                                seeds_added = sim_seedtrt,
                                low_germ_LACO = 0.2,
-                               high_germ_LACO = 0.8), 
+                               high_germ_LACO = 0.7), 
                    iter= 1000)
 
 ## Option 2: run with real data 
