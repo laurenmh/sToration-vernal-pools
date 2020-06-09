@@ -17,7 +17,14 @@ const_com_2000 <- read_csv(paste(datpath, "Aboveground annual vegetation data/20
 const_com <-  rbind(const_com, const_com_2000)
 
 ## Read in data from the reference vernal pools
-ref_com <- read_csv(paste(datpath, "Aboveground annual vegetation data/dat_csv_reference_pools.csv", sep="")) 
+ref_com <- read_csv(paste(datpath, "Aboveground annual vegetation data/dat_csv_reference_pools.csv", sep="")) %>%
+  filter(Year != "0")
+
+ref_com_2000 <- read_csv(paste(datpath, "Aboveground annual vegetation data/2000 veg data REFERENCE pools.csv", sep = "")) %>%
+  mutate(Year = "2000")
+
+ref_com <- rbind(ref_com, ref_com_2000)
+
 ## Read in the species list and traits - constructed
 const_spp <- read_csv(paste(datpath, "Aboveground annual vegetation data/Constructed pool metadata.csv", sep=""), skip = 29) %>%
   filter(!is.na(Genus))
