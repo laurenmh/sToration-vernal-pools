@@ -13,7 +13,7 @@
 # 6. create a matrix of seeds added each year
 
 # REFERENCE POOLS
-# subset complete data 2000-2017
+# subset complete data 2000-2015
 # 1. subset the data
 # 2. count the number of pools
 # 3. count the number of years
@@ -39,7 +39,7 @@ const_com_LACO <- const_com %>%
 #######################################################
 #Option a. How many pools have complete LACOdens data?#
 #######################################################
-#const_com_noNA <- const_com_LACO[complete.cases(const_com_LACO),] #only 72 pools have complete data
+const_com_noNA <- const_com_LACO[complete.cases(const_com_LACO),] #only 72 pools have complete data
 
 #1a. subset the complete data
 #const_com_subset <- inner_join(const_com, const_com_noNA, by.y = "Pool")
@@ -240,6 +240,7 @@ ref_com_mean <- ref_com %>%
   
 ref_com_LACO <- ref_com_mean %>%
   select(Year, Pool, LACO) %>%
-  spread(key = Year, value = LACO) #7 pools with complete LACO data 2000-2015
-
+  spread(key = Year, value = LACO) %>% #9 pools with complete LACO data 2002-2015 #7 pools with complete data 2000-2015. #None in 2000-2017. 
+  filter(Pool %in% c(9, 20, 34, 38, 52, 63, 77)) %>%
+  select(-c(`2016`, `2017`)) 
 
