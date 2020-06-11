@@ -58,7 +58,8 @@ inundation_summary <- const_depth %>%
   filter(Location == "SeedPlot", Treatment.1999 != "Control") %>%
   group_by(Year, Pool, Distance, Size) %>%
   summarize(max_depth = as.numeric(max(Depth)),
-            duration_wk = as.numeric(max(Duration.weeks))) #inundation data available for 2000, 2002, 2009, 2010, 2011, 2012
+            duration_wk = as.numeric(max(Duration.weeks))) %>% #inundation data available for 2000, 2002, 2009, 2010, 2011, 2012
+  filter(max_depth <= 10)
 
 env_summary <- left_join(inundation_summary, PPT%>% select(Year, Jan_March_cm), by = "Year") 
 env_summary$Year <- as.character(env_summary$Year)
@@ -77,12 +78,17 @@ rcorr(as.matrix(LACO_env[,5:8])) #this makes a correlation matrix with significa
     #early PPT is lightly correlated with LACO count
 
 ggplot(LACO_env, aes(x = max_depth, y = log(LACOdens))) +
-  geom_point() #LACO count pos correlates with max depth 
+  geom_point() +
+  geom_smooth(method = "lm")+
+  annotate(geom = "text", x = 2, y = 7, label = "R2 = 0.09, y = 0.197x + 1.378") +
+  theme_bw()#LACO count pos correlates with max depth 
+LACO_env$logLACOdens <- log(LACO_env$LACOdens)
+summary(lm(logLACOdens ~ max_depth, LACO_env %>% filter(logLACOdens>=0))) 
 
 ggplot(LACO_env, aes(x = Jan_March_cm, y = max_depth)) +
   geom_jitter() #max depth pos correlates with early PPT
 
-#-> What does the overall effct of ppt on LACO?
+#-> What is the overall effect of ppt on LACO?
 PPT$Year <- as.character(PPT$Year)
 LACO_ppt <- left_join(const_com %>% select(Year, Size, Pool, LACOdens), PPT %>% select(Year, Jan_March_cm, Jan, Feb, March), by = "Year") %>%
   drop_na()
@@ -90,7 +96,7 @@ summary(lm(LACOdens ~ Jan_March_cm, LACO_ppt)) #ppt has a significant effect on 
 ggplot(LACO_ppt, aes(x = Jan_March_cm, y = log(LACOdens), col = Size))+
   geom_point()
 
-#-> what are the effects of pool size or distance from runway on pool depth?
+#-> what are the effects of pool size and distance from runway on pool depth?
 summary(lm(max_depth ~ Size, inundation_summary)) #no effect of size on max_depth
 summary(lm(max_depth ~ Distance, inundation_summary)) #no effect of distance on max_depth
 
