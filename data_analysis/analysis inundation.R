@@ -129,8 +129,8 @@ summary(lm(max_depth ~ Jan_March_cm, env_summary)) #max water depth is significa
 # Equation: max_depth = 5.09207 + 0.03201 * PPT_Jan_March_cm #R-squared is 0.007
 
 ggplot() +
-  geom_bar(aes(x = PPT_subset$Year, y = PPT_subset$Jan_March_cm), stat= "identity", fill = "lightblue") +
-  geom_point(aes(x = PPT_depth$Year, y = PPT_depth$max_depth)) +
+  geom_bar(aes(x = PPT$Year, y = PPT$Jan_March_cm), stat= "identity", fill = "lightblue") +
+  geom_point(aes(x = LACO_env$Year, y = LACO_env$max_depth)) +
   scale_y_continuous(name = "Max water depth (cm)",
                      sec.axis = sec_axis(~./1, name = "Precip Jan-Mar (cm)")) +
   theme_bw()
@@ -141,19 +141,22 @@ pred_max_depth <- PPT %>%
   filter(Year %in% c(2001:2017))
 
 #3.Join lambda and max water depth by year
-
-lambda_real_depth <- left_join(max_depth_mean, lambda_gather, by = "Year") %>%
+env_summary$Year <- as.integer(env_summary$Year)
+lambda_real_depth <- left_join(env_summary, lambda_gather, by = "Year") %>%
   filter(Year != "2000")
 
+pred_max_depth$Year <- as.integer(pred_max_depth$Year)
 lambda_depth <- left_join(lambda_gather, pred_max_depth, by = "Year")
 
 #4.Plot lambda and max water depth
 
-ggplot(lambda_real_depth, aes(x = mean_max_depth, y = lambda)) +
+ggplot(lambda_real_depth, aes(x = max_depth, y = lambda)) +
   geom_point()
 
 ggplot(lambda_depth, aes(x = pred_max_depth, y = lambda)) +
-  geom_point()
+  geom_jitter()+
+  geom_smooth(method= "lm") +
+  annotate(geom = "text", label = "R2 = 0.398", x = 5.75, y = 40)
 
 #5.What's the fit?
 
@@ -162,3 +165,45 @@ summary(lm(pred_max_depth ~ lambda, lambda_depth))
 #############################
 # III. INUNDATION VS. ALPHA #
 #############################
+# INTRASPECIFIC COMPETITION
+alphaLACO_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
+
+alphaLACO_gather <- alphaLACO_data %>%
+  mutate(Year = c(2001:2006)) %>%
+  select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
+  gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = alphaLACO)
+
+alphaLACO_summary <- alphaLACO_gather %>%
+  group_by(Year) %>%
+  summarize(mean_alphaLACO = mean(alphaLACO), se_alphaLACO = se(alphaLACO)) #this is used for plotting
+
+alphaLACO_depth <- left_join(alphaLACO_gather, pred_max_depth, by = "Year")
+
+ggplot(alphaLACO_depth, aes(x = pred_max_depth, y = alphaLACO)) +
+  geom_jitter()+
+  geom_smooth(method= "lm") +
+  annotate(geom = "text", label = "R2 = 0.4773", x = 5.75, y = 0.4)
+
+summary(lm(pred_max_depth ~ alphaLACO, alphaLACO_depth)) 
+
+# INTERSPECIFIC COMPETITION
+alphaEG_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
+
+alphaEG_gather <- alphaEG_data %>%
+  mutate(Year = c(2001:2006)) %>%
+  select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
+  gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = alphaEG)
+
+alphaEG_summary <- alphaEG_gather %>%
+  group_by(Year) %>%
+  summarize(mean_alphaEG = mean(alphaEG), se_alphaEG = se(alphaEG)) #this is used for plotting
+
+alphaEG_depth <- left_join(alphaEG_gather, pred_max_depth, by = "Year")
+
+ggplot(alphaEG_depth, aes(x = pred_max_depth, y = alphaEG)) +
+  geom_jitter()+
+  geom_smooth(method= "lm") +
+  annotate(geom = "text", label = "R2 = 0.546", x = 5.75, y = 0.4)
+
+summary(lm(pred_max_depth ~ alphaEG, alphaEG_depth)) 
+

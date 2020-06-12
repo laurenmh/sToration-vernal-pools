@@ -10,8 +10,8 @@ library(StanHeaders)
 
 ### CREATE SIMULATED DATA ###
 
-sim_n_pools <- 152 #number of pools
-sim_n_years <- 7 #years of data
+sim_n_pools <- 9 #number of pools
+sim_n_years <- 14 #years of data
 
 set.seed(124) #this helps create simulated values that are reproducible
 sim_ref_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 35), ncol=sim_n_years) #simulate exotic grass(EG) cover 
@@ -63,7 +63,7 @@ bh.sim <- function(n_pools, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
                                   lambda = lambda[j-1], s = s, g = g)
       }
       else {
-        sim_ref_mu[i,j] <- bh.formula(sim_ref_LACO = sim_ref_LACO[i,j-2]*lambda[j-2]/(1+sim_ref_LACO[i,j-2]*aii[j-2]+EG[i,j-2]*a1[j-2]+ERVA[i,j-2]*a2[j-2]+NF[i,j-2]*a3[j-2])+s*(1-g)*sim_obs_LACO[i,j-2]/g,
+        sim_ref_mu[i,j] <- bh.formula(sim_ref_LACO = sim_ref_LACO[i,j-2]*lambda[j-2]/(1+sim_ref_LACO[i,j-2]*aii[j-2]+EG[i,j-2]*a1[j-2]+ERVA[i,j-2]*a2[j-2]+NF[i,j-2]*a3[j-2])+s*(1-g)*sim_ref_LACO[i,j-2]/g,
                                   EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
                                   aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                   lambda = lambda[j-1], s = s, g = g)
@@ -186,13 +186,112 @@ BH_ref_fit <- sampling(BH_ref_model,
 
 ## Option 2: run with real data 
 ## See data prep file before running this
-BH_fit <- sampling(BH_ref_model,
-                   data = list(n_pools = n_pools,
-                               n_years = n_years,
-                               obs_LACO = LACOdens,
-                               obs_EG = sumEGcover,
-                               obs_ERVA = ERVAdens,
-                               obs_NF = sumNFcover,
+BH_ref_fit <- sampling(BH_ref_model,
+                   data = list(n_pools = ref_n_pools,
+                               n_years = ref_n_years,
+                               obs_LACO = ref_LACOcover,
+                               obs_EG = ref_sumEGcover,
+                               obs_ERVA = ref_ERVAcover,
+                               obs_NF = ref_sumNFcover,
                                low_germ_LACO = 0.2,
                                high_germ_LACO = 0.8), 
                    iter= 1000)
+
+### EXTRACT MODEL OUTPUT ###
+
+# Check there is enough iteration
+stan_trace(BH_ref_fit, pars = c("lambda"))
+
+# Extract R hat (value greater than 1.1 means inadequate MCMC convergence)
+summary(BH_ref_fit)$summary[,"Rhat"]
+
+# Mean posterior estimates of parameters
+get_posterior_mean(BH_ref_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
+
+# Zoom into posterior distribution of parameters
+plot(BH_ref_fit, pars = c("lambda"))
+
+# extract mean estimates 
+refalpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_LACO")))
+refalpha_EG_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_EG")))
+refalpha_ERVA_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_ERVA")))
+refalpha_NF_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_NF")))
+reflambda_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("lambda")))
+refs_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("survival_LACO")))
+
+### COMPARE OBSERVED AND PREDICTED LACO ###
+library(tidyr)
+library(ggplot2)
+
+#Option 1: use simulated data
+#make a table of predicted LACO from estimated parameters
+ref_predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
+                             EG = sim_ref_EG,
+                             ERVA = sim_ref_ERVA,
+                             NF = sim_ref_NF,
+                             aii = refalpha_LACO_mean[,5],
+                             a1 = refalpha_EG_mean[,5],
+                             a2 = refalpha_ERVA_mean[,5], 
+                             a3 = refalpha_NF_mean[,5],
+                             lambda = reflambda_mean[,5],
+                             s = refs_mean[,5],
+                             g = 0.7,
+                             glow = 0.2)
+
+#plot simulated LACOdens vs predicted_LACO_sim to check model fit
+colnames(ref_predicted_LACO_sim) <- c(1:16)
+ref_predicted_LACO_sim <- as.data.frame(ref_predicted_LACO_sim) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, `8`, `9`, `10`, 
+         `11`, `12`, `13`, `14`, `15`, `16`, key = time, value = predicted_LACO)
+colnames(sim_ref_LACO) <- c(1:16)
+sim_ref_LACO <- as.data.frame(sim_ref_LACO) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, `8`, `9`, `10`, 
+         `11`, `12`, `13`, `14`, `15`, `16`, key = time, value = sim_LACO)
+ref_join_sim_LACO <- left_join(ref_predicted_LACO_sim, sim_ref_LACO, by = c("Pool", "time"))
+
+summary(lm(predicted_LACO ~ sim_LACO, data = ref_join_sim_LACO)) #R2 = 0.907
+ggplot(ref_join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
+  geom_point() +
+  annotate("text", label = "R^2 = 0.5082", x = 50, y = 90) + #looks like a good fit 
+  geom_smooth(method = "lm")
+
+
+#Option 2: use real data
+ref_predicted_LACO <- bh.sim(n_pools = ref_n_pools,
+                         EG = as.matrix(ref_sumEGcover),
+                         ERVA = as.matrix(ref_ERVAcover),
+                         NF = as.matrix(ref_sumNFcover),
+                         aii = refalpha_LACO_mean[,5],
+                         a1 = refalpha_EG_mean[,5],
+                         a2 = refalpha_ERVA_mean[,5], 
+                         a3 = refalpha_NF_mean[,5],
+                         lambda = reflambda_mean[,5],
+                         s = refs_mean[,5],
+                         g = 0.7,
+                         glow = 0.2)
+
+#plot LACOdens vs predicted_LACO for modelfit
+colnames(ref_predicted_LACO) <- c("2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010",
+                                  "2011", "2012", "2013", "2014", "2015")
+ref_predicted_LACO <- as.data.frame(ref_predicted_LACO) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,
+         `2008`, `2009`, `2010`, `2011`, `2012`, `2013`, `2014`, `2015`, key = time, value = predicted_LACO)
+ref_LACOcover <- as.data.frame(ref_LACOcover) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,
+         `2008`, `2009`, `2010`, `2011`, `2012`, `2013`, `2014`, `2015`, key = time, value = LACO, -Pool)
+ref_join_LACO <- left_join(ref_predicted_LACO, ref_LACOcover, by = c("Pool", "time"))
+
+summary(lm(predicted_LACO ~ LACO, data = ref_join_LACO)) #R2 = 0.907
+ggplot(ref_join_LACO, aes(x = LACO, y = predicted_LACO)) +
+  geom_point() +
+  annotate("text", label = "R^2 = 0.3034", x = 50, y = 90) + #looks like a good fit 
+  geom_smooth(method = "lm")
+
+
+
+
+

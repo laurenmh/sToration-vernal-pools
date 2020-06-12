@@ -232,15 +232,51 @@ seedtrt <- const_com_short %>%
 
 #----------------------
 # REFERENCE POOLS:
-# Take the mean of sub-sampling plots and organize by year, pool, and LACO
+#1. Take the mean of sub-sampling plots and organize by year, pool, and LACO
 ref_com_mean <- ref_com %>%
   select(-Quadrat) %>%
   group_by(Year, Pool) %>%
-  summarise_each(funs(mean))
-  
+  filter(Year %in% c(2002:2015)) %>%
+  summarise_each(funs(mean)) %>%
+  mutate_each(funs(as.integer(.)))
+
 ref_com_LACO <- ref_com_mean %>%
   select(Year, Pool, LACO) %>%
   spread(key = Year, value = LACO) %>% #9 pools with complete LACO data 2002-2015 #7 pools with complete data 2000-2015. #None in 2000-2017. 
-  filter(Pool %in% c(9, 20, 34, 38, 52, 63, 77)) %>%
-  select(-c(`2016`, `2017`)) 
+  filter(Pool %in% c(9, 20, 34, 38, 52, 63, 77, 31, 27)) %>%
+  mutate_each(funs(as.integer(.)))
 
+ref_com_join <- inner_join(ref_com_mean, ref_com_LACO, by.y = "Pool") %>%
+  filter(Year %in% c(2002:2015))
+
+#2. count the number of pools
+ref_n_pools <- length(unique(ref_com_join$Pool))
+
+#3. count the number of years
+ref_n_years <- length(unique(ref_com_join$Year))
+
+#4. sum frequency data
+#Exotic grass (EG) group contains BRHO, HOMA, and LOMU:
+ref_com_join$sum_EG <- as.integer(rowSums(cbind(ref_com_join$BRHO, ref_com_join$HOMA, ref_com_join$LOMU)))
+
+#Native forb (NF) group contains PLST and DOCO:
+ref_com_join$sum_NF <- as.integer(rowSums(cbind(ref_com_join$PLST, ref_com_join$DOCO)))
+
+#5b. spread the dataset
+#each matrix should have a [n_pools x n_years] dimension
+ref_LACOcover <- ref_com_join %>%
+  select(Year, Pool, LACO) %>%
+  spread(key = Year, value = LACO) %>%
+  select(-Pool)
+ref_ERVAcover <-  ref_com_join  %>%
+  select(Year, Pool, ERVA) %>%
+  spread(key = Year, value = ERVA) %>%
+  select(-Pool)
+ref_sumEGcover <-  ref_com_join  %>%
+  select(Year, Pool, sum_EG) %>%
+  spread(key = Year, value = sum_EG) %>%
+  select(-Pool)
+ref_sumNFcover <-  ref_com_join  %>%
+  select(Year, Pool, sum_NF) %>%
+  spread(key = Year, value = sum_NF) %>%
+  select(-Pool)

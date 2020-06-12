@@ -225,6 +225,15 @@ BH_fit <- sampling(BH_model,
 # Check there is enough iteration
 stan_trace(BH_fit, pars = c("lambda"))
 
+# Extract R hat (value greater than 1.1 means inadequate MCMC convergence)
+summary(BH_fit)$summary[,"Rhat"]
+
+# Mean posterior estimates of parameters
+get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
+
+# Zoom into posterior distribution of parameters
+plot(BH_fit, pars = c("alpha_ERVA"))
+
 # extract mean estimates 
 alpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
 alpha_EG_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
@@ -232,7 +241,6 @@ alpha_ERVA_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_ERVA
 alpha_NF_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_NF")))
 lambda_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
 s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
-g_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("germ_LACO")))
 
 ### COMPARE OBSERVED AND PREDICTED LACO ###
 library(tidyr)
@@ -251,7 +259,8 @@ predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
                          a3 = alpha_NF_mean[,5],
                          lambda = lambda_mean[,5],
                          s = s_mean[,5],
-                         g = g_mean[,5])
+                         g = 0.7,
+                         glow = 0.2)
 
 #plot simulated LACOdens vs predicted_LACO_sim to check model fit
 colnames(predicted_LACO_sim) <- c(1:7)
@@ -264,10 +273,11 @@ sim_obs_LACO <- as.data.frame(sim_obs_LACO) %>%
   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, key = time, value = sim_LACO)
 join_sim_LACO <- left_join(predicted_LACO_sim, sim_obs_LACO, by = c("Pool", "time"))
 
-summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.875
+summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.907
 ggplot(join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
   geom_point() +
-  annotate("text", label = "R^2 = 0.875", x = 50, y = 150)#looks like a good fit
+  annotate("text", label = "R^2 = 0.907", x = 50, y = 150) + #looks like a good fit 
+  geom_smooth(method = "lm")
 
 #plot timeseries of simulated LACOdens and predicted_LACO_sim
 long_join_sim <- join_sim_LACO %>% gather(`predicted_LACO`, `sim_LACO`, key = type, value = LACO)
@@ -280,16 +290,17 @@ ggplot(long_join_sim, aes(x = time, y = LACO, color = type)) +
 #Option 2: use real data
 predicted_LACO <- bh.sim(n_pools = n_pools,
                       seedtrt = as.matrix(seedtrt[,4:6]),
-                      EG = as.matrix(sumEGdens),
+                      EG = as.matrix(sumEGcover),
                       ERVA = as.matrix(ERVAdens),
-                      NF = as.matrix(sumNFdens),
+                      NF = as.matrix(sumNFcover),
                       aii = alpha_LACO_mean[,5],
                       a1 = alpha_EG_mean[,5],
                       a2 = alpha_ERVA_mean[,5], 
                       a3 = alpha_NF_mean[,5],
                       lambda = lambda_mean[,5],
                       s = s_mean[,5],
-                      g = g_mean[,5])
+                      g = 0.7,
+                      glow = 0.2)
 
 #plot LACOdens vs predicted_LACO for modelfit
 colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006")
@@ -301,10 +312,10 @@ obs_LACO <- LACOdens %>%
   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, key = time, value = observed_LACO)
 join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time"))
 
-summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.111
+summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.1806
 ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
   geom_point()+
-  annotate("text", label = "R^2 = 0.111", x = 3000, y = 1500)
+  annotate("text", label = "R^2 = 0.1806", x = 3000, y = 1500)
 
 #plot timeseries of LACOdens and predicted_LACO 
 long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
