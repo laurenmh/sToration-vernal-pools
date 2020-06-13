@@ -22,7 +22,7 @@ const_LACOden <- const_com_noNA %>% #72 pools
   gather(key = "Year", value = "LACOdens", -Pool) %>%
   mutate(type = "constructed")
 const_LACO <- left_join(const_LACOden, (const_com %>% select (Year, Pool, LACO)))
-const_LACO$Pool <- as.character(const_LACO$Pool)
+
 const_LACO$Year <- as.numeric(const_LACO$Year)
 const_LACO$LACO <- as.numeric(const_LACO$LACO)
 
@@ -43,11 +43,11 @@ const <- ggplot(const_LACO, aes(x = Year, y = LACOdens)) +
 ggarrange(ref, const, ncol = 1, nrow = 2)
 
 # Visualize LACOdens together
-ggplot(join_LACO, aes(x = Year, y = LACOdens, col = type)) +
+ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = type)) +
   geom_jitter() +
   geom_smooth() +
   theme_bw() +
-  ylab("LACO density")
+  ylab("LACO density (log)")
 
 # Visualize LACO cover seperately
 refcov <- ggplot(ref_LACO, aes(x = Year, y = LACO)) +
