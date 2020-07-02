@@ -238,9 +238,9 @@ const_com_dummy <- const_com_LACO
 const_com_dummy$`2007` <- 1
 const_dummy_sub <- const_com_dummy[complete.cases(const_com_dummy),] #142 pools
 
-#1d. subset the complete data and fill in 2007 data
+#1d. subset the complete data and fill in 2007 data with zeros
 const_dummy_join <- inner_join(const_com, const_dummy_sub, by.y = "Pool") %>%
-  mutate_if(is.numeric, ~replace(., is.na(.), 1))
+  mutate_if(is.numeric, ~replace(., is.na(.), 0))
 
 #2d. count the number of pools
 n_pools <- length(unique(const_dummy_join$Pool))

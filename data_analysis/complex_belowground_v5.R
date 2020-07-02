@@ -11,8 +11,8 @@ library(StanHeaders)
 
 ### CREATE SIMULATED DATA ###
 
-sim_n_pools <- 152 #number of pools
-sim_n_years <- 7 #years of data
+sim_n_pools <- 142 #number of pools
+sim_n_years <- 18 #years of data
 
 set.seed(124) #this helps create simulated values that are reproducible
 sim_obs_EG <- matrix(rpois(sim_n_pools*sim_n_years, lambda = 35), ncol=sim_n_years) #simulate exotic grass(EG) cover 
@@ -139,48 +139,16 @@ transformed parameters{
                             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
-        for(j in 3:7){
+        for(j in 3:n_years-1){
             real germ_LACO;
             if (obs_EG[i,j-1] > 100)
                 germ_LACO = low_germ_LACO;
             else
                 germ_LACO = high_germ_LACO;
-            if (obs_EG[i,j-1] > 0){
-                int_LACO[i,j-2] = 100;
-                mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
-                                obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-                                survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; 
-            }
-            else{
+            if (obs_LACO[i,j-1] > 0){
                 int_LACO[i,j-2] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
                                   obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
-                                  survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] ./ germ_LACO; // LACO at t-2
-                mu_LACO[i,j] = (int_LACO[i,j-2] * lambda[j-1])./(1 + int_LACO[i,j-2] * alpha_LACO[j-1] + 
-                                obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-                                survival_LACO * (1-germ_LACO) * int_LACO[i,j-2] ./ germ_LACO; // plugging in LACO t-2 for obs LACO t-1
-            }
-        }
-        for(j in 8:8){
-            real germ_LACO;
-            if (obs_EG[i,j-1] > 100)
-                germ_LACO = low_germ_LACO;
-            else
-                germ_LACO = high_germ_LACO;
-            int_LACO[i,j-2] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
-                              obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
-                              survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] ./ germ_LACO; // LACO at t-2
-            mu_LACO[i,j] = (int_LACO[i,j-2] * lambda[j-1])./(1 + int_LACO[i,j-2] * alpha_LACO[j-1] + 
-                            obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
-                            survival_LACO * (1-germ_LACO) * int_LACO[i,j-2] ./ germ_LACO; // plugging in LACO t-2 for obs LACO t-1
-        }
-        for(j in 9:n_years-1){
-            real germ_LACO;
-            if (obs_EG[i,j-1] > 100)
-                germ_LACO = low_germ_LACO;
-            else
-                germ_LACO = high_germ_LACO;
-            if (obs_EG[i,j-1] > 0){
-                int_LACO[i,j-2] = 100;
+                                  survival_LACO * (1-germ_LACO) * obs_LACO[i,j-2] ./ germ_LACO;
                 mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
                                 obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
                                 survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; 
@@ -338,13 +306,17 @@ predicted_LACO <- bh.sim(n_pools = n_pools,
                       glow = 0.2)
 
 #plot LACOdens vs predicted_LACO for modelfit
-colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006")
+colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
+                              "2007", "2008", "2009", "2010", "2011", "2012", "2013",
+                              "2014", "2015", "2016", "2017")
 predicted_LACO <- as.data.frame(predicted_LACO) %>% 
   mutate(Pool = row_number()) %>%
-  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, key = time, value = predicted_LACO)
+  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
+         `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = predicted_LACO)
 obs_LACO <- LACOdens %>% 
   mutate(Pool = row_number()) %>%
-  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, key = time, value = observed_LACO)
+  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,
+         `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = observed_LACO)
 join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time"))
 
 summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.1806
@@ -354,9 +326,9 @@ ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
 
 #plot timeseries of LACOdens and predicted_LACO 
 long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
-ggplot(long_join_real, aes(x = time, y = LACO, color = type)) +
+ggplot(long_join_real, aes(x = time, y = log(LACO), color = type)) +
   geom_jitter() +
-  labs(y = "LACO count") +
+  labs(y = "log LACO count") +
   scale_color_discrete(breaks = c("predicted_LACO", "observed_LACO"),
                        labels = c("predicted", "observed"))
 
