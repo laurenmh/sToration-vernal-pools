@@ -317,12 +317,24 @@ obs_LACO <- LACOdens %>%
   mutate(Pool = row_number()) %>%
   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,
          `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = observed_LACO)
-join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time"))
+
+join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time")) %>%
+  mutate(log_predicted_LACO = log(predicted_LACO)) %>%
+  mutate(log_observed_LACO = log(observed_LACO)) %>%
+  mutate_if(is.numeric, ~replace(., is.infinite(.), 0))
 
 summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.1806
 ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
   geom_point()+
-  annotate("text", label = "R^2 = 0.1806", x = 3000, y = 1500)
+  annotate("text", label = "R^2 = 0.1108", x = 3000, y = 2500) +
+  ylim(0, 4000) #most values are small, so try log scale
+
+summary(lm(log_predicted_LACO ~ log_observed_LACO, data = join_real_LACO))
+ggplot(join_real_LACO, aes(x = log_predicted_LACO, y = log_observed_LACO)) +
+  geom_point()+
+  annotate("text", label = "R^2 = 0.3158", x = 1.5, y = 8) +
+  geom_abline(intercept = 0, slope =1)
+
 
 #plot timeseries of LACOdens and predicted_LACO 
 long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
