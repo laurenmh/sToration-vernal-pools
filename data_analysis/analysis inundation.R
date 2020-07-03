@@ -116,7 +116,7 @@ ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, color = Dista
 lambda_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
 
 lambda_gather <- lambda_data %>%
-  mutate(Year = c(2001:2006)) %>%
+  mutate(Year = c(2001:2017)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = lambda)
   
