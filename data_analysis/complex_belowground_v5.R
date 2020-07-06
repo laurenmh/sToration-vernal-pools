@@ -183,7 +183,7 @@ model{
             obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
         }
     }
-    lambda ~ normal(40,10); //get partially-informed priors from lit
+    lambda ~ normal(60,20); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
@@ -235,7 +235,7 @@ summary(BH_fit)$summary[,"Rhat"]
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
 
 # Zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("alpha_ERVA"))
+plot(BH_fit, pars = c("lambda"))
 
 # extract mean estimates 
 alpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
