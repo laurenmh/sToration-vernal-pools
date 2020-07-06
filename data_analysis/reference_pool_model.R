@@ -136,7 +136,7 @@ transformed parameters{
                       germ_LACO = low_germ_LACO;
               else
                       germ_LACO = high_germ_LACO;
-              if (obs_EG[i,j-1] > 0){
+              if (obs_LACO[i,j-1] > 0){
                       int_LACO[i,j-2] = 100;
                       mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
                                       obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
@@ -239,23 +239,24 @@ ref_predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
                              glow = 0.2)
 
 #plot simulated LACOdens vs predicted_LACO_sim to check model fit
-colnames(ref_predicted_LACO_sim) <- c(1:16)
+colnames(ref_predicted_LACO_sim) <- c(1:14)
 ref_predicted_LACO_sim <- as.data.frame(ref_predicted_LACO_sim) %>% 
   mutate(Pool = row_number()) %>%
   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, `8`, `9`, `10`, 
-         `11`, `12`, `13`, `14`, `15`, `16`, key = time, value = predicted_LACO)
-colnames(sim_ref_LACO) <- c(1:16)
+         `11`, `12`, `13`, `14`, key = time, value = predicted_LACO)
+colnames(sim_ref_LACO) <- c(1:14)
 sim_ref_LACO <- as.data.frame(sim_ref_LACO) %>% 
   mutate(Pool = row_number()) %>%
   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, `8`, `9`, `10`, 
-         `11`, `12`, `13`, `14`, `15`, `16`, key = time, value = sim_LACO)
+         `11`, `12`, `13`, `14`, key = time, value = sim_LACO)
 ref_join_sim_LACO <- left_join(ref_predicted_LACO_sim, sim_ref_LACO, by = c("Pool", "time"))
 
-summary(lm(predicted_LACO ~ sim_LACO, data = ref_join_sim_LACO)) #R2 = 0.907
+summary(lm(predicted_LACO ~ sim_LACO, data = ref_join_sim_LACO)) #R2 = 0.7144
 ggplot(ref_join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
   geom_point() +
-  annotate("text", label = "R^2 = 0.5082", x = 50, y = 90) + #looks like a good fit 
-  geom_smooth(method = "lm")
+  annotate("text", label = "R^2 = 0.7144", x = 50, y = 90) + #looks like a good fit 
+  geom_smooth(method = "lm") +
+  labs(x = "simulated LACO count", y = "predicted LACO count")
 
 
 #Option 2: use real data
@@ -285,11 +286,12 @@ ref_LACOcover <- as.data.frame(ref_LACOcover) %>%
          `2008`, `2009`, `2010`, `2011`, `2012`, `2013`, `2014`, `2015`, key = time, value = LACO, -Pool)
 ref_join_LACO <- left_join(ref_predicted_LACO, ref_LACOcover, by = c("Pool", "time"))
 
-summary(lm(predicted_LACO ~ LACO, data = ref_join_LACO)) #R2 = 0.907
+summary(lm(predicted_LACO ~ LACO, data = ref_join_LACO)) #R2 = 0.2851
 ggplot(ref_join_LACO, aes(x = LACO, y = predicted_LACO)) +
   geom_point() +
-  annotate("text", label = "R^2 = 0.3034", x = 50, y = 90) + #looks like a good fit 
-  geom_smooth(method = "lm")
+  annotate("text", label = "R^2 = 0.2851", x = 50, y = 90) + 
+  geom_smooth(method = "lm") +
+  labs(x = "observed LACO count", y = "predicted LACO count")
 
 
 

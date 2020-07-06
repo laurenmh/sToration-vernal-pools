@@ -235,7 +235,7 @@ summary(BH_fit)$summary[,"Rhat"]
 get_posterior_mean(BH_fit, pars = c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF", "survival_LACO"))
 
 # Zoom into posterior distribution of parameters
-plot(BH_fit, pars = c("lambda"))
+plot(BH_fit, pars = c("alpha_LACO"))
 
 # extract mean estimates 
 alpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
@@ -266,21 +266,22 @@ predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
                          glow = 0.2)
 
 #plot simulated LACOdens vs predicted_LACO_sim to check model fit
-colnames(predicted_LACO_sim) <- c(1:7)
+colnames(predicted_LACO_sim) <- c(1:18)
 predicted_LACO_sim <- as.data.frame(predicted_LACO_sim) %>% 
   mutate(Pool = row_number()) %>%
-  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, key = time, value = predicted_LACO)
-colnames(sim_obs_LACO) <- c(1:7)
+  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = predicted_LACO)
+colnames(sim_obs_LACO) <- c(1:18)
 sim_obs_LACO <- as.data.frame(sim_obs_LACO) %>% 
   mutate(Pool = row_number()) %>%
-  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`, key = time, value = sim_LACO)
+  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = sim_LACO)
 join_sim_LACO <- left_join(predicted_LACO_sim, sim_obs_LACO, by = c("Pool", "time"))
 
-summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.907
+summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.8644
 ggplot(join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
   geom_point() +
-  annotate("text", label = "R^2 = 0.907", x = 50, y = 150) + #looks like a good fit 
-  geom_smooth(method = "lm")
+  annotate("text", label = "R^2 = 0.8644", x = 50, y = 150) + #looks like a good fit 
+  geom_smooth(method = "lm") +
+  labs(x = "simulated LACO counts", y = "predicted LACO counts")
 
 #plot timeseries of simulated LACOdens and predicted_LACO_sim
 long_join_sim <- join_sim_LACO %>% gather(`predicted_LACO`, `sim_LACO`, key = type, value = LACO)
@@ -326,13 +327,13 @@ join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time")) %>
 summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.1806
 ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
   geom_point()+
-  annotate("text", label = "R^2 = 0.1108", x = 3000, y = 2500) +
+  annotate("text", label = "R^2 = 0.1208", x = 3000, y = 2500) +
   ylim(0, 4000) #most values are small, so try log scale
 
 summary(lm(log_predicted_LACO ~ log_observed_LACO, data = join_real_LACO))
 ggplot(join_real_LACO, aes(x = log_predicted_LACO, y = log_observed_LACO)) +
   geom_point()+
-  annotate("text", label = "R^2 = 0.3158", x = 1.5, y = 8) +
+  annotate("text", label = "R^2 = 0.3009", x = 1.5, y = 8) +
   geom_abline(intercept = 0, slope =1)
 
 
