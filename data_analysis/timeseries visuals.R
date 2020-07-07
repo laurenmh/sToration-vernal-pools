@@ -8,7 +8,7 @@ library(ggplot2)
 library(ggpubr)
 
 # Convert LACO frequency to density in REFERENCE pools
-ref_LACO <- ref_com_LACO %>% #7pools
+ref_LACO <- ref_com_LACO %>% #9 pools
   group_by(Pool) %>%
   gather(key = "Year", value = "LACO" , - Pool) %>%
   mutate(LACOdens = round(exp(-0.42)+LACO^1.36)) %>%

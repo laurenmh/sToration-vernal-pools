@@ -1,4 +1,4 @@
-# Run "prep data before modeling.R" then "complex_belowground_v3.R" first.
+# Run "prep data before modeling.R" then "complex_belowground_v5.R" first.
 
 # Question:
 ## How does the environment, namely inundation, change LACO growth rate and competition interactions?
@@ -10,6 +10,7 @@
 
 # Set up:
 library(ggplot2)
+library(tidyverse)
 
 se<-function(x){
   sd(x)/sqrt(length(x))
@@ -100,10 +101,12 @@ ggplot(LACO_ppt, aes(x = Jan_March_cm, y = log(LACOdens), col = Size))+
 summary(lm(max_depth ~ Size, inundation_summary)) #no effect of size on max_depth
 summary(lm(max_depth ~ Distance, inundation_summary)) #no effect of distance on max_depth
 
-ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, color = Size)) +
-  geom_jitter()
-ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, color = Distance)) +
-  geom_jitter()
+ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, fill = Size)) +
+  geom_boxplot() +
+  theme_bw()
+ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, col = Distance)) +
+  geom_point() +
+  theme_bw()
 
 
 #############################

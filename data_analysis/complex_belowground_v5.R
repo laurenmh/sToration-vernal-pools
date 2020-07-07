@@ -334,8 +334,12 @@ summary(lm(log_predicted_LACO ~ log_observed_LACO, data = join_real_LACO))
 ggplot(join_real_LACO, aes(x = log_predicted_LACO, y = log_observed_LACO)) +
   geom_point()+
   annotate("text", label = "R^2 = 0.3009", x = 1.5, y = 8) +
-  geom_abline(intercept = 0, slope =1)
+  geom_abline(intercept = 0, slope =1) #there are a bunch of zeros that are predicted non-zero values.
 
+#how many of the observed zeros have non-zero predicted values?
+nonzero <- join_real_LACO %>%
+  filter(observed_LACO == 0) %>%
+  filter(predicted_LACO > 0) #851 out of 2556 observations
 
 #plot timeseries of LACOdens and predicted_LACO 
 long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
