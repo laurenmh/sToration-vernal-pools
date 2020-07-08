@@ -159,7 +159,7 @@ model{
              obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma); // obs_LACO is from a poisson distribution of mu_LACO.
         }
     }
-    lambda ~ normal(40,10); //get partially-informed priors from lit
+    lambda ~ normal(60,20); //get partially-informed priors from lit
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
