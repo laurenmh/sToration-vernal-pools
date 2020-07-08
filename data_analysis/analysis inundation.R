@@ -7,6 +7,8 @@
 ## I. Env vs. LACO counts
 ## II. Inundation vs. lambda
 ## III. Inundation vs. alpha
+## IV. PPT vs. lambda
+## V. PPT vs. alpha
 
 # Set up:
 library(ggplot2)
@@ -89,14 +91,6 @@ summary(lm(logLACOdens ~ max_depth, LACO_env %>% filter(logLACOdens>=0)))
 ggplot(LACO_env, aes(x = Jan_March_cm, y = max_depth)) +
   geom_jitter() #max depth pos correlates with early PPT
 
-#-> What is the overall effect of ppt on LACO?
-PPT$Year <- as.character(PPT$Year)
-LACO_ppt <- left_join(const_com %>% select(Year, Size, Pool, LACOdens), PPT %>% select(Year, Jan_March_cm, Jan, Feb, March), by = "Year") %>%
-  drop_na()
-summary(lm(LACOdens ~ Jan_March_cm, LACO_ppt)) #ppt has a significant effect on LACO counts
-ggplot(LACO_ppt, aes(x = Jan_March_cm, y = log(LACOdens), col = Size))+
-  geom_point()
-
 #-> what are the effects of pool size and distance from runway on pool depth?
 summary(lm(max_depth ~ Size, inundation_summary)) #no effect of size on max_depth
 summary(lm(max_depth ~ Distance, inundation_summary)) #no effect of distance on max_depth
@@ -107,6 +101,31 @@ ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, fill = Size))
 ggplot(inundation_summary, aes(x = as.factor(Year), y = max_depth, col = Distance)) +
   geom_point() +
   theme_bw()
+
+#-> What is the overall effect of ppt on LACO?
+PPT$Year <- as.character(PPT$Year)
+LACO_ppt <- left_join(const_com %>% select(Year, Size, Pool, LACOdens), PPT %>% select(Year, Jan_March_cm, Oct_Dec_cm, Total_ppt_cm), by = "Year") %>%
+  drop_na() %>%
+  mutate(log_LACOdens = log(LACOdens)) %>%
+  mutate_if(is.numeric, ~replace(., is.infinite(.), 0))
+
+summary(lm(log_LACOdens ~ Oct_Dec_cm, LACO_ppt))
+
+ggplot(LACO_ppt, aes(x = Oct_Dec_cm, y = log(LACOdens))) + #early season rain positive relationship
+  geom_jitter() +
+  geom_smooth(method = "lm") +
+  labs(x = "Early season rain (cm)", y = "log LACO density") +
+  annotate("text", label = "R^2 = 0.004", x = 10, y = 8) +
+  theme_bw() 
+
+ggplot(LACO_ppt, aes(x = Jan_March_cm, y = log(LACOdens), col = Size))+ #late season rain unimodal relationship
+  geom_jitter() +
+  theme_bw()
+
+ggplot(LACO_ppt, aes(x = Total_ppt_cm, y = log(LACOdens), col = Size)) + #total rain no relationship
+  geom_point() +
+  theme_bw()
+
 
 
 #############################
@@ -132,10 +151,10 @@ summary(lm(max_depth ~ Jan_March_cm, env_summary)) #max water depth is significa
 # Equation: max_depth = 5.09207 + 0.03201 * PPT_Jan_March_cm #R-squared is 0.007
 
 ggplot() +
-  geom_bar(aes(x = PPT$Year, y = PPT$Jan_March_cm), stat= "identity", fill = "lightblue") +
+  geom_bar(aes(x = PPT$Year, y = PPT$Total_ppt_cm), stat= "identity", fill = "lightblue") +
   geom_point(aes(x = LACO_env$Year, y = LACO_env$max_depth)) +
   scale_y_continuous(name = "Max water depth (cm)",
-                     sec.axis = sec_axis(~./1, name = "Precip Jan-Mar (cm)")) +
+                     sec.axis = sec_axis(~./1, name = "Water-year total precip (cm)")) +
   theme_bw()
 
 pred_max_depth <- PPT %>%
@@ -172,7 +191,7 @@ summary(lm(pred_max_depth ~ lambda, lambda_depth))
 alphaLACO_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
 
 alphaLACO_gather <- alphaLACO_data %>%
-  mutate(Year = c(2001:2006)) %>%
+  mutate(Year = c(2001:2017)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = alphaLACO)
 
@@ -193,7 +212,7 @@ summary(lm(pred_max_depth ~ alphaLACO, alphaLACO_depth))
 alphaEG_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
 
 alphaEG_gather <- alphaEG_data %>%
-  mutate(Year = c(2001:2006)) %>%
+  mutate(Year = c(2001:2017)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = alphaEG)
 
@@ -210,3 +229,40 @@ ggplot(alphaEG_depth, aes(x = pred_max_depth, y = alphaEG)) +
 
 summary(lm(pred_max_depth ~ alphaEG, alphaEG_depth)) 
 
+######################
+# IV. PPT vs. lambda #
+######################
+const_lambda <- as.data.frame(lambda_data[,5]) %>%
+  mutate(Year = c(2001:2017))
+colnames(const_lambda) <- c("Const_lambda", "Year")
+lambda_PPT <- merge(const_lambda, PPT)
+
+ggplot(lambda_PPT, aes(x = Oct_Dec_cm, y =Const_lambda)) +
+  geom_point() +
+  theme_bw() +
+  labs(x = "Early season rain (cm)", y = "Constructed LACO lambda")
+
+####################
+# V. PPT vs. alpha #
+####################
+#INTRASPECIFIC COMPETITION#
+const_alphaLACO <- as.data.frame(alphaLACO_data[,5]) %>%
+  mutate(Year = c(2001:2017))
+colnames(const_alphaLACO) <- c("Const_alphaLACO", "Year")
+alphaLACO_PPT <- merge(const_alphaLACO, PPT)
+
+ggplot(alphaLACO_PPT, aes(x = Oct_Dec_cm, y = Const_alphaLACO)) +
+  geom_point() +
+  theme_bw() +
+  labs(x = "Early season rain (cm)", y = "Constructed LACO alpha")
+
+#INTERSPECIFIC COMPETITION#
+const_alphaEG <- as.data.frame(alphaEG_data[,5]) %>%
+  mutate(Year = c(2001:2017))
+colnames(const_alphaEG) <- c("Const_alphaEG", "Year")
+alphaEG_PPT <- merge(const_alphaEG, PPT)
+
+ggplot(alphaEG_PPT, aes(x = Oct_Dec_cm, y = Const_alphaEG)) +
+  geom_point() +
+  theme_bw() +
+  labs(x = "Early season rain (cm)", y = "Constructed exotic grass alpha")
