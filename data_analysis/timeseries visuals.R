@@ -21,13 +21,14 @@ const_LACOden <- const_com_noNA %>% #72 pools
   group_by(Pool) %>%
   gather(key = "Year", value = "LACOdens", -Pool) %>%
   mutate(type = "constructed")
-const_LACO <- left_join(const_LACOden, (const_com %>% select (Year, Pool, LACO)))
+const_LACO <- left_join(const_LACOden, (const_com %>% select (Year, Pool, LACO, Treatment.1999, Treatment.2000)))
 
 const_LACO$Year <- as.numeric(const_LACO$Year)
 const_LACO$LACO <- as.numeric(const_LACO$LACO)
 
 # Join tables
-join_LACO <- full_join(ref_LACO, const_LACO, all = TRUE)
+join_LACO <- full_join(ref_LACO, const_LACO, all = TRUE) %>%
+  mutate(treatment = paste(Treatment.1999, Treatment.2000))
 
 # Visualize LACOdens separately
 ref <- ggplot(ref_LACO, aes(x = Year, y = LACOdens)) +
@@ -49,6 +50,12 @@ ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = type)) +
   theme_bw() +
   ylab("LACO density (log)")
 
+ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = treatment)) +
+  geom_jitter() +
+  geom_smooth(method = "loess") +
+  theme_bw() +
+  ylab("LACO density (log)")
+
 # Visualize LACO cover seperately
 refcov <- ggplot(ref_LACO, aes(x = Year, y = LACO)) +
   geom_jitter(col = "blue") +
@@ -64,6 +71,12 @@ ggarrange(refcov, constcov, ncol = 1, nrow  =2)
 
 # Visualize LACO cover together
 ggplot(join_LACO, aes(x = Year, y = LACO, col = type)) + 
+  geom_jitter() +
+  geom_smooth() +
+  theme_bw() +
+  ylab("LACO frequency (%)")
+
+ggplot(join_LACO, aes(x = Year, y = LACO, col = treatment)) + 
   geom_jitter() +
   geom_smooth() +
   theme_bw() +

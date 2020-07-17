@@ -33,6 +33,29 @@ ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
   annotate("text", label = "R^2 = 0.168", x = 100, y = 400) +
   theme_bw()
 
+#Differentiate by seeding treatment 
+mean_ref_LACOdens <- spread_join_LACO %>%
+  select(Year, reference) %>%
+  filter(Year != c("2000", "2001")) %>%
+  group_by(Year) %>%
+  summarise_at(c("reference"), mean, na.rm = TRUE)
+mean_const_LACOdens <- spread_join_LACO %>%
+  select(Year, constructed, treatment) %>%
+  filter(Year != c("2000", "2001")) %>%
+  filter(treatment != c("NA NA")) %>%
+  group_by(Year, treatment) %>%
+  summarise_at(c("constructed"), mean, na.rm = TRUE)
+mean_LACOdens_trt <- merge(mean_const_LACOdens, mean_ref_LACOdens, by = "Year")
+
+ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) +
+  geom_point() +
+  ylim(0, 500) +
+  xlim(0, 250) +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed mean LACO density",
+       x = "Reference mean LACO density") +
+  theme_bw()
+
 #############################################
 # II. Plot lambda constructed vs. reference #
 #############################################
