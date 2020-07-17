@@ -239,3 +239,8 @@ ggplot(join_lambda, aes(y = constructed, x = reference)) +
            p-value = 0.002", x = 20, y = 80) +
   theme_bw()
 
+ggplot(join_lambda, aes(y = constructed, x = reference, col = treatment)) +
+  geom_point() +
+  geom_smooth(method = "lm")+
+  labs(y = "Constructed LACO lambda", x = "Reference LACO lambda", col = "Seeding treatment") +
+  theme_bw()

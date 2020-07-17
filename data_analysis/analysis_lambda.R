@@ -62,6 +62,14 @@ ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference)) +
           p-value = 0.001", x = 50, y = 400) + 
   theme_bw()
 
+ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) +
+  geom_point() +
+  ylim(0, 500) +
+  xlim(0, 250) +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed mean LACO density",
+       x = "Reference mean LACO density", col = "Seeding treatment") +
+  theme_bw()
 #############################################
 # II. Plot lambda constructed vs. reference #
 #############################################
