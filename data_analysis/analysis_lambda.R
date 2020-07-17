@@ -30,7 +30,9 @@ ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density") +
   geom_smooth(method = "lm") +
-  annotate("text", label = "R^2 = 0.168", x = 100, y = 400) +
+  annotate("text", label = "R^2 = 0.232
+           adjusted R^2 = 0.168
+           p-value = 0.081", x = 100, y = 400) +
   theme_bw()
 
 #Differentiate by seeding treatment 
@@ -47,13 +49,17 @@ mean_const_LACOdens <- spread_join_LACO %>%
   summarise_at(c("constructed"), mean, na.rm = TRUE)
 mean_LACOdens_trt <- merge(mean_const_LACOdens, mean_ref_LACOdens, by = "Year")
 
-ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) +
-  geom_point() +
+summary(lm(constructed ~ reference, mean_LACOdens_trt))
+ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference)) +
+  geom_point(aes(col = treatment)) +
   ylim(0, 500) +
   xlim(0, 250) +
   geom_smooth(method = "lm") +
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density") +
+  annotate("text", label = "R^2 = 0.1822 
+          adjusted R^2 = 0.167
+          p-value = 0.001", x = 50, y = 400) + 
   theme_bw()
 
 #############################################
@@ -62,14 +68,16 @@ ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) 
 # combine lambda estimates from constructed and reference models
 const_lambda_trim <- as.data.frame(lambda_mean[-c(1,2,16,17),5]) #trim 2001, 2002, 2016, and 2017 estimates
 ref_lambda_trim <- as.data.frame(reflambda_mean[,5]) 
-join_lambda <- cbind(const_lambda_trim, ref_lambda_trim)
-row.names(join_lambda) <- c(2003:2015)
-colnames(join_lambda) <- c("constructed", "reference")
+join_lambda_trim <- cbind(const_lambda_trim, ref_lambda_trim)
+row.names(join_lambda_trim) <- c(2003:2015)
+colnames(join_lambda_trim) <- c("constructed", "reference")
 
-summary(lm(constructed ~ reference, join_lambda))
-ggplot(join_lambda, aes(y = constructed, x = reference)) +
+summary(lm(constructed ~ reference, join_lambda_trim))
+ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
   geom_point() +
   geom_smooth(method = "lm") +
   labs(y = "Constructed LACO lambda", x = "Reference LACO lambda") +
-  annotate("text", label = "R^2 = 0.1045", x = 20, y = 50) +
+  annotate("text", label = "R^2 = 0.1791
+           adjusted R^2 = 0.1045
+           p-value = 0.1496", x = 20, y = 50) +
   theme_bw()

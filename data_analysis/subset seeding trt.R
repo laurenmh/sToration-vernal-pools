@@ -8,54 +8,8 @@
 library(dplyr)
 library(rstan)
 library(StanHeaders)
-
-sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of LACO stem counts
-sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of mean LACO stem counts
-
-bh.formula <- function(sim_obs_LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
-  sim_obs_LACO*lambda/(1+sim_obs_LACO*aii+EG*a1+ERVA*a2+NF*a3)+s*(1-g)*sim_obs_LACO/g
-} #this is the modified Beverton-Holt model we'll use for LACO stem counts
-
-#now simulate LACO stem counts
-bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
-  for(i in 1:nrow(sim_mu)){
-    for(j in 1:1){
-      sim_mu[i,j] <- 100
-      sim_obs_LACO[i,j] <- rbinom(1,100,g)
-    }
-    for(j in 2:3){
-      if (EG[i,j-1]> 100){
-        g = glow
-      }
-      else{g = g}
-      sim_mu[i,j] <- bh.formula(sim_obs_LACO = sim_obs_LACO[i,j-1],
-                                EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
-                                aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
-                                lambda = lambda[j-1], s = s, g = g)
-      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] + seedtrt[i,j] * g))
-    }
-    for(j in 4:ncol(sim_mu)){
-      if (EG[i,j-1]> 100){
-        g = glow
-      }
-      else{g = g}
-      if (sim_obs_LACO[i,j-1] > 0){
-        sim_mu[i,j] <- bh.formula(sim_obs_LACO = sim_obs_LACO[i,j-1],
-                                  EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
-                                  aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
-                                  lambda = lambda[j-1], s = s, g = g)
-      }
-      else {
-        sim_mu[i,j] <- bh.formula(sim_obs_LACO = sim_obs_LACO[i,j-2]*lambda[j-2]/(1+sim_obs_LACO[i,j-2]*aii[j-2]+EG[i,j-2]*a1[j-2]+ERVA[i,j-2]*a2[j-2]+NF[i,j-2]*a3[j-2])+s*(1-g)*sim_obs_LACO[i,j-2]/g,
-                                  EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
-                                  aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
-                                  lambda = lambda[j-1], s = s, g = g)
-      }
-      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j])
-    }
-  }
-  return(sim_obs_LACO)
-}
+library(ggplot2)
+library(tidyverse)
 
 ### CREATE A STAN MODEL ###
 
@@ -269,14 +223,19 @@ const_lambda_trim_GrBA <- as.data.frame(lambda_mean_GrBA[-c(1,2,16,17),5])
 const_lambda_trim_LALA <- as.data.frame(lambda_mean_LALA[-c(1,2,16,17),5])
 const_lambda_trim_LANo <- as.data.frame(lambda_mean_LANo[-c(1,2,16,17),5])
 ref_lambda_trim <- as.data.frame(reflambda_mean[,5]) 
-join_lambda <- cbind(ref_lambda_trim, const_lambda_trim_GrAB, const_lambda_trim_GrBA, const_lambda_trim_LALA, const_lambda_trim_LANo)
-row.names(join_lambda) <- c(2003:2015)
-colnames(join_lambda) <- c("reference", "GrAB", "GrBA", "LALA", "LANo")
 
-ggplot(join_lambda, aes(y = GrAB, x = reference)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(y = "Constructed LACO lambda", x = "Reference LACO lambda") +
-  annotate("text", label = "R^2 = 0.1045", x = 20, y = 50) +
+join_lambda <- cbind(ref_lambda_trim, const_lambda_trim_GrAB, const_lambda_trim_GrBA, const_lambda_trim_LALA, const_lambda_trim_LANo) %>%
+  mutate(Year = c(2003:2015))
+colnames(join_lambda) <- c("reference", "GrAB", "GrBA", "LALA", "LANo", "Year")
+join_lambda <- gather(join_lambda, key = "treatment", value = "constructed", - reference, -Year)
+
+summary(lm(constructed ~ reference, join_lambda))
+ggplot(join_lambda, aes(y = constructed, x = reference)) +
+  geom_point(aes(col = treatment)) +
+  geom_smooth(method = "lm")+
+  labs(y = "Constructed LACO lambda", x = "Reference LACO lambda", col = "Seeding treatment") +
+  annotate("text", label = "R^2 = 0.1636
+           adjusted R^2 = 0.1468
+           p-value = 0.002", x = 20, y = 80) +
   theme_bw()
 
