@@ -52,7 +52,7 @@ ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = type)) +
 
 ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = treatment)) +
   geom_jitter() +
-  geom_smooth(method = "loess") +
+  geom_smooth(method = "loess", se = FALSE) +
   theme_bw() +
   ylab("LACO density (log)")
 
@@ -78,6 +78,6 @@ ggplot(join_LACO, aes(x = Year, y = LACO, col = type)) +
 
 ggplot(join_LACO, aes(x = Year, y = LACO, col = treatment)) + 
   geom_jitter() +
-  geom_smooth() +
+  geom_smooth(se = FALSE) +
   theme_bw() +
   ylab("LACO frequency (%)")

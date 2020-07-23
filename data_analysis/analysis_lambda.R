@@ -32,8 +32,9 @@ ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
   geom_smooth(method = "lm") +
   annotate("text", label = "R^2 = 0.232
            adjusted R^2 = 0.168
-           p-value = 0.081", x = 100, y = 400) +
-  theme_bw()
+           p-value = 0.081", x = 50, y = 400) +
+  theme_bw() +
+  geom_text(aes(label = Year), hjust = 0, vjust = 0)
 
 #Differentiate by seeding treatment 
 mean_ref_LACOdens <- spread_join_LACO %>%
@@ -66,7 +67,7 @@ ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) 
   geom_point() +
   ylim(0, 500) +
   xlim(0, 250) +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", se = FALSE) +
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density", col = "Seeding treatment") +
   theme_bw()
@@ -88,4 +89,5 @@ ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
   annotate("text", label = "R^2 = 0.1791
            adjusted R^2 = 0.1045
            p-value = 0.1496", x = 20, y = 50) +
-  theme_bw()
+  theme_bw() +
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0)
