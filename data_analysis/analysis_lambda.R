@@ -34,7 +34,8 @@ ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
            adjusted R^2 = 0.168
            p-value = 0.081", x = 50, y = 400) +
   theme_bw() +
-  geom_text(aes(label = Year), hjust = 0, vjust = 0)
+  geom_text(aes(label = Year), hjust = 0, vjust = 0) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted")
 
 #Differentiate by seeding treatment 
 mean_ref_LACOdens <- spread_join_LACO %>%
@@ -90,4 +91,5 @@ ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
            adjusted R^2 = 0.1045
            p-value = 0.1496", x = 20, y = 50) +
   theme_bw() +
-  geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0)
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted")
