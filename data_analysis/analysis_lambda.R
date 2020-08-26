@@ -20,7 +20,10 @@ mean_LACOdens <- spread_join_LACO %>%
   select(Year, constructed, reference) %>%
   filter(Year != c("2000", "2001")) %>%
   group_by(Year) %>%
-  summarise_at(c("constructed", "reference"), mean, na.rm = TRUE)
+  summarise_at(c("constructed", "reference"), mean, na.rm = TRUE) %>%
+  group_by(Year) %>%
+  mutate(log_constructed = log(constructed), 
+         log_reference = log(reference))
 
 summary(lm(constructed ~ reference, mean_LACOdens))
 ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
@@ -36,6 +39,22 @@ ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
   theme_bw() +
   geom_text(aes(label = Year), hjust = 0, vjust = 0) +
   geom_abline(intercept = 0, slope = 1, linetype = "dotted")
+
+#Log-log analysis of LACO density
+summary(lm(log_constructed ~ log_reference, mean_LACOdens))
+ggplot(mean_LACOdens, aes(y = log_constructed, x = log_reference)) +
+  geom_point()+
+  theme_bw()+
+  geom_smooth(method = "lm") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  ylim(0,6.2)+
+  xlim(3.5,5.6)+
+  geom_text(aes(label = Year), hjust = 0, vjust = 0) +
+  labs(y = "Constructed mean LACO density (log)",
+       x = "Reference mean LACO density (log)") +
+  annotate("text", label = "R^2 = 0.283
+           adjusted R^2 = 0.223
+           p-value = 0.050", x = 3.8, y =5.5) 
 
 #Differentiate by seeding treatment 
 mean_ref_LACOdens <- spread_join_LACO %>%
@@ -84,7 +103,7 @@ colnames(join_lambda_trim) <- c("constructed", "reference")
 
 summary(lm(constructed ~ reference, join_lambda_trim))
 ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
-  geom_point() +
+  geom_jitter() +
   geom_smooth(method = "lm") +
   labs(y = "Constructed LACO lambda", x = "Reference LACO lambda") +
   annotate("text", label = "R^2 = 0.1791
@@ -92,4 +111,6 @@ ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
            p-value = 0.1496", x = 20, y = 50) +
   theme_bw() +
   geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dotted")
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted")+
+  xlim(0, 80) +
+  ylim(-5, 70)
