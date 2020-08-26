@@ -67,14 +67,26 @@ predicted_LACO <- bh.sim(n_pools = n_pools,
 
 #Remove 50% of EG every year from 2001-2017
 mult.5 <- function(x)(x*0.5)
-reducedEGcover <- sumEGcover %>%
+reduced50EGcover <- sumEGcover %>%
   mutate_at(c("2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
               "2012", "2013", "2014", "2015", "2016", "2017"), mult.5)
 
+#Remove 25% of EG every year from 2001-2017
+mult.25 <- function(x)(x*0.75)
+reduced25EGcover <- sumEGcover %>%
+  mutate_at(c("2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016", "2017"), mult.25)
+
+#Remove 75% of EG every year from 2001-2017
+mult.75 <- function(x)(x*0.25)
+reduced75EGcover <- sumEGcover %>%
+  mutate_at(c("2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016", "2017"), mult.75)
+
 #Simulate with exotic grass removal
-reducedEG_LACO <- bh.sim(n_pools = n_pools,
+reduced50EG_LACO <- bh.sim(n_pools = n_pools,
                          seedtrt = as.matrix(seedtrt[,4:6]),
-                         EG = as.matrix(reducedEGcover),
+                         EG = as.matrix(reduced50EGcover),
                          ERVA = as.matrix(ERVAdens),
                          NF = as.matrix(sumNFcover),
                          aii = alpha_LACO_mean[,5],
@@ -86,23 +98,64 @@ reducedEG_LACO <- bh.sim(n_pools = n_pools,
                          g = 0.7,
                          glow = 0.2)
 
+reduced75EG_LACO <- bh.sim(n_pools = n_pools,
+                           seedtrt = as.matrix(seedtrt[,4:6]),
+                           EG = as.matrix(reduced75EGcover),
+                           ERVA = as.matrix(ERVAdens),
+                           NF = as.matrix(sumNFcover),
+                           aii = alpha_LACO_mean[,5],
+                           a1 = alpha_EG_mean[,5],
+                           a2 = alpha_ERVA_mean[,5], 
+                           a3 = alpha_NF_mean[,5],
+                           lambda = lambda_mean[,5],
+                           s = s_mean[,5],
+                           g = 0.7,
+                           glow = 0.2)
+
+reduced25EG_LACO <- bh.sim(n_pools = n_pools,
+                           seedtrt = as.matrix(seedtrt[,4:6]),
+                           EG = as.matrix(reduced25EGcover),
+                           ERVA = as.matrix(ERVAdens),
+                           NF = as.matrix(sumNFcover),
+                           aii = alpha_LACO_mean[,5],
+                           a1 = alpha_EG_mean[,5],
+                           a2 = alpha_ERVA_mean[,5], 
+                           a3 = alpha_NF_mean[,5],
+                           lambda = lambda_mean[,5],
+                           s = s_mean[,5],
+                           g = 0.7,
+                           glow = 0.2)
 #Combine simulated LACO
 colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
                               "2007", "2008", "2009", "2010", "2011", "2012", "2013",
                               "2014", "2015", "2016", "2017")
-colnames(reducedEG_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
+colnames(reduced50EG_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
                               "2007", "2008", "2009", "2010", "2011", "2012", "2013",
                               "2014", "2015", "2016", "2017")
+colnames(reduced75EG_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
+                                "2007", "2008", "2009", "2010", "2011", "2012", "2013",
+                                "2014", "2015", "2016", "2017")
+colnames(reduced25EG_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
+                                "2007", "2008", "2009", "2010", "2011", "2012", "2013",
+                                "2014", "2015", "2016", "2017")
 predicted_LACO <- as.data.frame(predicted_LACO) %>% 
   mutate(Pool = row_number()) %>%
   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
          `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = predicted_LACO)
-reducedEG_LACO <- as.data.frame(reducedEG_LACO) %>% 
+reduced50EG_LACO <- as.data.frame(reduced50EG_LACO) %>% 
   mutate(Pool = row_number()) %>%
   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
-         `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = reducedEG_LACO)
-grass_sim_LACO <- left_join(predicted_LACO, reducedEG_LACO, by = c("Pool", "time")) %>%
-  gather(`predicted_LACO`, `reducedEG_LACO`, key = type, value = LACO) %>%
+         `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = reduced50EG_LACO)
+reduced75EG_LACO <- as.data.frame(reduced75EG_LACO) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
+         `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = reduced75EG_LACO)
+reduced25EG_LACO <- as.data.frame(reduced25EG_LACO) %>% 
+  mutate(Pool = row_number()) %>%
+  gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
+         `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = reduced25EG_LACO)
+grass_sim_LACO <- left_join(left_join(left_join(predicted_LACO, reduced50EG_LACO, by = c("Pool", "time")), reduced75EG_LACO, by = c("Pool", "time")), reduced25EG_LACO, by = c("Pool", "time")) %>%
+  gather(`predicted_LACO`, `reduced50EG_LACO`, `reduced75EG_LACO`, `reduced25EG_LACO`, key = type, value = LACO) %>%
   mutate(log_LACO = log(LACO)) %>%
   mutate_if(is.numeric, ~replace(., is.infinite(.), 0))
 
@@ -121,10 +174,11 @@ summary_grass_sim_LACO <- grass_sim_LACO %>%
             mean_LACO = mean(LACO),
             se_LACO = se(LACO))
 
-ggplot(summary_grass_sim_LACO, aes(x = time, y = mean_LACO, col = type)) +
+ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time, y = mean_LACO, col = type)) +
   geom_point() +
+  geom_line(aes(x = time, y = mean_LACO, group = type)) +
   geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
   theme_bw() +
   labs(x = "Year", y = "Mean LACO density") +
-  scale_color_discrete(name = "Treatment", labels = c("No grass removal", "50% grass removed"))
+  scale_color_discrete(name = "Treatment", labels = c("No grass removal", "50% grass removed", "75% grass removed"))
   
