@@ -8,6 +8,7 @@
 # Outline:
 ## I. Plot LACO dens constructed vs. reference
 ## II. Plot Lambda constructed vs. reference
+## III. Plot LACO Nt/Nt-1 constructed vs. reference
 
 # Set up:
 library(ggplot2)
@@ -15,7 +16,8 @@ library(ggplot2)
 ##############################################
 # I. Plot LACO dens constructed vs. reference#
 ##############################################
-spread_join_LACO <- spread(join_LACO, type, LACOdens) #join_LACO from "timeseries visuals.R"
+#join_LACO from "timeseries visuals.R"
+spread_join_LACO <- spread(join_LACO, type, LACOdens) 
 mean_LACOdens <- spread_join_LACO %>%
   select(Year, constructed, reference) %>%
   filter(Year != c("2000", "2001")) %>%
@@ -91,6 +93,7 @@ ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) 
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density", col = "Seeding treatment") +
   theme_bw()
+
 #############################################
 # II. Plot lambda constructed vs. reference #
 #############################################
@@ -114,3 +117,131 @@ ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dotted")+
   xlim(0, 80) +
   ylim(-5, 70)
+
+####################################################
+# III. Plot LACO Nt/Nt-1 constructed vs. reference #
+####################################################
+#observed Nt/Nt-1 constructed vs. reference
+const_relative_GR <- const_com_noNA %>% 
+  mutate_if(is.numeric, ~replace(., . == 0, 1)) %>% #to avoid NAN and infinite numbers, we'll replace all zeros with one.
+  group_by(Pool) %>%
+  summarize('2003G' = `2003`/`2002`,
+            '2004G' = `2004`/`2003`,
+            '2005G' = `2005`/`2004`,
+            '2006G' = `2006`/`2005`,
+            '2007G' = `2007`/`2006`,
+            '2008G' = `2008`/`2007`,
+            '2009G' = `2009`/`2008`,
+            '2010G' = `2010`/`2009`,
+            '2011G' = `2011`/`2010`,
+            '2012G' = `2012`/`2011`,
+            '2013G' = `2013`/`2012`,
+            '2014G' = `2014`/`2013`,
+            '2015G' = `2015`/`2014`) %>% 
+  gather(`2003G`, `2004G`, `2005G`, `2006G`, `2007G`, `2008G`, 
+         `2009G`, `2010G`, `2011G`, `2012G`, `2013G`, `2014G`, `2015G`, key = Year, value = const_GR) %>%
+  group_by(Year) %>%
+  summarize(mean_const_GR = mean(const_GR),
+            log_mean_const_GR = log(mean_const_GR)) %>%
+  mutate(Year = gsub("G", "", Year) )
+
+ref_relative_GR <- ref_com_LACO %>%
+  mutate_if(is.numeric, ~replace(., . == 0, 1)) %>% #to avoid NAN and infinite numbers, we'll replace all zeros with one.
+  group_by(Pool) %>%
+  summarize('2003G' = `2003`/`2002`,
+            '2004G' = `2004`/`2003`,
+            '2005G' = `2005`/`2004`,
+            '2006G' = `2006`/`2005`,
+            '2007G' = `2007`/`2006`,
+            '2008G' = `2008`/`2007`,
+            '2009G' = `2009`/`2008`,
+            '2010G' = `2010`/`2009`,
+            '2011G' = `2011`/`2010`,
+            '2012G' = `2012`/`2011`,
+            '2013G' = `2013`/`2012`,
+            '2014G' = `2014`/`2013`,
+            '2015G' = `2015`/`2014`) %>%
+  gather(`2003G`, `2004G`, `2005G`, `2006G`, `2007G`, `2008G`, 
+         `2009G`, `2010G`, `2011G`, `2012G`, `2013G`, `2014G`, `2015G`, key = Year, value = ref_GR) %>%
+  group_by(Year) %>%
+  summarize(mean_ref_GR = mean(ref_GR), 
+            log_mean_ref_GR = log(mean_ref_GR)) %>%
+  mutate(Year = gsub("G", "", Year) )
+
+join_relative_GR <- left_join(const_relative_GR, ref_relative_GR, by = "Year") #join two tables
+
+summary(lm(log_mean_const_GR ~ log_mean_ref_GR, join_relative_GR))
+ggplot(join_relative_GR, aes(y = log_mean_const_GR, x = log_mean_ref_GR)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed LACO observed growth rate (log)", x = "Reference LACO observed growth rate (log)") +
+  theme_bw() +
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  annotate("text", label = "R^2 = 0.614
+           adjusted R^2 = 0.579
+           p-value = 0.002", x = 0, y = 4) +
+  xlim(-1, 3.5)
+
+#predicted Nt/Nt-1 constructed vs. reference
+predicted_const_GR <- predicted_LACO %>%
+  spread(time, predicted_LACO) %>%
+  mutate_if(is.numeric, ~replace(., . == 0, 1)) %>%
+  group_by(Pool) %>%
+  summarize('2003G' = `2003`/`2002`,
+            '2004G' = `2004`/`2003`,
+            '2005G' = `2005`/`2004`,
+            '2006G' = `2006`/`2005`,
+            '2007G' = `2007`/`2006`,
+            '2008G' = `2008`/`2007`,
+            '2009G' = `2009`/`2008`,
+            '2010G' = `2010`/`2009`,
+            '2011G' = `2011`/`2010`,
+            '2012G' = `2012`/`2011`,
+            '2013G' = `2013`/`2012`,
+            '2014G' = `2014`/`2013`,
+            '2015G' = `2015`/`2014`) %>%
+  gather(`2003G`, `2004G`, `2005G`, `2006G`, `2007G`, `2008G`, 
+         `2009G`, `2010G`, `2011G`, `2012G`, `2013G`, `2014G`, `2015G`, key = Year, value = const_GR) %>%
+  group_by(Year) %>%
+  summarize(mean_const_GR = mean(const_GR), 
+            log_mean_const_GR = log(mean_const_GR)) %>%
+  mutate(Year = gsub("G", "", Year) ) 
+
+predicted_ref_GR <- ref_predicted_LACO %>%
+  spread(time, predicted_LACO) %>%
+  mutate_if(is.numeric, ~replace(., . == 0, 1)) %>%
+  group_by(Pool) %>%
+  summarize('2003G' = `2003`/`2002`,
+            '2004G' = `2004`/`2003`,
+            '2005G' = `2005`/`2004`,
+            '2006G' = `2006`/`2005`,
+            '2007G' = `2007`/`2006`,
+            '2008G' = `2008`/`2007`,
+            '2009G' = `2009`/`2008`,
+            '2010G' = `2010`/`2009`,
+            '2011G' = `2011`/`2010`,
+            '2012G' = `2012`/`2011`,
+            '2013G' = `2013`/`2012`,
+            '2014G' = `2014`/`2013`,
+            '2015G' = `2015`/`2014`) %>%
+  gather(`2003G`, `2004G`, `2005G`, `2006G`, `2007G`, `2008G`, 
+         `2009G`, `2010G`, `2011G`, `2012G`, `2013G`, `2014G`, `2015G`, key = Year, value = ref_GR) %>%
+  group_by(Year) %>%
+  summarize(mean_ref_GR = mean(ref_GR), 
+            log_mean_ref_GR = log(mean_ref_GR)) %>%
+  mutate(Year = gsub("G", "", Year) ) 
+
+join_predicted_GR <- left_join(predicted_const_GR, predicted_ref_GR, by = "Year") #join two tables
+summary(lm(log_mean_const_GR ~ log_mean_ref_GR, join_predicted_GR))
+ggplot(join_predicted_GR, aes(y = log_mean_const_GR, x = log_mean_ref_GR)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed LACO predicted growth rate (log)", x = "Reference LACO predicted growth rate (log)") +
+  theme_bw() +
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  annotate("text", label = "R^2 = 0.604
+           adjusted R^2 = 0.568
+           p-value = 0.002", x = -0.5, y = 2) +
+  xlim(-1.5, 2)
