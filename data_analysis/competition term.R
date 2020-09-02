@@ -96,9 +96,12 @@ comp_const_ref <- merge(comp_ref, comp) %>%
 join_comp_lambda <- left_join(lambda_const_ref, comp_const_ref, by = c("Year", "type"))
 
 # Plot lambda and competition terms
-ggplot(join_comp_lambda, aes(x = lambda, y = comp, col = type)) +
+join_comp_lambda$type <- factor(join_comp_lambda$type, levels = c("reference", "constructed"))
+ggplot(join_comp_lambda , aes(x = lambda, y = comp)) +
   geom_point()+
   theme_bw()+
   geom_text(aes(label = join_comp_lambda$Year), hjust = 0, vjust =0)+
-  labs(y = "Competition term", x = "Lambda") 
+  labs(y = "Competition term", x = "Lambda") +
+  xlim(0, 75)+
+  facet_wrap(~type)
 
