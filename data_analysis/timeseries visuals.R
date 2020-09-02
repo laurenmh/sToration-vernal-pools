@@ -28,7 +28,9 @@ const_LACO$LACO <- as.numeric(const_LACO$LACO)
 
 # Join tables
 join_LACO <- full_join(ref_LACO, const_LACO, all = TRUE) %>%
-  mutate(treatment = paste(Treatment.1999, Treatment.2000))
+  mutate(treatment = paste(Treatment.1999, Treatment.2000)) %>%
+  mutate(log_LACOdens = log(LACOdens)) %>%
+  mutate_if(is.numeric, ~replace(., is.infinite(.), 0)) 
 
 # Visualize LACOdens separately
 ref <- ggplot(ref_LACO, aes(x = Year, y = LACOdens)) +
@@ -44,13 +46,13 @@ const <- ggplot(const_LACO, aes(x = Year, y = LACOdens)) +
 ggarrange(ref, const, ncol = 1, nrow = 2)
 
 # Visualize LACOdens together
-ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = type)) +
+ggplot(join_LACO, aes(x = Year, y = log_LACOdens, col = type)) +
   geom_jitter() +
   geom_smooth() +
   theme_bw() +
-  ylab("LACO density (log)")
+  ylab("LACO density (log)") 
 
-ggplot(join_LACO, aes(x = Year, y = log(LACOdens), col = treatment)) +
+ggplot(join_LACO, aes(x = Year, y = log_LACOdens, col = treatment)) +
   geom_jitter() +
   geom_smooth(method = "loess", se = FALSE) +
   theme_bw() +
