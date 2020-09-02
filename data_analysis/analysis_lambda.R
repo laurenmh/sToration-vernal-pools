@@ -244,4 +244,14 @@ ggplot(join_predicted_GR, aes(y = log_mean_const_GR, x = log_mean_ref_GR)) +
   annotate("text", label = "R^2 = 0.604
            adjusted R^2 = 0.568
            p-value = 0.002", x = -0.5, y = 2) +
-  xlim(-1.5, 2)
+  xlim(-1.5, 2) 
+
+
+### Are lambdas (instrinsic growth rate) correlated with LACO actual growth rate?
+join_lambda_GR <- cbind(const_relative_GR, lambda_mean[-c(1,2,16,17),5])
+colnames(join_lambda_GR) <- c("Year", "mean_GR", "log_mean_GR", "lambda")
+ggplot(join_lambda_GR, aes(x = lambda, y = log_mean_GR)) +
+  geom_point()+
+  geom_text(aes(label = join_lambda_GR$Year), hjust = 0, vjust =0) +
+  xlim(0, 75)+
+  theme_bw()
