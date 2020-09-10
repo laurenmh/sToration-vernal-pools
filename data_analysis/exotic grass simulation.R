@@ -181,4 +181,21 @@ ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time
   theme_bw() +
   labs(x = "Year", y = "Mean LACO density") +
   scale_color_discrete(name = "Treatment", labels = c("No grass removal", "50% grass removed", "75% grass removed"))
-  
+
+#Graph mean of exotic grass cover timeseries
+EG_summary <- const_dummy_join %>%
+  group_by(Year) %>%
+  summarise(EG_mean = mean(sum_EG),
+            EG_se = se(sum_EG)) %>%
+  mutate(type = "constructed")
+EG_ref_summary <- ref_com_join %>%
+  group_by(Year) %>%
+  summarise(EG_mean = mean(sum_EG),
+            EG_se = se(sum_EG)) %>%
+  mutate(type = "reference")
+EG_summary_join <- rbind(EG_summary, EG_ref_summary) 
+ggplot(EG_summary_join, aes(x = Year, y = EG_mean, col= type)) +
+  geom_point()+
+  geom_errorbar(aes(ymin = EG_mean-EG_se, ymax = EG_mean+EG_se)) +
+  theme_bw() +
+  labs(x = "Year", y = "Mean exotic grass cover (%)") 
