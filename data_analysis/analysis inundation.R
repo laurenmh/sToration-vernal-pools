@@ -64,17 +64,17 @@ inundation_summary <- const_depth %>%
             duration_wk = as.numeric(max(Duration.weeks))) %>% #inundation data available for 2000, 2002, 2009, 2010, 2011, 2012
   filter(max_depth <= 10)
 
-env_summary <- left_join(inundation_summary, PPT%>% select(Year, Jan_March_cm), by = "Year") 
+env_summary <- left_join(inundation_summary, PPT%>% select(Year, Oct_Dec_cm, Jan_March_cm), by = "Year") 
 env_summary$Year <- as.character(env_summary$Year)
 LACO_env <- left_join(env_summary, const_com%>%select(Year, Pool, LACOdens), by = c("Year", "Pool")) %>%
   drop_na() #use this combined data
 
-pairs(~log(LACOdens)+max_depth+duration_wk+Jan_March_cm, data = LACO_env) #this makes a pairwise comparison  
-LACO_env_cor <- cor(LACO_env[,5:8], method = c("pearson")) #this makes a correlation matrix
+pairs(~log(LACOdens)+max_depth+duration_wk+Oct_Dec_cm+Jan_March_cm, data = LACO_env) #this makes a pairwise comparison  
+LACO_env_cor <- cor(LACO_env[,5:9], method = c("pearson")) #this makes a correlation matrix
 library(corrplot)
 corrplot(LACO_env_cor, type = "upper", order = "hclust") #this makes a correlogram
 library(Hmisc)
-rcorr(as.matrix(LACO_env[,5:8])) #this makes a correlation matrix with significance levels
+rcorr(as.matrix(LACO_env[,5:9])) #this makes a correlation matrix with significance levels
     #LACO count looks positively correlated with max depth (increases up to 10cm)
     #max depth and duration are strongly positively correlated
     #early PPT is lightly correlated with max depth
