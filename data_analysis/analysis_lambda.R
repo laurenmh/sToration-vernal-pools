@@ -12,6 +12,8 @@
 
 # Set up:
 library(ggplot2)
+library(tidyverse)
+library(ggpubr)
 
 ##############################################
 # I. Plot LACO dens constructed vs. reference#
@@ -30,14 +32,14 @@ mean_LACOdens <- spread_join_LACO %>%
 summary(lm(constructed ~ reference, mean_LACOdens))
 ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
   geom_point() +
-  ylim(0, 500) +
-  xlim(0, 250) +
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density") +
+    #scale_x_log10()+
+    #scale_y_log10()+
   geom_smooth(method = "lm") +
   annotate("text", label = "R^2 = 0.232
            adjusted R^2 = 0.168
-           p-value = 0.081", x = 50, y = 400) +
+           p-value = 0.081", x = 60, y = 400) +
   theme_bw() +
   geom_text(aes(label = Year), hjust = 0, vjust = 0) +
   geom_abline(intercept = 0, slope = 1, linetype = "dotted")
@@ -247,7 +249,7 @@ ggplot(join_predicted_GR, aes(y = log_mean_const_GR, x = log_mean_ref_GR)) +
   xlim(-1.5, 2) 
 
 
-### Are lambdas (instrinsic growth rate) correlated with LACO actual growth rate?
+### Are lambdas (intrinsic growth rate) correlated with LACO actual growth rate?
 join_lambda_GR <- cbind(const_relative_GR, lambda_mean[-c(1,2,16,17),5])
 colnames(join_lambda_GR) <- c("Year", "mean_GR", "log_mean_GR", "lambda")
 ggplot(join_lambda_GR, aes(x = lambda, y = log_mean_GR)) +
@@ -255,3 +257,57 @@ ggplot(join_lambda_GR, aes(x = lambda, y = log_mean_GR)) +
   geom_text(aes(label = join_lambda_GR$Year), hjust = 0, vjust =0) +
   xlim(0, 75)+
   theme_bw()
+
+############
+# Figure 2 #
+############
+
+f2a <- ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
+  geom_point() +
+  labs(y = "Constructed LACO density",
+       x = "Reference LACO density") +
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_smooth(method = "lm") +
+  geom_text(aes(x = 100, y = 1000, label = "R^2 == 0.283~~~p == 0.050"), parse = TRUE) +
+  theme_bw() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2)+
+  geom_text(aes(label = Year), hjust = +0.5, vjust = -0.5)
+
+f2b <- ggplot(join_relative_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed LACO observed growth rate", x = "Reference LACO observed growth rate") +
+  theme_bw() +
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = +0.5, vjust = -0.5) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2) +
+  geom_text(aes(x =3, y = 65, label = "R^2 == 0.614~~~p == 0.002"), parse = TRUE) +
+  scale_x_log10()+
+  scale_y_log10()
+
+f2c <- ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
+  geom_jitter() +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed LACO lambda", x = "Reference LACO lambda") +
+  geom_text(aes(x = 35, y = 60, label = "R^2 == 0.179~~~p == 0.149"), parse = TRUE) +
+  theme_bw() +
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = +0.5, vjust = -0.5) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2)+
+  xlim(0, 80) +
+  ylim(-5, 70)
+
+f2d <- ggplot(join_predicted_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(y = "Constructed LACO predicted growth rate", x = "Reference LACO predicted growth rate") +
+  theme_bw() +
+  geom_text(aes(label = row.names(join_lambda_trim)), hjust = +0.5, vjust = -0.5) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2) +
+  geom_text(aes(x =1, y = 12, label = "R^2 == 0.604~~~p == 0.002"), parse = TRUE) +
+  scale_x_log10()+
+  scale_y_log10()
+
+ggarrange(f2a, f2b, f2c, f2d,  ncol = 2, nrow = 2, 
+          labels = c("a)", "b)",
+                     "c)", "d)"),
+          font.label = list(size = 12))

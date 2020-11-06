@@ -107,7 +107,7 @@ join_comp_lambda <- left_join(lambda_const_ref, comp_const_ref, by = c("Year", "
 
 # Plot lambda and competition terms
 join_comp_lambda$type <- factor(join_comp_lambda$type, levels = c("reference", "constructed"))
-ggplot(join_comp_lambda , aes(x = lambda, y = comp, col = type)) +
+ggplot(join_comp_lambda , aes(x = lambda, y = comp)) +
   geom_point()+
   theme_bw()+
   geom_text(aes(label = join_comp_lambda$Year), hjust = 0, vjust =0)+
@@ -197,4 +197,37 @@ ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp)) +
   xlim(0, 80)+
   facet_wrap(~type)
 
+############
+# Figure 3 #
+############
+f3a <- ggplot(join_comp_lambda , aes(x = lambda, y = comp)) +
+  geom_point()+
+  theme_bw()+
+  theme(axis.title.x = element_blank())+
+  geom_text(aes(label = join_comp_lambda$Year), hjust = 0, vjust =0)+
+  labs(y = "Competition term all") +
+  xlim(0, 80)+
+  facet_wrap(~type)
 
+f3b <- ggplot(join_comp_lambdaEG , aes(x = lambda, y = comp)) +
+  geom_point()+
+  theme_bw()+
+  theme(axis.title.x = element_blank())+
+  geom_text(aes(label = join_comp_lambdaEG$Year), hjust = 0, vjust =0)+
+  labs(y = "Competition term EG only") +
+  xlim(0, 80)+
+  facet_wrap(~type)
+
+f3c <- ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp)) +
+  geom_point()+
+  theme_bw()+
+  geom_text(aes(label = join_comp_lambdaEG$Year), hjust = 0, vjust =0)+
+  labs(y = "Competition term LACO only", x = "LACO Lambda") +
+  xlim(0, 80)+
+  facet_wrap(~type)
+
+ggarrange(f3a, f3b, f3c,   ncol = 1, nrow = 3, 
+          labels = c("a)", "b)",
+                     "c)"),
+          font.label = list(size = 12),
+          heights = c(5, 5, 5.5))  
