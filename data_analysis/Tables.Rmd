@@ -1,0 +1,28 @@
+---
+title: "Tables"
+author: "Lina Aoyama"
+date: "September 14, 2020"
+output:
+  pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(stargazer)
+library(tidyverse)
+```
+
+```{r load_data, include = FALSE}
+dt_1 <- read_csv(paste("C:/Users/Lina/Desktop/Repositories/sToration-vernal-pools/data_analysis/", "Table1.csv", sep=""))
+dt_2 <- read_csv(paste("C:/Users/Lina/Desktop/Repositories/sToration-vernal-pools/data_analysis/", "Table2.csv", sep =""))
+```
+
+## Environmental variables and demographic parameters
+```{r cars, results = 'asis'}
+stargazer::stargazer(as.matrix(dt_1), header = FALSE, type = 'latex', title = "Regression results")
+```
+
+## Effect sizes of exotic grass removal
+```{r , results = 'asis'}
+stargazer::stargazer(as.matrix(dt_2), header = FALSE, type = 'latex', title = "Effect sizes of exotic grass removal by year")
+```
