@@ -15,6 +15,10 @@ library(tidyverse)
 ```{r load_data, include = FALSE}
 dt_1 <- read_csv(paste("C:/Users/Lina/Desktop/Repositories/sToration-vernal-pools/data_analysis/", "Table1.csv", sep=""))
 dt_2 <- read_csv(paste("C:/Users/Lina/Desktop/Repositories/sToration-vernal-pools/data_analysis/", "Table2.csv", sep =""))
+dt_2 <- round(dt_2, 3)
+dt_2$time <- as.character(dt_2$time)
+colnames(dt_2) <- c("Year", "25% removal", "50% removal", "75% removal")
+
 ```
 
 ## Environmental variables and demographic parameters
@@ -24,5 +28,5 @@ stargazer::stargazer(as.matrix(dt_1), header = FALSE, type = 'latex', title = "R
 
 ## Effect sizes of exotic grass removal
 ```{r , results = 'asis'}
-stargazer::stargazer(as.matrix(dt_2), header = FALSE, type = 'latex', title = "Effect sizes of exotic grass removal by year")
+stargazer::stargazer(as.matrix.data.frame(dt_2), header = FALSE, type = 'latex', title = "Effect sizes of exotic grass removal by year")
 ```

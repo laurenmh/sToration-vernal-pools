@@ -185,6 +185,10 @@ ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time
   labs(x = "Year", y = "Mean LACO density") +
   scale_color_discrete(name = "Treatment", labels = c("No grass removal", "50% grass removed", "75% grass removed"))
 
+summary_grass_sim_LACO %>%
+  group_by(type) %>%
+  summarize(mean = mean(mean_LACO))
+
 ################################################
 #Which year had the greatest effect of removal?#
 ################################################
