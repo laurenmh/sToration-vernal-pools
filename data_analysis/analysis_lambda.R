@@ -19,23 +19,20 @@ library(ggpubr)
 # I. Plot LACO dens constructed vs. reference#
 ##############################################
 #join_LACO from "timeseries visuals.R"
-spread_join_LACO <- spread(join_LACO, type, LACOdens) 
-mean_LACOdens <- spread_join_LACO %>%
-  select(Year, constructed, reference) %>%
-  filter(Year != c("2000", "2001")) %>%
-  group_by(Year) %>%
-  summarise_at(c("constructed", "reference"), mean, na.rm = TRUE) %>%
-  group_by(Year) %>%
-  mutate(log_constructed = log(constructed), 
-         log_reference = log(reference))
+mean_LACOdens <-join_LACO %>%
+  filter(Year !=c("2000","2001")) %>%
+  group_by(type, Year) %>%
+  summarise(mean_LACO = mean(LACOdens),
+            mean_logLACO = mean(log_LACOdens)) %>%
+  pivot_wider(names_from = type, values_from = c(mean_LACO, mean_logLACO))
 
-summary(lm(constructed ~ reference, mean_LACOdens))
-ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
+summary(lm(mean_LACO_constructed ~ mean_LACO_reference, mean_LACOdens))
+ggplot(mean_LACOdens, aes(y = mean_LACO_constructed, x = mean_LACO_reference)) +
   geom_point() +
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density") +
-    #scale_x_log10()+
-    #scale_y_log10()+
+  scale_x_log10()+
+  scale_y_log10()+
   geom_smooth(method = "lm") +
   annotate("text", label = "R^2 = 0.232
            adjusted R^2 = 0.168
@@ -45,55 +42,41 @@ ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dotted")
 
 #Log-log analysis of LACO density
-summary(lm(log_constructed ~ log_reference, mean_LACOdens))
-ggplot(mean_LACOdens, aes(y = log_constructed, x = log_reference)) +
+ggplot(mean_LACOdens, aes(y = mean_logLACO_constructed, x = mean_logLACO_reference)) +
   geom_point()+
   theme_bw()+
   geom_smooth(method = "lm") +
   geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
   ylim(0,6.2)+
-  xlim(3.5,5.6)+
+  xlim(0,6.2)+
   geom_text(aes(label = Year), hjust = 0, vjust = 0) +
   labs(y = "Constructed mean LACO density (log)",
-       x = "Reference mean LACO density (log)") +
-  annotate("text", label = "R^2 = 0.283
-           adjusted R^2 = 0.223
-           p-value = 0.050", x = 3.8, y =5.5) 
+       x = "Reference mean LACO density (log)")
 
 #Differentiate by seeding treatment 
-mean_ref_LACOdens <- spread_join_LACO %>%
-  select(Year, reference) %>%
-  filter(Year != c("2000", "2001")) %>%
-  group_by(Year) %>%
-  summarise_at(c("reference"), mean, na.rm = TRUE)
-mean_const_LACOdens <- spread_join_LACO %>%
-  select(Year, constructed, treatment) %>%
-  filter(Year != c("2000", "2001")) %>%
-  filter(treatment != c("NA NA")) %>%
+mean_LACOdens_const <- join_LACO %>%
+  filter(Year !=c("2000","2001")) %>%
+  filter(type == "constructed") %>%
   group_by(Year, treatment) %>%
-  summarise_at(c("constructed"), mean, na.rm = TRUE)
-mean_LACOdens_trt <- merge(mean_const_LACOdens, mean_ref_LACOdens, by = "Year")
+  summarise(mean_LACO_const = mean(LACOdens),
+            mean_logLACO_const = mean(log_LACOdens)) 
 
-summary(lm(constructed ~ reference, mean_LACOdens_trt))
-ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference)) +
+mean_LACOdens_ref <- join_LACO %>%
+  filter(Year !=c("2000", "2001")) %>%
+  group_by(Year) %>%
+  summarise(mean_LACO_ref = mean(LACOdens),
+            mean_logLACO_ref = mean(log_LACOdens)) 
+
+mean_LACOdens_trt <- merge(mean_LACOdens_const, mean_LACOdens_ref)
+
+summary(lm(mean_LACO_const ~ mean_LACO_ref, mean_LACOdens_trt))
+ggplot(mean_LACOdens_trt, aes(y = mean_LACO_const, x = mean_LACO_ref)) +
   geom_point(aes(col = treatment)) +
-  ylim(0, 500) +
-  xlim(0, 250) +
-  geom_smooth(method = "lm") +
   labs(y = "Constructed mean LACO density",
-       x = "Reference mean LACO density") +
-  annotate("text", label = "R^2 = 0.1822 
-          adjusted R^2 = 0.167
-          p-value = 0.001", x = 50, y = 400) + 
-  theme_bw()
-
-ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) +
-  geom_point() +
-  ylim(0, 500) +
-  xlim(0, 250) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(y = "Constructed mean LACO density",
-       x = "Reference mean LACO density", col = "Seeding treatment") +
+       x = "Reference mean LACO density",  col = "Seeding treatment") +
+  geom_smooth(aes(col = treatment), method = "lm", se = FALSE) + 
+  scale_x_log10()+
+  scale_y_log10()+
   theme_bw()
 
 #############################################
@@ -262,14 +245,14 @@ ggplot(join_lambda_GR, aes(x = lambda, y = log_mean_GR)) +
 # Figure 2 #
 ############
 
-f2a <- ggplot(mean_LACOdens, aes(y = constructed, x = reference)) +
+f2a <- ggplot(mean_LACOdens, aes(y = mean_LACO_constructed, x = mean_LACO_reference)) +
   geom_point() +
   labs(y = "Constructed LACO density",
        x = "Reference LACO density") +
   scale_x_log10()+
   scale_y_log10()+
   geom_smooth(method = "lm") +
-  geom_text(aes(x = 100, y = 1000, label = "R^2 == 0.283~~~p == 0.050"), parse = TRUE) +
+  geom_text(aes(x = 100, y = 1000, label = "R^2 == 0.232~~~p == 0.081"), parse = TRUE) +
   theme_bw() +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2)+
   geom_text(aes(label = Year), hjust = +0.5, vjust = -0.5)

@@ -17,7 +17,7 @@ dt_1 <- read_csv(paste("C:/Users/Lina/Desktop/Repositories/sToration-vernal-pool
 dt_2 <- read_csv(paste("C:/Users/Lina/Desktop/Repositories/sToration-vernal-pools/data_analysis/", "Table2.csv", sep =""))
 dt_2 <- round(dt_2, 3)
 dt_2$time <- as.character(dt_2$time)
-colnames(dt_2) <- c("Year", "25% removal", "50% removal", "75% removal")
+colnames(dt_2) <- c("Year",  "50% removal", "75% removal")
 
 ```
 

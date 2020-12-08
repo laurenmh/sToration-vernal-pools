@@ -189,6 +189,8 @@ summary_grass_sim_LACO %>%
   group_by(type) %>%
   summarize(mean = mean(mean_LACO))
 
+anova(lm(mean_LACO ~ time, data = summary_grass_sim_LACO))
+
 ################################################
 #Which year had the greatest effect of removal?#
 ################################################
@@ -197,8 +199,7 @@ removal_eff <- summary_grass_sim_LACO %>%
   select(time, type, mean_LACO, sd_LACO) %>%
   pivot_wider(names_from = type, values_from = c(mean_LACO, sd_LACO)) %>%
   select(-sd_LACO_reduced25EG_LACO, -sd_LACO_reduced50EG_LACO, -sd_LACO_reduced75EG_LACO) %>%
-  mutate(eff_25 = (mean_LACO_reduced25EG_LACO-mean_LACO_predicted_LACO)/sd_LACO_predicted_LACO,
-         eff_50 = (mean_LACO_reduced50EG_LACO-mean_LACO_predicted_LACO)/sd_LACO_predicted_LACO,
+  mutate(eff_50 = (mean_LACO_reduced50EG_LACO-mean_LACO_predicted_LACO)/sd_LACO_predicted_LACO,
          eff_75 = (mean_LACO_reduced75EG_LACO-mean_LACO_predicted_LACO)/sd_LACO_predicted_LACO) %>%
   select(-mean_LACO_predicted_LACO, -mean_LACO_reduced25EG_LACO, -mean_LACO_reduced50EG_LACO, -mean_LACO_reduced75EG_LACO,
          -sd_LACO_predicted_LACO)
