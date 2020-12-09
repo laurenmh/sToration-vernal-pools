@@ -247,12 +247,12 @@ ggplot(join_lambda_GR, aes(x = lambda, y = log_mean_GR)) +
 
 f2a <- ggplot(mean_LACOdens, aes(y = mean_LACO_constructed, x = mean_LACO_reference)) +
   geom_point() +
-  labs(y = "Constructed LACO density",
-       x = "Reference LACO density") +
-  scale_x_log10()+
+  labs(y = "Observed constructed LACO density",
+       x = "Observed reference LACO density") +
+  scale_x_log10(limits = c(1,2000))+
   scale_y_log10()+
   geom_smooth(method = "lm") +
-  geom_text(aes(x = 100, y = 1000, label = "R^2 == 0.232~~~p == 0.081"), parse = TRUE) +
+  geom_text(aes(x = 10, y = 1000, label = "R^2 == 0.232~~~p == 0.081"), parse = TRUE) +
   theme_bw() +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2)+
   geom_text(aes(label = Year), hjust = +0.5, vjust = -0.5)
@@ -260,35 +260,35 @@ f2a <- ggplot(mean_LACOdens, aes(y = mean_LACO_constructed, x = mean_LACO_refere
 f2b <- ggplot(join_relative_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  labs(y = "Constructed LACO observed growth rate", x = "Reference LACO observed growth rate") +
+  labs(y = "Observed constructed LACO growth rate", x = "Observed reference LACO growth rate") +
   theme_bw() +
   geom_text(aes(label = row.names(join_lambda_trim)), hjust = +0.5, vjust = -0.5) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2) +
-  geom_text(aes(x =3, y = 65, label = "R^2 == 0.614~~~p == 0.002"), parse = TRUE) +
-  scale_x_log10()+
-  scale_y_log10()
+  geom_text(aes(x = 1.5, y = 65, label = "R^2 == 0.614~~~p == 0.002"), parse = TRUE) +
+  scale_x_log10(limits = c(0.2, 130))+
+  scale_y_log10(limits = c(0.2, 130))
 
 f2c <- ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
   geom_jitter() +
   geom_smooth(method = "lm") +
-  labs(y = "Constructed LACO lambda", x = "Reference LACO lambda") +
-  geom_text(aes(x = 35, y = 60, label = "R^2 == 0.179~~~p == 0.149"), parse = TRUE) +
+  labs(y = "Predicted constructed LACO lambda", x = "Predicted reference LACO lambda") +
+  geom_text(aes(x = 25, y = 70, label = "R^2 == 0.179~~~p == 0.149"), parse = TRUE) +
   theme_bw() +
   geom_text(aes(label = row.names(join_lambda_trim)), hjust = +0.5, vjust = -0.5) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2)+
-  xlim(0, 80) +
-  ylim(-5, 70)
+  xlim(-5, 80) +
+  ylim(-5, 80)
 
 f2d <- ggplot(join_predicted_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  labs(y = "Constructed LACO predicted growth rate", x = "Reference LACO predicted growth rate") +
+  labs(y = "Predicted constructed LACO growth rate", x = "Predicted reference LACO growth rate") +
   theme_bw() +
   geom_text(aes(label = row.names(join_lambda_trim)), hjust = +0.5, vjust = -0.5) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2) +
-  geom_text(aes(x =1, y = 12, label = "R^2 == 0.604~~~p == 0.002"), parse = TRUE) +
-  scale_x_log10()+
-  scale_y_log10()
+  geom_text(aes(x = 0.6, y = 10, label = "R^2 == 0.604~~~p == 0.002"), parse = TRUE) +
+  scale_x_log10(limits = c(0.1, 20))+
+  scale_y_log10(limits = c(0.1, 20))
 
 ggarrange(f2a, f2b, f2c, f2d,  ncol = 2, nrow = 2, 
           labels = c("a)", "b)",
