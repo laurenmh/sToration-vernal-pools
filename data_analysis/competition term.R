@@ -6,6 +6,7 @@
 # Load packages
 library(ggplot2)
 library(tidyverse)
+library(ggpubr)
 
 # Calculate mean of LACO, EG, ERVA, and NF each year
 # Constructed pools
@@ -203,27 +204,33 @@ ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp)) +
 f3a <- ggplot(join_comp_lambda , aes(x = lambda, y = comp)) +
   geom_point()+
   theme_bw()+
+  scale_x_log10(limits=c(0.1,80))+
+  geom_smooth(method = "lm")+
+  ylim(0,1.0)+
   theme(axis.title.x = element_blank())+
-  geom_text(aes(label = join_comp_lambda$Year), hjust = 0, vjust =0)+
+  geom_text(aes(label = Year), hjust = 1, vjust = 0)+
   labs(y = "Competition term all") +
-  xlim(0, 80)+
   facet_wrap(~type)
 
 f3b <- ggplot(join_comp_lambdaEG , aes(x = lambda, y = comp)) +
   geom_point()+
   theme_bw()+
   theme(axis.title.x = element_blank())+
-  geom_text(aes(label = join_comp_lambdaEG$Year), hjust = 0, vjust =0)+
+  geom_text(aes(label = Year), hjust = 1, vjust = 0)+
   labs(y = "Competition term EG only") +
-  xlim(0, 80)+
+  scale_x_log10(limits=c(0.1,80))+
+  geom_smooth(method = "lm")+
+  ylim(0,1.0)+
   facet_wrap(~type)
 
 f3c <- ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp)) +
   geom_point()+
   theme_bw()+
-  geom_text(aes(label = join_comp_lambdaEG$Year), hjust = 0, vjust =0)+
+  geom_text(aes(label = Year), hjust = 1, vjust = 0)+
   labs(y = "Competition term LACO only", x = "LACO Lambda") +
-  xlim(0, 80)+
+  scale_x_log10(limits=c(0.1,80))+
+  geom_smooth(method = "lm")+
+  ylim(0,1.0)+
   facet_wrap(~type)
 
 ggarrange(f3a, f3b, f3c,   ncol = 1, nrow = 3, 

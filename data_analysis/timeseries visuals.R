@@ -46,8 +46,9 @@ const <- ggplot(const_LACO, aes(x = Year, y = LACOdens)) +
 ggarrange(ref, const, ncol = 1, nrow = 2)
 
 # Visualize LACOdens together
-ggplot(join_LACO, aes(x = Year, y = log_LACOdens, col = type)) +
+ggplot(join_LACO, aes(x = Year, y = LACOdens, col = type)) +
   geom_jitter() +
+  scale_y_log10()+
   geom_smooth() +
   theme_bw() +
   ylab("LACO density (log)") 
@@ -58,7 +59,25 @@ ggplot(join_LACO, aes(x = Year, y = log_LACOdens, col = treatment)) +
   theme_bw() +
   ylab("LACO density (log)")
 
-# Visualize LACO cover seperately
+# Visualize mean and se of LACOdens
+se<-function(x){
+  sd(x)/sqrt(length(x))
+} # this is a function for calculating standard error
+mean_join_LACO <- join_LACO %>%
+  group_by(Year, type) %>%
+  summarise(mean_LACOdens = mean(LACOdens),
+            se_LACOdens = se(LACOdens))
+
+ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
+  geom_point()+
+  geom_line()+
+  scale_y_log10()+
+  geom_errorbar(aes(ymin = mean_LACOdens-se_LACOdens, ymax = mean_LACOdens+se_LACOdens), width = 0.4, alpha = 0.9, size = 1) +
+  theme_bw()+
+  ylab("Mean LACO density") +
+  scale_color_manual(name = "Pool type", values = c("#26a63a", "#00a6bb"))
+
+# Visualize LACO cover separately
 refcov <- ggplot(ref_LACO, aes(x = Year, y = LACO)) +
   geom_jitter(col = "blue") +
   geom_smooth(method = "loess") +

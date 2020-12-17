@@ -257,7 +257,7 @@ f2a <- ggplot(mean_LACOdens, aes(y = mean_LACO_constructed, x = mean_LACO_refere
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = '#F39C12', size = 1.2)+
   geom_text(aes(label = Year), hjust = +0.5, vjust = -0.5)
 
-f2b <- ggplot(join_relative_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
+f2c <- ggplot(join_relative_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
   geom_point() +
   geom_smooth(method = "lm") +
   labs(y = "Observed constructed LACO growth rate", x = "Observed reference LACO growth rate") +
@@ -268,7 +268,7 @@ f2b <- ggplot(join_relative_GR, aes(y = mean_const_GR, x = mean_ref_GR)) +
   scale_x_log10(limits = c(0.2, 130))+
   scale_y_log10(limits = c(0.2, 130))
 
-f2c <- ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
+f2b <- ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
   geom_jitter() +
   geom_smooth(method = "lm") +
   labs(y = "Predicted constructed LACO lambda", x = "Predicted reference LACO lambda") +

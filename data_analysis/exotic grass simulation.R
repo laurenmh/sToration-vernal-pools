@@ -7,6 +7,7 @@
 library(tidyverse)
 library(ggplot2)
 
+
 # Simulation model:
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of LACO stem counts
 sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of mean LACO stem counts
@@ -163,7 +164,13 @@ grass_sim_LACO <- left_join(left_join(left_join(predicted_LACO, reduced50EG_LACO
 
 #plot them!
 ggplot(grass_sim_LACO, aes(x = time, y = log_LACO, col = type)) +
-  geom_jitter()
+  geom_jitter() 
+  
+
+ggplot(grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = as.numeric(time), y = LACO, col = type)) +
+  geom_smooth(method = "gam",formula = y ~s(x))+
+  scale_y_log10()+
+  theme_bw()
 
 se<-function(x){
   sd(x)/sqrt(length(x))
@@ -183,7 +190,9 @@ ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time
   geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
   theme_bw() +
   labs(x = "Year", y = "Mean LACO density") +
-  scale_color_discrete(name = "Treatment", labels = c("No grass removal", "50% grass removed", "75% grass removed"))
+  scale_color_manual(name = "Treatment", 
+                       labels = c("No grass removal", "50% grass removed", "75% grass removed"),
+                       values = c("#004533", "#40a45d", "#85c876"))
 
 summary_grass_sim_LACO %>%
   group_by(type) %>%
