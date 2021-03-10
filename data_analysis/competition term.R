@@ -199,42 +199,58 @@ ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp)) +
   facet_wrap(~type)
 
 ############
-# Figure 3 #
+# Figure 2 #
 ############
-f3a <- ggplot(join_comp_lambda , aes(x = lambda, y = comp)) +
+f2a <- ggplot(join_comp_lambda , aes(x = lambda, y = comp, col = type)) +
   geom_point()+
-  theme_bw()+
+  #theme_bw()+
   scale_x_log10(limits=c(0.1,80))+
-  geom_smooth(method = "lm")+
+  #geom_smooth(method = "lm")+
   ylim(0,1.0)+
-  theme(axis.title.x = element_blank())+
-  geom_text(aes(label = Year), hjust = 1, vjust = 0)+
-  labs(y = "Competition term all") +
-  facet_wrap(~type)
+  theme(axis.title.x = element_blank(),
+        text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"))+
+  #geom_text(aes(label = Year), hjust = 1, vjust = 0)+
+  labs(y = "Overall competition") +
+  scale_color_manual(name = "", values = c("#000000", "#888888"))
 
-f3b <- ggplot(join_comp_lambdaEG , aes(x = lambda, y = comp)) +
+f2b <- ggplot(join_comp_lambdaEG , aes(x = lambda, y = comp, col = type)) +
   geom_point()+
-  theme_bw()+
-  theme(axis.title.x = element_blank())+
-  geom_text(aes(label = Year), hjust = 1, vjust = 0)+
-  labs(y = "Competition term EG only") +
+  #theme_bw()+
+  theme(axis.title.x = element_blank(),
+        text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"))+
+  #geom_text(aes(label = Year), hjust = 1, vjust = 0)+
+  labs(y = "Exotic grass competition") +
   scale_x_log10(limits=c(0.1,80))+
-  geom_smooth(method = "lm")+
+  #geom_smooth(method = "lm")+
   ylim(0,1.0)+
-  facet_wrap(~type)
+  scale_color_manual(name = "", values = c("#000000", "#888888"))
 
-f3c <- ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp)) +
+f2c <- ggplot(join_comp_lambdaLACO , aes(x = lambda, y = comp, col = type)) +
   geom_point()+
-  theme_bw()+
-  geom_text(aes(label = Year), hjust = 1, vjust = 0)+
-  labs(y = "Competition term LACO only", x = "LACO Lambda") +
+  #theme_bw()+
+  #geom_text(aes(label = Year), hjust = 1, vjust = 0)+
+  theme(text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"))+
+  labs(y = "LACO competition", x = "LACO intrinsic growth rate (log)") +
   scale_x_log10(limits=c(0.1,80))+
-  geom_smooth(method = "lm")+
+  #geom_smooth(method = "lm")+
   ylim(0,1.0)+
-  facet_wrap(~type)
+  scale_color_manual(name = "", values = c("#000000", "#888888"))
 
-ggarrange(f3a, f3b, f3c,   ncol = 1, nrow = 3, 
+ggarrange(f2a, f2b, f2c,   ncol = 1, nrow = 3, 
           labels = c("a)", "b)",
                      "c)"),
           font.label = list(size = 12),
-          heights = c(5, 5, 5.5))  
+          heights = c(5, 5, 5.5),
+          common.legend = TRUE, legend = "bottom")  

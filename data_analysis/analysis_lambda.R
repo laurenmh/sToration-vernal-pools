@@ -241,9 +241,9 @@ ggplot(join_lambda_GR, aes(x = lambda, y = log_mean_GR)) +
   xlim(0, 75)+
   theme_bw()
 
-############
-# Figure 2 #
-############
+###################
+# 1:1 Line Figure #
+###################
 
 f2a <- ggplot(mean_LACOdens, aes(y = mean_LACO_constructed, x = mean_LACO_reference)) +
   geom_point() +

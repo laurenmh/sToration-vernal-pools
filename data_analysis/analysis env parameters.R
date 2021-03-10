@@ -11,12 +11,12 @@ library(ggpubr)
 PPT <- read_csv(paste(datpath, "Monthly precip averages/Fairfield_precip.csv", sep="")) 
 source("data_compiling/compile_constructed_depth.R")
 
-#Summarise PPT data 2001-2017
+#Summarize PPT data 2001-2017
 PPT_0117 <- PPT %>%
-  filter(!Year %in% c("1999", "2000", "2018" , "2019")) %>%
+  filter(!Year %in% c("1999", "2017", "2018" , "2019")) %>%
   select(Year, Oct_Dec_cm, Jan_March_cm, Total_ppt_cm)
 
-#Summarise inundation data 
+#Summarize inundation data 
 inundation <- const_depth %>%
   filter(Location == "SeedPlot", Treatment.1999 != "Control") %>%
   group_by(Year, Pool, Distance, Size) %>%
@@ -28,60 +28,60 @@ inundation <- const_depth %>%
   summarise(mean_max_depth = mean(max_depth),
             mean_duration_wk = mean(duration_wk))
 
-# Make a lambda table  2001-2017
+# Make a lambda table  2000-2016
 lambda_ref_full <- as.data.frame(reflambda_mean[,5]) %>%
-  mutate(Year = c(2003:2015))
+  mutate(Year = c(2002:2014))
 colnames(lambda_ref_full) <- c("lambda_ref", "Year")  
 lambda_const_full <- as.data.frame(lambda_mean[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(lambda_const_full) <- c("lambda_const", "Year")
 lambda_join <- left_join(lambda_const_full, lambda_ref_full)
 lambda_long <- lambda_join %>%
   gather(key = "type", value = "lambda", lambda_const, lambda_ref) %>%
   mutate(type = ifelse(type == "lambda_const", "constructed", "reference"))
 
-# Make an alpha_LACO table 2001-2017
+# Make an alpha_LACO table 2000-2016
 alpha_LACO_ref <- as.data.frame(refalpha_LACO_mean[,5]) %>%
-  mutate(Year = c(2003:2015))
+  mutate(Year = c(2002:2014))
 colnames(alpha_LACO_ref) <- c("alpha_LACO_ref", "Year")
 alpha_LACO_const <- as.data.frame(alpha_LACO_mean[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(alpha_LACO_const) <- c("alpha_LACO_const", "Year")
 alpha_LACO_join <- left_join(alpha_LACO_const, alpha_LACO_ref)
 alpha_LACO_long <- alpha_LACO_join %>%
   gather(key = "type", value = "alpha_LACO", alpha_LACO_const, alpha_LACO_ref) %>%
   mutate(type = ifelse(type == "alpha_LACO_const", "constructed", "reference"))
 
-# Make an alpha_EG table 2001-2017
+# Make an alpha_EG table 2000-2016
 alpha_EG_ref <- as.data.frame(refalpha_EG_mean[,5]) %>%
-  mutate(Year = c(2003:2015))
+  mutate(Year = c(2002:2014))
 colnames(alpha_EG_ref) <- c("alpha_EG_ref", "Year")
 alpha_EG_const <- as.data.frame(alpha_EG_mean[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(alpha_EG_const) <- c("alpha_EG_const", "Year")
 alpha_EG_join <- left_join(alpha_EG_const, alpha_EG_ref)
 alpha_EG_long <- alpha_EG_join %>%
   gather(key = "type", value = "alpha_EG", alpha_EG_const, alpha_EG_ref) %>%
   mutate(type = ifelse(type == "alpha_EG_const", "constructed", "reference"))
 
-# Make an alpha_ERVA table 2001-2017
+# Make an alpha_ERVA table 2000-2016
 alpha_ERVA_ref <- as.data.frame(refalpha_ERVA_mean[,5]) %>%
-  mutate(Year = c(2003:2015))
+  mutate(Year = c(2002:2014))
 colnames(alpha_ERVA_ref) <- c("alpha_ERVA_ref", "Year")
 alpha_ERVA_const <- as.data.frame(alpha_ERVA_mean[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(alpha_ERVA_const) <- c("alpha_ERVA_const", "Year")
 alpha_ERVA_join <- left_join(alpha_ERVA_const, alpha_ERVA_ref)
 alpha_ERVA_long <- alpha_ERVA_join %>%
   gather(key = "type", value = "alpha_ERVA", alpha_ERVA_const, alpha_ERVA_ref) %>%
   mutate(type = ifelse(type == "alpha_ERVA_const", "constructed", "reference"))
 
-# Make an alpha_NF table 2001-2017
+# Make an alpha_NF table 2000-2016
 alpha_NF_ref <- as.data.frame(refalpha_NF_mean[,5]) %>%
-  mutate(Year = c(2003:2015))
+  mutate(Year = c(2002:2014))
 colnames(alpha_NF_ref) <- c("alpha_NF_ref", "Year")
 alpha_NF_const <- as.data.frame(alpha_NF_mean[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(alpha_NF_const) <- c("alpha_NF_const", "Year")
 alpha_NF_join <- left_join(alpha_NF_const, alpha_NF_ref)
 alpha_NF_long <- alpha_NF_join %>%
@@ -159,60 +159,60 @@ p1 <- c(summary(lm(lambda_const~Oct_Dec_cm, PPT_parameters))$coefficients[2,4],
                 summary(lm(lambda_const~mean_max_depth, PPT_parameters))$coefficients[2,4],
                 summary(lm(lambda_const~mean_duration_wk, PPT_parameters))$coefficients[2,4])
 
-p2 <- c(summary(lm(alpha_LACO_const~Oct_Dec_cm, PPT_paramters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~Jan_March_cm, PPT_paramters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~Total_ppt_cm, PPT_paramters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~mean_max_depth, PPT_paramters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~mean_duration_wk, PPT_paramters))$coefficients[2,4])
+p2 <- c(summary(lm(alpha_LACO_const~Oct_Dec_cm, PPT_parameters))$coefficients[2,4],
+            summary(lm(alpha_LACO_const~Jan_March_cm, PPT_parameters))$coefficients[2,4],
+            summary(lm(alpha_LACO_const~Total_ppt_cm, PPT_parameters))$coefficients[2,4],
+            summary(lm(alpha_LACO_const~mean_max_depth, PPT_parameters))$coefficients[2,4],
+            summary(lm(alpha_LACO_const~mean_duration_wk, PPT_parameters))$coefficients[2,4])
 
-summary(lm(alpha_EG_const~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_EG_const~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_EG_const~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_EG_const~mean_max_depth, PPT_paramters))
-summary(lm(alpha_EG_const~mean_duration_wk, PPT_paramters))
+summary(lm(alpha_EG_const~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_EG_const~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_EG_const~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_EG_const~mean_max_depth, PPT_parameters))
+summary(lm(alpha_EG_const~mean_duration_wk, PPT_parameters))
 
 
-summary(lm(alpha_ERVA_const~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_ERVA_const~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_ERVA_const~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_ERVA_const~mean_max_depth, PPT_paramters))
-summary(lm(alpha_ERVA_const~mean_duration_wk, PPT_paramters))
+summary(lm(alpha_ERVA_const~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_ERVA_const~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_ERVA_const~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_ERVA_const~mean_max_depth, PPT_parameters))
+summary(lm(alpha_ERVA_const~mean_duration_wk, PPT_parameters))
 
-summary(lm(alpha_NF_const~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_NF_const~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_NF_const~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_NF_const~mean_max_depth, PPT_paramters))
-summary(lm(alpha_NF_const~mean_duration_wk, PPT_paramters))
+summary(lm(alpha_NF_const~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_NF_const~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_NF_const~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_NF_const~mean_max_depth, PPT_parameters))
+summary(lm(alpha_NF_const~mean_duration_wk, PPT_parameters))
 
-summary(lm(lambda_ref~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_LACO_ref~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_EG_ref~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_ERVA_ref~Oct_Dec_cm, PPT_paramters))
-summary(lm(alpha_NF_ref~Oct_Dec_cm, PPT_paramters))
+summary(lm(lambda_ref~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_LACO_ref~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_EG_ref~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_ERVA_ref~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_NF_ref~Oct_Dec_cm, PPT_parameters))
 
-summary(lm(lambda_ref~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_LACO_ref~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_EG_ref~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_ERVA_ref~Jan_March_cm, PPT_paramters))
-summary(lm(alpha_NF_ref~Jan_March_cm, PPT_paramters))
+summary(lm(lambda_ref~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_LACO_ref~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_EG_ref~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_ERVA_ref~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_NF_ref~Jan_March_cm, PPT_parameters))
 
-summary(lm(lambda_ref~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_LACO_ref~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_EG_ref~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_ERVA_ref~Total_ppt_cm, PPT_paramters))
-summary(lm(alpha_NF_ref~Total_ppt_cm, PPT_paramters))
+summary(lm(lambda_ref~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_LACO_ref~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_EG_ref~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_ERVA_ref~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_NF_ref~Total_ppt_cm, PPT_parameters))
 
-summary(lm(lambda_ref~mean_max_depth, PPT_paramters))
-summary(lm(alpha_LACO_ref~mean_max_depth, PPT_paramters))
-summary(lm(alpha_EG_ref~mean_max_depth, PPT_paramters))
-summary(lm(alpha_ERVA_ref~mean_max_depth, PPT_paramters))
-summary(lm(alpha_NF_ref~mean_max_depth, PPT_paramters))
+summary(lm(lambda_ref~mean_max_depth, PPT_parameters))
+summary(lm(alpha_LACO_ref~mean_max_depth, PPT_parameters))
+summary(lm(alpha_EG_ref~mean_max_depth, PPT_parameters))
+summary(lm(alpha_ERVA_ref~mean_max_depth, PPT_parameters))
+summary(lm(alpha_NF_ref~mean_max_depth, PPT_parameters))
 
-summary(lm(lambda_ref~mean_duration_wk, PPT_paramters))
-summary(lm(alpha_LACO_ref~mean_duration_wk, PPT_paramters))
-summary(lm(alpha_EG_ref~mean_duration_wk, PPT_paramters))
-summary(lm(alpha_ERVA_ref~mean_duration_wk, PPT_paramters))
-summary(lm(alpha_NF_ref~mean_duration_wk, PPT_paramters))
+summary(lm(lambda_ref~mean_duration_wk, PPT_parameters))
+summary(lm(alpha_LACO_ref~mean_duration_wk, PPT_parameters))
+summary(lm(alpha_EG_ref~mean_duration_wk, PPT_parameters))
+summary(lm(alpha_ERVA_ref~mean_duration_wk, PPT_parameters))
+summary(lm(alpha_NF_ref~mean_duration_wk, PPT_parameters))
 
 stargazer(dt, type = "text")
 

@@ -138,7 +138,7 @@ ggplot(LACO_ppt, aes(x = Total_ppt_cm, y = log(LACOdens), col = Size)) + #total 
 lambda_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
 
 lambda_gather <- lambda_data %>%
-  mutate(Year = c(2001:2017)) %>%
+  mutate(Year = c(2000:2016)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = lambda)
   
@@ -160,12 +160,11 @@ ggplot() +
 pred_max_depth <- PPT %>%
   select(Year, Jan_March_cm) %>%
   mutate(pred_max_depth = 5.09207 + 0.03201 * Jan_March_cm) %>%
-  filter(Year %in% c(2001:2017))
+  filter(Year %in% c(2000:2016))
 
 #3.Join lambda and max water depth by year
 env_summary$Year <- as.integer(env_summary$Year)
-lambda_real_depth <- left_join(env_summary, lambda_gather, by = "Year") %>%
-  filter(Year != "2000")
+lambda_real_depth <- left_join(env_summary, lambda_gather, by = "Year") 
 
 pred_max_depth$Year <- as.integer(pred_max_depth$Year)
 lambda_depth <- left_join(lambda_gather, pred_max_depth, by = "Year")
@@ -191,7 +190,7 @@ summary(lm(pred_max_depth ~ lambda, lambda_depth))
 alphaLACO_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
 
 alphaLACO_gather <- alphaLACO_data %>%
-  mutate(Year = c(2001:2017)) %>%
+  mutate(Year = c(2000:2016)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = alphaLACO)
 
@@ -212,7 +211,7 @@ summary(lm(pred_max_depth ~ alphaLACO, alphaLACO_depth))
 alphaEG_data <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
 
 alphaEG_gather <- alphaEG_data %>%
-  mutate(Year = c(2001:2017)) %>%
+  mutate(Year = c(2000:2016)) %>%
   select(Year, `mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`) %>%
   gather(`mean-chain:1`, `mean-chain:2`, `mean-chain:3`, `mean-chain:4`, key = chain, value = alphaEG)
 
@@ -233,7 +232,7 @@ summary(lm(pred_max_depth ~ alphaEG, alphaEG_depth))
 # IV. PPT vs. lambda #
 ######################
 const_lambda <- as.data.frame(lambda_data[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(const_lambda) <- c("Const_lambda", "Year")
 lambda_PPT <- merge(const_lambda, PPT)
 
@@ -247,7 +246,7 @@ ggplot(lambda_PPT, aes(x = Oct_Dec_cm, y =Const_lambda)) +
 ####################
 #INTRASPECIFIC COMPETITION#
 const_alphaLACO <- as.data.frame(alphaLACO_data[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(const_alphaLACO) <- c("Const_alphaLACO", "Year")
 alphaLACO_PPT <- merge(const_alphaLACO, PPT)
 
@@ -258,7 +257,7 @@ ggplot(alphaLACO_PPT, aes(x = Oct_Dec_cm, y = Const_alphaLACO)) +
 
 #INTERSPECIFIC COMPETITION#
 const_alphaEG <- as.data.frame(alphaEG_data[,5]) %>%
-  mutate(Year = c(2001:2017))
+  mutate(Year = c(2000:2016))
 colnames(const_alphaEG) <- c("Const_alphaEG", "Year")
 alphaEG_PPT <- merge(const_alphaEG, PPT)
 
@@ -266,3 +265,4 @@ ggplot(alphaEG_PPT, aes(x = Oct_Dec_cm, y = Const_alphaEG)) +
   geom_point() +
   theme_bw() +
   labs(x = "Early season rain (cm)", y = "Constructed exotic grass alpha")
+
