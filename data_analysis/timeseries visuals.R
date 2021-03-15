@@ -9,18 +9,18 @@ library(ggpubr)
 
 
 # REFERENCE pool LACO cover data
-ref_LACO <- ref_com_LACO %>% #9 pools that have consecutive data from 2002 to 2015
+ref_LACO <- ref_com_LACO %>% #9 reference pools that have consecutive data on LACO abundance from 2002 to 2015
   group_by(Pool) %>%
   gather(key = "Year", value = "LACO" , - Pool) 
 
-ref_LACOden_edge <- ref_com %>%
+ref_LACOden_edge <- ref_com %>% #any reference LACO abundance data in 2000, 2001, 2016, 2017
   select(Year, Pool, LACO) %>%
   group_by(Year, Pool) %>%
-  filter(Year %in% c(2000, 2001, 2016, 2017)) %>% #pull out any reference data in 2000, 2001, 2016, 2017
+  filter(Year %in% c(2000, 2001, 2016, 2017)) %>% 
   summarise_each(funs(mean)) %>%
   mutate_each(funs(as.integer(.)))
 
-ref_LACOdens <- full_join(ref_LACOden_edge, ref_LACO)%>%
+ref_LACOdens <- full_join(ref_LACOden_edge, ref_LACO)%>% #join reference LACO abundance data 2000-2017
   mutate(LACOdens = round(exp(-0.42)+LACO^1.36)) %>% # Convert LACO frequency to density 
   mutate(type = "reference")
 ref_LACOdens$Year <- as.numeric(ref_LACOdens$Year)
@@ -68,10 +68,16 @@ f1a <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
         scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 # Visualize timeseries of predicted LACO lambda
-lambda_ref <- as.data.frame(reflambda_mean[,5]) %>%
+lambda_ref_00_01 <- as.data.frame(reflambda_mean[1:2,5])%>% #2000-2001 lambda data 
+  mutate(Year = c(2000:2001))%>%
+  mutate(type = "reference")
+lambda_ref_02_14 <- as.data.frame(reflambda_mean[,5]) %>% #2002-2014 lambda data
   mutate(Year = c(2002:2014))%>%
   mutate(type = "reference")
-colnames(lambda_ref) <- c("lambda", "Year", "type")  
+colnames(lambda_ref_00_01) <- c("lambda", "Year", "type")  
+colnames(lambda_ref_02_14) <- c("lambda", "Year", "type")
+lambda_ref <- full_join(lambda_ref_00_01, lambda_ref_02_14) #piece together 2000-2001 data with 2002-2014 data
+
 lambda_const <- as.data.frame(lambda_mean[,5]) %>%
   mutate(Year = c(2000:2016))%>%
   mutate(type = "constructed")
