@@ -1,27 +1,35 @@
-#Goal: Calculate the long-term growth rate when rare (r_invader) of LACO 
-
-#Step 1. Calculate the stable equilibrium frequency of non-LACO species in the model each year. 
-#Step 2. Calculate the annual growth rate of LACO in restored pools when one LACO is introduced into a stable community. 
-#Step 3. Do the same step for the reference pools.
-#Step 4. Average the growth rates of LACO over time for restored and reference pools.
-
-#--------------------------
+#PARTS:
+#I. Long-term growth rate when rare (r_invader) of LACO
+#II. r_invader partitioning
+#III. EG removal simulation
 
 # Load data and package
 # Remember to set your data pathway first!
 source("data_compiling/compile_composition.R") 
-
+library(rstan)
+library(StanHeaders)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(stargazer)
+library(ggpubr)
 #--------------------------
+#Goal: Calculate the long-term growth rate when rare (r_invader) of LACO 
+
+  #Step 1. Calculate the stable equilibrium frequency of non-LACO species in the model each year. 
+  #Step 2. Calculate the annual growth rate of LACO in restored pools when one LACO is introduced into a stable community. 
+  #Step 3. Do the same step for the reference pools.
+  #Step 4. Average the growth rates of LACO over time for restored and reference pools.
 
 #Step 1. Calculate the stable equilibrium frequency of non-LACO species in the model each year. 
 
-#Filter out just the control plots in reference pools (no LACO present). Average the frequency of non-LACO species across space each year. 
-#Non-LACO species in our model:
-#ERVA
-#Exotic grass group - BRHO, HOMA, LOMU
-#Native forb group - PLST, DOCO
+#Use just the control plots in reference pools (no LACO present). Average the frequency of non-LACO species across space each year. 
+  #Non-LACO species in our model:
+    #ERVA
+    #Exotic grass group - BRHO, HOMA, LOMU
+    #Native forb group - PLST, DOCO
 
-const_com_control <- const_com %>% #constructed pools data
+const_com_control <- const_com %>% #use constructed pools data
   filter(Treatment.1999 == "Control") %>% #filter control plots only
   drop_na() %>% #remove any rows with na
   filter(LACO <= 0) %>% #remove communities with LACO present
@@ -31,7 +39,7 @@ const_com_control <- const_com %>% #constructed pools data
   summarize(avg_ERVA = round(mean(ERVA), digits = 0),
             avg_sumEG = round(mean(sumEG), digits = 0),
             avg_sumNF = round(mean(sumNF), digits = 0)) %>%#take the average freq.
-  filter(Year != "2017")
+  filter(Year != "2017") #filter out 2017
 
 #Step 2. Calculate the annual growth rate of LACO in restored pools when one LACO is introduced into a stable community.
 
@@ -104,11 +112,139 @@ mean(GRWR_LACO_const) #Average GRWR LACO for constructed pools = -0.5818442
 mean(GRWR_LACO_ref) #Average GRWR LACO for reference pools = 0.02065058 
 
 #-----------------------
-#Goal: simulate removing exotic grasses (EG) to promote LACO persistence
-library(dplyr)
-library(ggplot2)
-library(stargazer)
-library(ggpubr)
+#Goal: Partition r_LACO by Ellner et al. (2019) method
+
+  #Step 1. Contribution to the overall GRWR when all variation is removed
+  #Step 2. Vary lambda while keeping everything else constant
+  #Step 3. Vary alphas while keeping everything else constant
+  #Step 4. Vary belowground parameters (survival and germination) while keeping everything else constant
+  #Step 5. Interactive effect from simultaneous variation in lambda, alpha, and belowground after accounting for each main effect
+
+#Step 1. Contribution to the overall GRWR when all variation is removed
+
+#calculate mean of each parameter over the whole time series
+alpha_LACO_knot <- rep(mean(alpha_LACO_mean[,5]), 17)
+alpha_EG_knot <- rep(mean(alpha_EG_mean[,5]), 17)
+alpha_ERVA_knot <- rep(mean(alpha_ERVA_mean[,5]), 17)
+alpha_NF_knot <- rep(mean(alpha_NF_mean[,5]), 17)
+lambda_mean_knot <- rep(mean(lambda_mean[,5]), 17)
+s_mean_knot <- mean(s_mean[,5])
+g_knot <- (0.7+0.2)/2
+
+refalpha_LACO_knot <- rep(mean(refalpha_LACO_mean[,5]), 13)
+refalpha_EG_knot <- rep(mean(refalpha_EG_mean[,5]), 13)
+refalpha_ERVA_knot <- rep(mean(refalpha_ERVA_mean[,5]), 13)
+refalpha_NF_knot <- rep(mean(refalpha_NF_mean[,5]), 13)
+reflambda_knot <- rep(mean(reflambda_mean[,5]), 13)
+refs_knot <- mean(refs_mean[,5])
+refg_knot <- (0.7+0.2)/2
+
+#modify the model with constant g
+bh.sim.control.knot <- function(LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
+  for(i in 1:nrow(sim_LACO)){
+    sim_LACO[i] <- LACO*lambda[i]/(1+LACO*aii[i]+EG[i]*a1[i]+ERVA[i]*a2[i]+NF[i]*a3[i])+s*(1-g)*LACO/g #this is the modified Beverton-Holt model we'll use for LACO stem counts
+  }
+  return(sim_LACO)
+}
+
+#run the model with constant parameters
+LACO_const_knot <- bh.sim.control.knot(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = alpha_LACO_knot,
+                        a1 = alpha_EG_knot,
+                        a2 = alpha_ERVA_knot,
+                        a3 = alpha_NF_knot,
+                        lambda = lambda_mean_knot,
+                        s = s_mean_knot,
+                        g = g_knot)
+GRWR_LACO_const_knot <- log(LACO_const_knot) 
+mean(GRWR_LACO_const_knot) # 0.067385
+LACO_ref_knot <- bh.sim.control.knot(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = refalpha_LACO_knot,
+                        a1 = refalpha_EG_knot,
+                        a2 = refalpha_ERVA_knot,
+                        a3 = refalpha_NF_knot,
+                        lambda = reflambda_knot,
+                        s = refs_knot,
+                        g = refg_knot)
+GRWR_LACO_ref_knot <- log(LACO_ref_knot) 
+mean(GRWR_LACO_ref_knot) #0.2524456
+
+#Step 2. Vary lambda while keeping everything else constant
+
+LACO_const_lambda <- bh.sim.control.knot(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = alpha_LACO_knot,
+                        a1 = alpha_EG_knot,
+                        a2 = alpha_ERVA_knot,
+                        a3 = alpha_NF_knot,
+                        lambda = lambda_mean[,5],
+                        s = s_mean_knot,
+                        g = g_knot)
+GRWR_LACO_const_lambda <- log(LACO_const_lambda) 
+mean(GRWR_LACO_const_lambda) #  -1.67114
+LACO_ref_lambda <- bh.sim.control.knot(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = refalpha_LACO_knot,
+                        a1 = refalpha_EG_knot,
+                        a2 = refalpha_ERVA_knot,
+                        a3 = refalpha_NF_knot,
+                        lambda = reflambda_mean[,5],
+                        s = refs_knot,
+                        g = refg_knot)
+GRWR_LACO_ref_lambda <- log(LACO_ref_lambda) 
+mean(GRWR_LACO_ref_lambda) #-0.1005198
+
+#Step 3. Vary alphas while keeping everything else constant
+
+LACO_const_alpha <- bh.sim.control.knot(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = alpha_LACO_mean[,5],
+                        a1 = alpha_EG_mean[,5],
+                        a2 = alpha_ERVA_mean[,5],
+                        a3 = alpha_NF_mean[,5],
+                        lambda = lambda_mean_knot,
+                        s = s_mean_knot,
+                        g = g_knot)
+GRWR_LACO_const_alpha <- log(LACO_const_alpha) 
+mean(GRWR_LACO_const_alpha) #0.9505379
+LACO_ref_alpha <- bh.sim.control.knot(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = refalpha_LACO_mean[,5],
+                        a1 = refalpha_EG_mean[,5],
+                        a2 = refalpha_ERVA_mean[,5],
+                        a3 = refalpha_NF_mean[,5],
+                        lambda = reflambda_knot,
+                        s = refs_knot,
+                        g = refg_knot)
+
+
+#-----------------------
+#Goal: Simulate exotic grasses (EG) removal to promote LACO persistence
+
+  #Step 1. Figure out when to remove EG
+  #Step 2. Simulate EG removal
+  #Step 3. Average the growth rates of LACO over time for all simulation scenarios
+  #Step 4. Plot simulated GRWR
 
 #Step 1. Figure out when to remove EG
 #Join GRWR from restored and reference pools
@@ -135,6 +271,16 @@ mean(PPT_0117$Jan_March_cm)
 #Combine GRWR_LACO and PPT data
 GRWR_PPT <- left_join(GRWR_LACO, PPT_0117)
 
+#Plot GRWR and PPT regression
+ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = GRWR_const))+
+  geom_point()+
+  geom_smooth(method = "lm")
+summary(lm(GRWR_const~Oct_Dec_cm+Jan_March_cm+Total_ppt_cm, GRWR_PPT))
+ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = GRWR_ref))+
+  geom_point()+
+  geom_smooth(method = "lm")
+summary(lm(GRWR_ref~Oct_Dec_cm+Jan_March_cm+Total_ppt_cm, GRWR_PPT))
+
 #EG in restored and reference pools
 EG_summary <- const_dummy_join %>%
   group_by(Year) %>%
@@ -150,15 +296,7 @@ EG_ref_summary <- ref_com %>%
   mutate(type = "reference")
 EG_summary_join <- rbind(EG_summary, EG_ref_summary) 
 
-#Plot
-
-ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = GRWR_const))+
-  geom_point()+
-  geom_smooth(method = "lm")
-ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = GRWR_ref))+
-  geom_point()+
-  geom_smooth(method = "lm")
-
+#Plot GRWR, EG, and PPT in timeseries
 a <- ggplot(GRWR_PPT, aes(x = Year, y = Total_ppt_cm))+
         geom_hline(yintercept = 57.19, color = "red")+
         geom_bar(stat= "identity")+
