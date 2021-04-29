@@ -108,7 +108,7 @@ LACO_ref <- bh.sim.control(
 GRWR_LACO_ref <- log(LACO_ref) #2002-2014
 
 #Step 4. Average the growth rates of LACO over time for restored and reference pools.
-mean(GRWR_LACO_const) #Average GRWR LACO for constructed pools = -0.5818442
+mean(GRWR_LACO_const) #Average GRWR LACO for constructed pools = -0.7838304
 mean(GRWR_LACO_ref) #Average GRWR LACO for reference pools = 0.02065058 
 
 #-----------------------
@@ -148,6 +148,7 @@ bh.sim.control.knot <- function(LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, 
 }
 
 #run the model with constant parameters
+sim_LACO <- matrix(nrow = 17, ncol = 1)
 LACO_const_knot <- bh.sim.control.knot(
                         LACO = 1,
                         EG = const_com_control$avg_sumEG,
@@ -161,7 +162,8 @@ LACO_const_knot <- bh.sim.control.knot(
                         s = s_mean_knot,
                         g = g_knot)
 GRWR_LACO_const_knot <- log(LACO_const_knot) 
-mean(GRWR_LACO_const_knot) # 0.067385
+LACO_const_epsilon_0 <- mean(GRWR_LACO_const_knot) # -0.04333787
+sim_LACO <- matrix(nrow = 13, ncol = 1)
 LACO_ref_knot <- bh.sim.control.knot(
                         LACO = 1,
                         EG = const_com_control$avg_sumEG,
@@ -175,10 +177,10 @@ LACO_ref_knot <- bh.sim.control.knot(
                         s = refs_knot,
                         g = refg_knot)
 GRWR_LACO_ref_knot <- log(LACO_ref_knot) 
-mean(GRWR_LACO_ref_knot) #0.2524456
+LACO_ref_epsilon_0 <- mean(GRWR_LACO_ref_knot) # 0.2524456
 
 #Step 2. Vary lambda while keeping everything else constant
-
+sim_LACO <- matrix(nrow = 17, ncol = 1)
 LACO_const_lambda <- bh.sim.control.knot(
                         LACO = 1,
                         EG = const_com_control$avg_sumEG,
@@ -192,7 +194,8 @@ LACO_const_lambda <- bh.sim.control.knot(
                         s = s_mean_knot,
                         g = g_knot)
 GRWR_LACO_const_lambda <- log(LACO_const_lambda) 
-mean(GRWR_LACO_const_lambda) #  -1.67114
+LACO_const_epsilon_lambda <- mean(GRWR_LACO_const_lambda) - LACO_const_epsilon_0 # -1.194625
+sim_LACO <- matrix(nrow = 13, ncol = 1)
 LACO_ref_lambda <- bh.sim.control.knot(
                         LACO = 1,
                         EG = const_com_control$avg_sumEG,
@@ -206,10 +209,10 @@ LACO_ref_lambda <- bh.sim.control.knot(
                         s = refs_knot,
                         g = refg_knot)
 GRWR_LACO_ref_lambda <- log(LACO_ref_lambda) 
-mean(GRWR_LACO_ref_lambda) #-0.1005198
+LACO_ref_epsilon_lambda <- mean(GRWR_LACO_ref_lambda) - LACO_ref_epsilon_0 #-0.3529654
 
 #Step 3. Vary alphas while keeping everything else constant
-
+sim_LACO <- matrix(nrow = 17, ncol = 1)
 LACO_const_alpha <- bh.sim.control.knot(
                         LACO = 1,
                         EG = const_com_control$avg_sumEG,
@@ -223,7 +226,8 @@ LACO_const_alpha <- bh.sim.control.knot(
                         s = s_mean_knot,
                         g = g_knot)
 GRWR_LACO_const_alpha <- log(LACO_const_alpha) 
-mean(GRWR_LACO_const_alpha) #0.9505379
+LACO_const_epsilon_alpha <- mean(GRWR_LACO_const_alpha) - LACO_const_epsilon_0 #0.6620671
+sim_LACO <- matrix(nrow = 13, ncol = 1)
 LACO_ref_alpha <- bh.sim.control.knot(
                         LACO = 1,
                         EG = const_com_control$avg_sumEG,
@@ -236,8 +240,72 @@ LACO_ref_alpha <- bh.sim.control.knot(
                         lambda = reflambda_knot,
                         s = refs_knot,
                         g = refg_knot)
+GRWR_LACO_ref_alpha <- log(LACO_ref_alpha)
+LACO_ref_epsilon_alpha <- mean(GRWR_LACO_ref_alpha) - LACO_ref_epsilon_0 #0.128182
 
+#Step 4. Vary belowground parameters (survival and germination) while keeping everything else constant
+sim_LACO <- matrix(nrow = 17, ncol = 1)
+LACO_const_bg <- bh.sim.control(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = alpha_LACO_knot,
+                        a1 = alpha_EG_knot,
+                        a2 = alpha_ERVA_knot,
+                        a3 = alpha_NF_knot,
+                        lambda = lambda_mean_knot,
+                        s = s_mean[,5],
+                        g = 0.7,
+                        glow = 0.2)
+GRWR_LACO_const_bg <- log(LACO_const_bg)
+LACO_const_epsilon_bg <- mean(GRWR_LACO_const_bg) - LACO_const_epsilon_0 # 0.1116214
+sim_LACO <- matrix(nrow = 13, ncol = 1)
+LACO_ref_bg <- bh.sim.control(
+                        LACO = 1,
+                        EG = const_com_control$avg_sumEG,
+                        ERVA = const_com_control$avg_ERVA,
+                        NF = const_com_control$avg_sumNF,
+                        aii = refalpha_LACO_knot,
+                        a1 = refalpha_EG_knot,
+                        a2 = refalpha_ERVA_knot,
+                        a3 = refalpha_NF_knot,
+                        lambda = reflambda_knot,
+                        s = refs_mean[,5],
+                        g = 0.7,
+                        glow = 0.2)
+GRWR_LACO_ref_bg <- log(LACO_ref_bg)
+LACO_ref_epsilon_bg <- mean(GRWR_LACO_ref_bg) - LACO_ref_epsilon_0 # -0.002154302
 
+#Step 5. Interactive effect from simultaneous variation in lambda, alpha, and belowground after accounting for each main effect
+GRWR_LACO_const_interaction <- mean(GRWR_LACO_const) - (LACO_const_epsilon_0 + LACO_const_epsilon_alpha + LACO_const_epsilon_lambda + LACO_const_epsilon_bg)
+GRWR_LACO_ref_interaction <- mean(GRWR_LACO_ref) - (LACO_ref_epsilon_0 + LACO_ref_epsilon_alpha + LACO_ref_epsilon_lambda + LACO_ref_epsilon_bg)
+
+#plot partitioned GRWR
+Partitioning_GRWR_LACO_const <- as.data.frame(c(mean(GRWR_LACO_const), LACO_const_epsilon_0, LACO_const_epsilon_alpha, LACO_const_epsilon_lambda, LACO_const_epsilon_bg, GRWR_LACO_const_interaction)) %>%
+  mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+colnames(Partitioning_GRWR_LACO_const) <- c("Partitioned_GRWR_LACO_const","Mechanism") 
+Partitioning_GRWR_LACO_const$Mechanism <- ordered(Partitioning_GRWR_LACO_const$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+Part_const <- ggplot(Partitioning_GRWR_LACO_const, aes(x = Mechanism, y = Partitioned_GRWR_LACO_const, fill = Mechanism))+
+            geom_bar(stat = "identity")+
+            theme_classic()+
+            geom_hline(yintercept = 0)+
+            ylab("Partitioning of growth rate when rare")+
+            scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60", "grey60"))+
+            ylim(-1.5, 0.8)
+
+Partitioning_GRWR_LACO_ref <- as.data.frame(c(mean(GRWR_LACO_ref), LACO_ref_epsilon_0, LACO_ref_epsilon_alpha, LACO_ref_epsilon_lambda, LACO_ref_epsilon_bg, GRWR_LACO_ref_interaction)) %>%
+  mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+colnames(Partitioning_GRWR_LACO_ref) <- c("Partitioned_GRWR_LACO_ref","Mechanism") 
+Partitioning_GRWR_LACO_ref$Mechanism <- ordered(Partitioning_GRWR_LACO_ref$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+Part_ref <- ggplot(Partitioning_GRWR_LACO_ref, aes(x = Mechanism, y = Partitioned_GRWR_LACO_ref, fill = Mechanism))+
+            geom_bar(stat = "identity")+
+            theme_classic()+
+            geom_hline(yintercept = 0)+
+            ylab("Partitioning of growth rate when rare")+
+            scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60", "grey60"))+
+            ylim(-1.5, 0.8)
+ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", labels = c("Reference LACO", "Constructed LACO"))
 #-----------------------
 #Goal: Simulate exotic grasses (EG) removal to promote LACO persistence
 
