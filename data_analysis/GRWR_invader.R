@@ -636,7 +636,7 @@ GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c
 ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% grass removed", "100% grass removed")), aes(x = Year, y = GRWR, group = treatment))+
   geom_point(aes(color = treatment))+
   geom_line(size=0.8, aes(color = treatment, linetype = treatment))+
-  theme(text = element_text(size=12),
+  theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
