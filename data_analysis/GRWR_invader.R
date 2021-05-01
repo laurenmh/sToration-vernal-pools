@@ -108,7 +108,7 @@ LACO_ref <- bh.sim.control(
 GRWR_LACO_ref <- log(LACO_ref) #2002-2014
 
 #Step 4. Average the growth rates of LACO over time for restored and reference pools.
-mean(GRWR_LACO_const) #Average GRWR LACO for constructed pools = -0.7838304
+mean(GRWR_LACO_const) #Average GRWR LACO for constructed pools = -0.5771465
 mean(GRWR_LACO_ref) #Average GRWR LACO for reference pools = 0.02065058 
 
 #-----------------------
@@ -286,13 +286,20 @@ Partitioning_GRWR_LACO_const <- as.data.frame(c(mean(GRWR_LACO_const), LACO_cons
   mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
 colnames(Partitioning_GRWR_LACO_const) <- c("Partitioned_GRWR_LACO_const","Mechanism") 
 Partitioning_GRWR_LACO_const$Mechanism <- ordered(Partitioning_GRWR_LACO_const$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+xlabels <- c("r_overall" = expression(bar("r")[i]^" "), 
+             "epsilon_0" = expression(epsilon[i]^0), 
+             "epsilon_alpha" = expression(epsilon[i]^alpha),
+             "epsilon_lambda" = expression(epsilon[i]^lambda),
+             "epsilon_bg" = expression(epsilon[i]^B),
+             "epsilon_int" = expression(epsilon[i]^{alpha*lambda*B}))
 Part_const <- ggplot(Partitioning_GRWR_LACO_const, aes(x = Mechanism, y = Partitioned_GRWR_LACO_const, fill = Mechanism))+
             geom_bar(stat = "identity")+
-            theme_classic()+
+            theme_classic(base_size = 14)+
+            theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
-            ylab("Partitioning of growth rate when rare")+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60", "grey60"))+
-            ylim(-1.5, 0.8)
+            ylim(-1.4, 0.8)+
+            scale_x_discrete(labels = xlabels)
 
 Partitioning_GRWR_LACO_ref <- as.data.frame(c(mean(GRWR_LACO_ref), LACO_ref_epsilon_0, LACO_ref_epsilon_alpha, LACO_ref_epsilon_lambda, LACO_ref_epsilon_bg, GRWR_LACO_ref_interaction)) %>%
   mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
@@ -300,13 +307,16 @@ colnames(Partitioning_GRWR_LACO_ref) <- c("Partitioned_GRWR_LACO_ref","Mechanism
 Partitioning_GRWR_LACO_ref$Mechanism <- ordered(Partitioning_GRWR_LACO_ref$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
 Part_ref <- ggplot(Partitioning_GRWR_LACO_ref, aes(x = Mechanism, y = Partitioned_GRWR_LACO_ref, fill = Mechanism))+
             geom_bar(stat = "identity")+
-            theme_classic()+
+            theme_classic(base_size = 14)+
+            theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
-            ylab("Partitioning of growth rate when rare")+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60", "grey60"))+
-            ylim(-1.5, 0.8)
-ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", labels = c("Reference LACO", "Constructed LACO"))
-#-----------------------
+            ylim(-1.4, 0.8)+
+            scale_x_discrete(labels = xlabels)
+figure_partitioning <- ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", 
+                                  labels = c("(a) Reference LACO", "(b) Constructed LACO"), font.label = list(size = 11))
+annotate_figure(figure_partitioning, bottom = "Mechanism", left = "Partitioning of average population growth rate")
+ #-----------------------
 #Goal: Simulate exotic grasses (EG) removal to promote LACO persistence
 
   #Step 1. Figure out when to remove EG
@@ -318,10 +328,10 @@ ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", labels = c(
 #Join GRWR from restored and reference pools
 GRWR_LACO_const <- as.data.frame(GRWR_LACO_const) %>%
   mutate(Year = c(2000:2016))
-colnames(GRWR_LACO_const) <- c("GRWR_const", "Year")
+colnames(GRWR_LACO_const) <- c("constructed", "Year")
 GRWR_LACO_ref <- as.data.frame(GRWR_LACO_ref) %>%
   mutate(Year = c(2002:2014))
-colnames(GRWR_LACO_ref) <- c("GRWR_ref", "Year")
+colnames(GRWR_LACO_ref) <- c("reference", "Year")
 GRWR_LACO <- left_join(GRWR_LACO_const, GRWR_LACO_ref)
 
 #Load precipitation data
@@ -340,14 +350,14 @@ mean(PPT_0117$Jan_March_cm)
 GRWR_PPT <- left_join(GRWR_LACO, PPT_0117)
 
 #Plot GRWR and PPT regression
-ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = GRWR_const))+
+ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = constructed))+
   geom_point()+
   geom_smooth(method = "lm")
-summary(lm(GRWR_const~Oct_Dec_cm+Jan_March_cm+Total_ppt_cm, GRWR_PPT))
-ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = GRWR_ref))+
+summary(lm(constructed~Oct_Dec_cm+Jan_March_cm+Total_ppt_cm, GRWR_PPT))
+ggplot(GRWR_PPT, aes(x = Oct_Dec_cm, y = reference))+
   geom_point()+
   geom_smooth(method = "lm")
-summary(lm(GRWR_ref~Oct_Dec_cm+Jan_March_cm+Total_ppt_cm, GRWR_PPT))
+summary(lm(reference~Oct_Dec_cm+Jan_March_cm+Total_ppt_cm, GRWR_PPT))
 
 #EG in restored and reference pools
 EG_summary <- const_dummy_join %>%
@@ -380,14 +390,14 @@ c <- ggplot(GRWR_PPT, aes(x = Year, y = Jan_March_cm))+
         geom_bar(stat = "identity")+
         theme(axis.title.x = element_blank())
 
-d <- ggplot(GRWR_PPT, aes(x = Year, y = GRWR_const))+
+d <- ggplot(GRWR_PPT, aes(x = Year, y = constructed))+
         geom_hline(yintercept = 0, linetype = "dashed")+
-        geom_hline(yintercept = -0.5818442, color = "red")+
+        geom_hline(yintercept = -0.5771465, color = "red")+
         geom_point()+
         geom_line()+
         theme(axis.title.x = element_blank())
 
-e <- ggplot(GRWR_PPT, aes(x = Year, y = GRWR_ref))+
+e <- ggplot(GRWR_PPT, aes(x = Year, y = reference))+
         geom_hline(yintercept = 0, linetype = "dashed")+
         geom_hline(yintercept = 0.02065058, color = "red")+
         geom_point()+
@@ -407,14 +417,14 @@ f <- ggplot(EG_summary_join%>%filter(Year != "2017"), aes(x = Year, y = EG_mean,
   labs(x = "Time (year)", y = "Mean exotic grass cover (%)") +
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
-ggarrange(e, d, ncol = 1, nrow =2, labels = c("a)", "b"))
 
-ggarrange(b, c, f,  ncol = 1, nrow = 3, 
+ggarrange(b, c, f, e, d,  ncol = 1, nrow = 5, 
           labels = c("a)", "b)",
-                     "c)"), 
+                     "c)", "d)", "e)"), 
           #common.legend = TRUE, legend = "bottom", 
           font.label = list(size = 10),
           heights = c(1,1,1.5))
+
 #Remove EG in years with above average Oct-Dec rain (2002, 2003, 2005, 2006, 2011, 2013, 2015)
 
 #Step 2. Simulate EG removal
@@ -529,3 +539,110 @@ ggplot(GRWR_simulated%>%filter(treatment != "25% EG removed"), aes(x = Year, y =
         legend.position = "bottom")+
   labs(x = "Year", y = "GRWR of LACO") +
   scale_color_manual(name = "", values = c("#ff4c4c", "#000000", "#0818A8", "#3F00FF",  "#40E0D0"))
+
+---------------------------------------------
+#ALTERNATIVE: remove EG in all years
+
+#Remove 25% of EG in all years
+reduced25EGcover_all <- sumEG %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.25)
+LACO_25EG_all <- bh.sim.control(
+                      LACO = 1,
+                      EG = as.matrix(reduced25EGcover_all),
+                      ERVA = const_com_control$avg_ERVA,
+                      NF = const_com_control$avg_sumNF,
+                      aii = alpha_LACO_mean[,5],
+                      a1 = alpha_EG_mean[,5],
+                      a2 = alpha_ERVA_mean[,5],
+                      a3 = alpha_NF_mean[,5],
+                      lambda = lambda_mean[,5],
+                      s = s_mean[,5],
+                      g = 0.7,
+                      glow = 0.2)
+GRWR_LACO_25EG_all <- log(LACO_25EG_all)
+
+#Remove 50% of EG in all years
+reduced50EGcover_all <- sumEG %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.5)
+LACO_50EG_all <- bh.sim.control(
+                      LACO = 1,
+                      EG = as.matrix(reduced50EGcover_all),
+                      ERVA = const_com_control$avg_ERVA,
+                      NF = const_com_control$avg_sumNF,
+                      aii = alpha_LACO_mean[,5],
+                      a1 = alpha_EG_mean[,5],
+                      a2 = alpha_ERVA_mean[,5],
+                      a3 = alpha_NF_mean[,5],
+                      lambda = lambda_mean[,5],
+                      s = s_mean[,5],
+                      g = 0.7,
+                      glow = 0.2)
+GRWR_LACO_50EG_all <- log(LACO_50EG_all)
+
+#Remove 75% of EG in all years
+reduced75EGcover_all <- sumEG %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.75)
+LACO_75EG_all <- bh.sim.control(
+                      LACO = 1,
+                      EG = as.matrix(reduced75EGcover_all),
+                      ERVA = const_com_control$avg_ERVA,
+                      NF = const_com_control$avg_sumNF,
+                      aii = alpha_LACO_mean[,5],
+                      a1 = alpha_EG_mean[,5],
+                      a2 = alpha_ERVA_mean[,5],
+                      a3 = alpha_NF_mean[,5],
+                      lambda = lambda_mean[,5],
+                      s = s_mean[,5],
+                      g = 0.7,
+                      glow = 0.2)
+GRWR_LACO_75EG_all <- log(LACO_75EG_all)
+
+#Remove 100% of EG in all years
+reduced100EGcover_all <- sumEG %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.100)
+LACO_100EG_all <- bh.sim.control(
+                      LACO = 1,
+                      EG = as.matrix(reduced100EGcover_all),
+                      ERVA = const_com_control$avg_ERVA,
+                      NF = const_com_control$avg_sumNF,
+                      aii = alpha_LACO_mean[,5],
+                      a1 = alpha_EG_mean[,5],
+                      a2 = alpha_ERVA_mean[,5],
+                      a3 = alpha_NF_mean[,5],
+                      lambda = lambda_mean[,5],
+                      s = s_mean[,5],
+                      g = 0.7,
+                      glow = 0.2)
+GRWR_LACO_100EG_all <- log(LACO_100EG_all)
+
+#Average the growth rates of LACO over time for all simulation scenarios.
+mean(GRWR_LACO_25EG_all) # -0.3718841
+mean(GRWR_LACO_50EG_all) # -0.1032695
+mean(GRWR_LACO_75EG_all) # 0.2953273
+mean(GRWR_LACO_100EG_all) # 1.313785
+
+#Plot simulated GRWR
+GRWR_simulated_all <- cbind(GRWR_LACO, GRWR_LACO_25EG_all, GRWR_LACO_50EG_all, GRWR_LACO_75EG_all, GRWR_LACO_100EG_all) 
+colnames(GRWR_simulated_all) <- c("0% grass removed", "Year", "reference", "25% grass removed", "50% grass removed", "75% grass removed", "100% grass removed")
+GRWR_simulated_all <- GRWR_simulated_all %>% 
+  gather(key = "treatment", "GRWR", -Year)
+
+GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("reference", "0% grass removed", "25% grass removed", "50% grass removed", "75% grass removed", "100% grass removed"))
+
+ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% grass removed", "100% grass removed")), aes(x = Year, y = GRWR, group = treatment))+
+  geom_point(aes(color = treatment))+
+  geom_line(size=0.8, aes(color = treatment, linetype = treatment))+
+  theme(text = element_text(size=12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom")+
+  labs(x = "Time (year)", y = "Growth rate when rare") +
+  scale_color_manual( values = c("#888888", "#000000", "#000000",  "#000000"))+
+  scale_linetype_manual(values = c("solid", "solid",  "dashed", "dotted"))
+

@@ -62,8 +62,10 @@ f1a <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(),
               panel.background = element_blank(),
-              axis.line = element_line(colour = "black"))+
-        ylab(bquote('Count (individuals/ '~ m^2~')')) +
+              axis.line = element_line(colour = "black"),
+              legend.position = c(.2, .3),
+              axis.title = element_text(size = 14))+
+        ylab(bquote(Density~(stems/m^2))) +
         scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
         scale_color_manual(name = "", values = c("#000000", "#888888"))
 
@@ -91,14 +93,37 @@ f1b <- ggplot(lambda_const_ref, aes(x = Year, y = lambda, col = type))+
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(),
                 panel.background = element_blank(),
-                axis.line = element_line(colour = "black"))+
-          ylab("Intrinsic growth rate")+
-          scale_x_continuous(name = "Time (year)",
+                axis.line = element_line(colour = "black"),
+                legend.position = "none", 
+                axis.title = element_text(size = 14))+
+          ylab(bquote(Intrinsic~Growth~Rate~lambda))+
+          scale_x_continuous(name = NULL,
                      limits = c(1999.5,2017.5))+
           scale_color_manual(name = "", values = c("#000000", "#888888"))
 
+#Visualize timeseries of GRWR (see GRWR_invader.R)
+GRWR_time <- GRWR_LACO %>%
+  gather(key = "type", "GRWR", -Year)
+
+f1c <- ggplot(GRWR_time, aes(x = Year, y = GRWR, col = type))+
+            geom_point() +
+            geom_line(size=1)+
+            theme(text = element_text(size=16),
+                  panel.grid.major = element_blank(),
+                  panel.grid.minor = element_blank(),
+                  panel.background = element_blank(),
+                  axis.line = element_line(colour = "black"),
+                  legend.position = "none",
+                  axis.title = element_text(size = 14))+
+            ylab(bquote(Growth~rate~when~rare))+
+            geom_hline(yintercept = 0, linetype = "dashed")+
+            scale_x_continuous(name = NULL,
+                               limits = c(1999.5,2017.5))+
+            scale_color_manual(name = "", values = c("#000000", "#888888"))
+
 #FIGURE 1
-ggarrange(f1a, f1b, ncol=1, nrow=2, common.legend = TRUE, legend = "bottom", align = "v", labels = c("a)", "b)"))
+Fig1 <- ggarrange(f1a, f1b, f1c,  ncol=1, nrow=3, align = "v", labels = c("(a)", "(b)", "(c)"), font.label = list(size = 11))
+annotate_figure(Fig1, bottom = text_grob("Time (year)", size = 14))
 
 # Visualize timeseries of observed LACO growth rate
 #observed Nt/Nt-1 constructed vs. reference
