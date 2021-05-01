@@ -633,7 +633,13 @@ GRWR_simulated_all <- GRWR_simulated_all %>%
 
 GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("reference", "0% grass removed", "25% grass removed", "50% grass removed", "75% grass removed", "100% grass removed"))
 
+
 ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% grass removed", "100% grass removed")), aes(x = Year, y = GRWR, group = treatment))+
+  geom_rect(aes(xmin = c(2001.5), xmax = c(2003.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
+  geom_rect(aes(xmin = c(2004.5), xmax = c(2006.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
+  geom_rect(aes(xmin = c(2010.5), xmax = c(2011.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
+  geom_rect(aes(xmin = c(2012.5), xmax = c(2013.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
+  geom_rect(aes(xmin = c(2014.5), xmax = c(2015.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
   geom_point(aes(color = treatment))+
   geom_line(size=0.8, aes(color = treatment, linetype = treatment))+
   theme(text = element_text(size=16),
@@ -645,4 +651,5 @@ ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% grass removed", "100% 
   labs(x = "Time (year)", y = "Growth rate when rare") +
   scale_color_manual( values = c("#888888", "#000000", "#000000",  "#000000"))+
   scale_linetype_manual(values = c("solid", "solid",  "dashed", "dotted"))
+
 
