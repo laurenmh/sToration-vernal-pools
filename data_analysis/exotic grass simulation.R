@@ -195,10 +195,10 @@ ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        legend.position = "top") +
+        legend.position = c(0.8, 0.8)) +
   labs(x = "Time (year)", y = "Mean LACO density") +
   scale_linetype_manual(name = "Treatment", 
-                       labels = c("No grass removal", "50% grass removed", "75% grass removed"),
+                       labels = c("0% grass removal", "50% grass removed", "75% grass removed"),
                        values = c("solid", "twodash", "dotted"))
 
 summary_grass_sim_LACO %>%

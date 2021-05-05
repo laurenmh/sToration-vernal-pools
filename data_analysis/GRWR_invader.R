@@ -652,4 +652,15 @@ ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% grass removed", "100% 
   scale_color_manual( values = c("#888888", "#000000", "#000000",  "#000000"))+
   scale_linetype_manual(values = c("solid", "solid",  "dashed", "dotted"))
 
+AvgGRWR_all <- GRWR_simulated_all %>%
+  filter(!is.na(GRWR))%>%
+  group_by(treatment) %>%
+  summarize(overall_GRWR = mean(GRWR))
 
+ggplot(AvgGRWR_all %>% filter(!treatment %in% c("reference",
+  "25% grass removed", "100% grass removed")), aes(x = treatment, y = overall_GRWR))+
+  geom_bar(stat = "identity")+
+  theme_classic(base_size = 14)+
+  labs(y = "Overall GRWR", x = "Treatment")+
+  geom_hline(yintercept = 0)
+         
