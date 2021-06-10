@@ -220,7 +220,7 @@ BH_fit <- sampling(BH_model,
                                obs_NF = sumNFcover,
                                seeds_added = seedtrt[,4:6],
                                low_germ_LACO = 0.2,
-                               high_germ_LACO = 0.8), 
+                               high_germ_LACO = 0.7), 
                    iter= 1000)
 
 ### EXTRACT MODEL OUTPUT ###
