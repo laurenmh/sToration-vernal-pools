@@ -8,9 +8,11 @@
 # Outline:
 ## I. Plot LACO dens constructed vs. reference
 ## II. Plot Lambda constructed vs. reference
+## III. Plot Relative growth rate constructed vs. reference
 
 # Set up:
 library(ggplot2)
+library(tidyverse)
 
 ##############################################
 # I. Plot LACO dens constructed vs. reference#
@@ -72,6 +74,7 @@ ggplot(mean_LACOdens_trt, aes(y = constructed, x = reference, col = treatment)) 
   labs(y = "Constructed mean LACO density",
        x = "Reference mean LACO density", col = "Seeding treatment") +
   theme_bw()
+
 #############################################
 # II. Plot lambda constructed vs. reference #
 #############################################
@@ -93,3 +96,52 @@ ggplot(join_lambda_trim, aes(y = constructed, x = reference)) +
   theme_bw() +
   geom_text(aes(label = row.names(join_lambda_trim)), hjust = 0, vjust =0) +
   geom_abline(intercept = 0, slope = 1, linetype = "dotted")
+
+############################################################
+# III. Plot Relative Growth Rate constructed vs. reference #
+############################################################
+# relative growth rate of constructed 2002-2015
+const_GR <- long_relative_GR %>% 
+  select(Year, Pool, GR) %>% 
+  mutate_if(is.numeric, ~replace(., is.infinite(.), 1)) %>%
+  mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
+  group_by(Year) %>%
+  summarise(constructed = mean(GR)) %>%
+  filter(Year != 2016) %>%
+  filter(Year != 2017) %>%
+  filter(Year != 2001) %>%
+  filter(Year != 2002)
+
+ref_GR <- ref_com_LACO %>%
+  group_by(Pool) %>%
+  summarise('2003' = `2003`/`2002`,
+            '2004' = `2004`/`2003`,
+            '2005' = `2005`/`2004`,
+            '2006' = `2006`/`2005`,
+            '2007' = `2007`/`2006`,
+            '2008' = `2008`/`2007`,
+            '2009' = `2009`/`2008`,
+            '2010' = `2010`/`2009`,
+            '2011' = `2011`/`2010`,
+            '2012' = `2012`/`2011`,
+            '2013' = `2013`/`2012`,
+            '2014' = `2014`/`2013`,
+            '2015' = `2015`/`2014`) %>%
+  gather(`2003`, `2003`, `2004`, `2005`, `2006`, 
+         `2007`, `2008`, `2009`, `2010`, `2011`, `2012`, `2013`,
+         `2014`, `2015`,
+         key = Year, value = GR) %>%
+  mutate_if(is.numeric, ~replace(., is.infinite(.), 1)) %>%
+  mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
+  group_by(Year) %>%
+  summarise(reference = mean(GR))
+
+join_GR <- left_join(ref_GR, const_GR, by = 'Year')
+
+ggplot(join_GR, aes(x = reference, y = constructed)) +
+  geom_point() +
+  theme_bw() +
+  geom_text(aes(label = Year), hjust = .5, vjust = 0) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  labs(y = "Constructed mean LACO growth rate",
+       x = "Reference mean LACO growth rate") 

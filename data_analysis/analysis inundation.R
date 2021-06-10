@@ -9,6 +9,7 @@
 ## III. Inundation vs. alpha
 ## IV. PPT vs. lambda
 ## V. PPT vs. alpha
+## VI. PPT vs. growth rate
 
 # Set up:
 library(ggplot2)
@@ -50,8 +51,20 @@ relative_GR <- const_com_noNA %>%
             '2005' = `2005`/`2004`,
             '2006' = `2006`/`2005`,
             '2007' = `2007`/`2006`,
-            '2008' = `2008`/`2007`)
-long_relative_GR <- relative_GR %>% gather(`2001`, `2002`, `2003`, `2003`, `2004`, `2005`, `2006`, `2007`, `2008`, key = Year, value = GR)
+            '2008' = `2008`/`2007`,
+            '2009' = `2009`/`2008`,
+            '2010' = `2010`/`2009`,
+            '2011' = `2011`/`2010`,
+            '2012' = `2012`/`2011`,
+            '2013' = `2013`/`2012`,
+            '2014' = `2014`/`2013`,
+            '2015' = `2015`/`2014`,
+            '2016' = `2016`/`2015`,
+            '2017' = `2017`/`2016`)
+long_relative_GR <- relative_GR %>% gather(`2001`, `2002`, `2003`, `2003`, `2004`, `2005`, `2006`, 
+                                           `2007`, `2008`, `2009`, `2010`, `2011`, `2012`, `2013`,
+                                           `2014`, `2015`, `2016`, `2017`,
+                                           key = Year, value = GR)
 ggplot(long_relative_GR, aes(x = Year, y = log(GR), col = Size)) +
   geom_jitter() #no difference in LACO growth rates among pond sizes
 
@@ -126,8 +139,19 @@ ggplot(LACO_ppt, aes(x = Total_ppt_cm, y = log(LACOdens), col = Size)) + #total 
   geom_point() +
   theme_bw()
 
+summary_LACO_ppt <- LACO_ppt %>%
+  group_by(Year, Oct_Dec_cm) %>%
+  summarise(mean_log_LACO = mean(log_LACOdens),
+            se_log_LACO = se(log_LACOdens))
 
-
+ggplot(summary_LACO_ppt, aes(x = Oct_Dec_cm, y = mean_log_LACO)) +
+  geom_point()+
+  theme_bw() +
+  geom_errorbar(aes(ymin = mean_log_LACO-se_log_LACO, ymax = mean_log_LACO+se_log_LACO), width = 0.4, alpha = 0.9, size = 1) +
+  labs(x = "Early season rain (cm)", y = "Mean LACO density (log) ") +
+  geom_text(aes(label = Year), hjust = 0, vjust = 0)+
+  geom_smooth(method = "lm")
+  
 #############################
 # II. INUNDATION VS. LAMBDA #
 #############################
@@ -240,7 +264,8 @@ lambda_PPT <- merge(const_lambda, PPT)
 ggplot(lambda_PPT, aes(x = Oct_Dec_cm, y =Const_lambda)) +
   geom_point() +
   theme_bw() +
-  labs(x = "Early season rain (cm)", y = "Constructed LACO lambda")
+  labs(x = "Early season rain (cm)", y = "Constructed LACO lambda")+
+  geom_text(aes(label = Year), hjust = 0, vjust = 0)
 
 ####################
 # V. PPT vs. alpha #
@@ -254,7 +279,8 @@ alphaLACO_PPT <- merge(const_alphaLACO, PPT)
 ggplot(alphaLACO_PPT, aes(x = Oct_Dec_cm, y = Const_alphaLACO)) +
   geom_point() +
   theme_bw() +
-  labs(x = "Early season rain (cm)", y = "Constructed LACO alpha")
+  labs(x = "Early season rain (cm)", y = "Constructed LACO alpha") +
+  geom_text(aes(label = Year), hjust = 0, vjust = 0)
 
 #INTERSPECIFIC COMPETITION#
 const_alphaEG <- as.data.frame(alphaEG_data[,5]) %>%
@@ -265,4 +291,23 @@ alphaEG_PPT <- merge(const_alphaEG, PPT)
 ggplot(alphaEG_PPT, aes(x = Oct_Dec_cm, y = Const_alphaEG)) +
   geom_point() +
   theme_bw() +
-  labs(x = "Early season rain (cm)", y = "Constructed exotic grass alpha")
+  labs(x = "Early season rain (cm)", y = "Constructed exotic grass alpha") +
+  geom_text(aes(label = Year), hjust = 0, vjust = 0)
+
+###########################
+# VI. PPT vs. Growth Rate #
+###########################
+summary_relative_GR <- long_relative_GR %>%
+  select(Year, Pool, GR) %>%
+  mutate_if(is.numeric, ~replace(., is.infinite(.), 1)) %>%
+  mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>%
+  group_by(Year) %>%
+  summarise(mean_GR = mean(GR), se_GR = se(GR))
+
+GR_ppt <- left_join(summary_relative_GR, PPT %>% select(Year, Jan_March_cm, Oct_Dec_cm, Total_ppt_cm), by = "Year")
+
+ggplot(GR_ppt, aes(x = Oct_Dec_cm, y = mean_GR)) +
+  geom_point()+
+  geom_text(aes(label = Year), hjust = 0, vjust = 0) +
+  theme_bw() +
+  labs(x = "Early season rain (cm)", y = "Mean relative growth rate (Nt/Nt-1)") 
