@@ -8,18 +8,18 @@ library(ggplot2)
 library(gridExtra)
 
 #EG group - LOMU, BRHO, HOMA
-ggplot(const_com_subset, aes(x = sum_EG, y = log(LACOdens))) +
+ggplot(const_dummy_join, aes(x = sum_EG, y = log(LACOdens))) +
   geom_point()+ 
   geom_smooth(se= FALSE, method = "gam", formula = y ~ poly(x, 2))
 
-plot1 <- ggplot(const_com_subset, aes(x = as.factor(Year))) +
+plot1 <- ggplot(const_dummy_join, aes(x = as.factor(Year))) +
             geom_boxplot(aes(y = LACOdens)) + 
             ylim(0, 120)
-plot2 <- ggplot(const_com_subset, aes(x = as.factor(Year))) +
+plot2 <- ggplot(const_dummy_join, aes(x = as.factor(Year))) +
             geom_boxplot(aes(y = sum_EG)) +
             ylim(0, 120)
 grid.arrange(plot1, plot2, nrow=2, ncol=1)
 
-EG <- lm(LACOdens ~ poly(sum_EG, 2, raw = TRUE), const_com_subset)
+EG <- lm(LACOdens ~ poly(sum_EG, 2, raw = TRUE), const_dummy_join)
 summary(EG)
 
