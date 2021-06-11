@@ -1,14 +1,16 @@
-# Make a timeseries figure of LACO density in REFERENCE and CONSTRUCTED pools from 2000-2015.
+# Script for FIGURE 1 and 2
 
-# Load data and packages
 # Set your data pathway first!
-# Go to "data_wrangling/prep data before modeling.R"
-# Run "const_com_noNA" in option 1 and "ref_com_LACO"
+# Go to "data_wrangling/prep data before modeling.R" to get data on LACO abundance and exotic grass cover
+PPT <- read_csv(paste(datpath, "Monthly precip averages/Fairfield_precip.csv", sep="")) #precip data
+# Go to "analysis/complex_belowground_v5.R" for lambda values
+# Go to "analysis/GRWR_invader" for GRWR values
+
 library(ggplot2)
 library(ggpubr)
 
 
-# REFERENCE pool LACO cover data
+# REFERENCE pool LACO cover data (see 'prep data before modeling.R')
 ref_LACO <- ref_com_LACO %>% #9 reference pools that have consecutive data on LACO abundance from 2002 to 2015
   group_by(Pool) %>%
   gather(key = "Year", value = "LACO" , - Pool) 
@@ -25,7 +27,7 @@ ref_LACOdens <- full_join(ref_LACOden_edge, ref_LACO)%>% #join reference LACO ab
   mutate(type = "reference")
 ref_LACOdens$Year <- as.numeric(ref_LACOdens$Year)
 
-# CONSTRUCTED pool LACO density data 
+# CONSTRUCTED pool LACO density data (see 'prep data before modeling.R')
 const_LACOden <- const_com_noNA %>% #72 pools
   select(- c(Size)) %>%
   group_by(Pool) %>%
@@ -53,7 +55,7 @@ mean_join_LACO <- join_LACO %>%
             se_LACOdens = se(LACOdens))
 mean_join_LACO$Year <- as.numeric(mean_join_LACO$Year)
 
-f1a <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
+fabundance <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
         geom_point()+
         geom_line(size=1)+
         scale_y_log10()+
@@ -65,11 +67,64 @@ f1a <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
               axis.line = element_line(colour = "black"),
               legend.position = c(.2, .3),
               axis.title = element_text(size = 14))+
-        ylab(bquote(Density~(stems/m^2))) +
+        ylab(bquote(~italic(L.~conj.)~Density~(stems/m^2))) +
         scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
         scale_color_manual(name = "", values = c("#000000", "#888888"))
 
-# Visualize timeseries of predicted LACO lambda
+# Visualize timeseries of exotic grass cover (see 'prep data before modeling.R'))
+ref_EG <- ref_com %>% 
+  filter(Pool %in% c(9, 20, 34, 38, 52, 63, 77, 31, 27)) %>%
+  select(-Quadrat) %>%
+  group_by(Year, Pool) %>%
+  summarise_each(funs(mean)) %>%
+  group_by(Year, Pool) %>%
+  summarise(sum_EG = sum(BRHO, HOMA, LOMU)) %>%
+  mutate(type = "reference") %>%
+  group_by(Year, type) %>%
+  summarise(mean_EG = mean(sum_EG),
+            se_EG = se(sum_EG))
+const_EG <- const_dummy_join %>% 
+  select(Year, Pool, sum_EG) %>% 
+  mutate(type = "constructed") %>%
+  group_by(Year, type) %>%
+  summarise(mean_EG = mean(sum_EG),
+            se_EG = se(sum_EG))
+EG_all <- rbind(ref_EG, const_EG) 
+EG_all$Year <- as.numeric(EG_all$Year)
+
+fexoticgrass <- ggplot(EG_all, aes(x = Year, y = mean_EG, col = type)) +
+                      geom_point() +
+                      geom_line(size = 1) +
+                      geom_errorbar(aes(ymin = mean_EG-se_EG, ymax = mean_EG+se_EG), width = 0.4, alpha = 0.9, size = 1) +
+                      ylab(bquote(Exotic~Grass~Cover~('%'))) +
+                      scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
+                      scale_color_manual(name = "", values = c("#000000", "#888888")) +
+                      theme(text = element_text(size=16),
+                            panel.grid.major = element_blank(),
+                            panel.grid.minor = element_blank(),
+                            panel.background = element_blank(),
+                            axis.line = element_line(colour = "black"),
+                            legend.position = c(0.2, 0.9), 
+                            axis.title = element_text(size = 14))
+
+# Visualize timeseries of precipitation (PPT object)
+PPT_long <- PPT %>% select(Year, Jan_March_cm, Oct_Dec_cm) %>% 
+  pivot_longer(cols = c('Jan_March_cm', 'Oct_Dec_cm'),names_to = "season", values_to= "rain") #Oct_Dec_cm rain is calculated from t-1, while Jan_March_cm is calculated from t.
+PPT_long$season <- as.factor(PPT_long$season)
+frain <- ggplot(PPT_long %>%filter(Year  %in%  c(2000:2017)), aes(fill = season, y = rain, x = Year)) +
+                geom_bar(position = "stack", stat = "identity") +
+                ylab(bquote(Precipitation~(cm)))+
+                scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
+                scale_fill_manual(name = "", labels = c("January-March", "October-December"), values = c("#000000", "#888888")) +
+                theme(text = element_text(size=16),
+                      panel.grid.major = element_blank(),
+                      panel.grid.minor = element_blank(),
+                      panel.background = element_blank(),
+                      axis.line = element_line(colour = "black"),
+                      legend.position = c(0.7, 0.85), 
+                      axis.title = element_text(size = 14))
+
+# Visualize timeseries of predicted LACO lambda (see 'complex_belowground_v5.R')
 lambda_ref_00_01 <- as.data.frame(reflambda_mean[1:2,5])%>% #2000-2001 lambda data 
   mutate(Year = c(2000:2001))%>%
   mutate(type = "reference")
@@ -86,7 +141,7 @@ lambda_const <- as.data.frame(lambda_mean[,5]) %>%
 colnames(lambda_const) <- c("lambda", "Year", "type")
 lambda_const_ref <- rbind(lambda_ref, lambda_const) 
 
-f1b <- ggplot(lambda_const_ref, aes(x = Year, y = lambda, col = type))+
+flambda <- ggplot(lambda_const_ref, aes(x = Year, y = lambda, col = type))+
           geom_point() +
           geom_line(size=1)+
           theme(text = element_text(size=16),
@@ -101,11 +156,11 @@ f1b <- ggplot(lambda_const_ref, aes(x = Year, y = lambda, col = type))+
                      limits = c(1999.5,2017.5))+
           scale_color_manual(name = "", values = c("#000000", "#888888"))
 
-#Visualize timeseries of GRWR (see GRWR_invader.R)
+#Visualize timeseries of GRWR (see 'GRWR_invader.R')
 GRWR_time <- GRWR_LACO %>%
   gather(key = "type", "GRWR", -Year)
 
-f1c <- ggplot(GRWR_time, aes(x = Year, y = GRWR, col = type))+
+fGRWR <- ggplot(GRWR_time, aes(x = Year, y = GRWR, col = type))+
             geom_point() +
             geom_line(size=1)+
             theme(text = element_text(size=16),
@@ -122,8 +177,12 @@ f1c <- ggplot(GRWR_time, aes(x = Year, y = GRWR, col = type))+
             scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 #FIGURE 1
-Fig1 <- ggarrange(f1a, f1b, f1c,  ncol=1, nrow=3, align = "v", labels = c("(a)", "(b)", "(c)"), font.label = list(size = 11))
-annotate_figure(Fig1, bottom = text_grob("Time (year)", size = 14))
+Fig1 <- ggarrange(fabundance, fexoticgrass, frain,  ncol=1, nrow=3, align = "v", 
+                  font.label = list(size = 14), hjust = 0.9)
+#annotate_figure(Fig1, bottom = text_grob("Time (year)", size = 14))
+
+#FIGURE 2
+Fig2 <- ggarrange(flambda, fGRWR, ncol = 1, nrow = 2, align = "v", labels = c("(a)", "(b)"), font.label = list(size = 11))
 
 # Visualize timeseries of observed LACO growth rate
 #observed Nt/Nt-1 constructed vs. reference
