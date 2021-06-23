@@ -145,25 +145,25 @@ pairs(~lambda_const + alpha_LACO_const + alpha_EG_const + alpha_ERVA_const, PPT_
 pairs(~lambda_ref + alpha_LACO_ref + alpha_EG_ref + alpha_ERVA_ref, PPT_parameters)
 
 # Make a regression table
-dt <- matrix(ncol=5, nrow = 5)
-rownames(dt) <- c("early ppt", "late ppt", "total ppt", "max depth", "max duration")
-colnames(dt) <- c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF")
+# dt <- matrix(ncol=5, nrow = 5)
+# rownames(dt) <- c("early ppt", "late ppt", "total ppt", "max depth", "max duration")
+# colnames(dt) <- c("lambda", "alpha_LACO", "alpha_EG", "alpha_ERVA", "alpha_NF")
+# 
+# parenthesis <- function(x){
+#     x[i] <- paste("(" , x[i]) %>%
+#             paste(., ")")
+# }
+summary(lm(lambda_const~Oct_Dec_cm, PPT_parameters))
+summary(lm(lambda_const~Jan_March_cm, PPT_parameters))
+summary(lm(lambda_const~Total_ppt_cm, PPT_parameters))
+summary(lm(lambda_const~mean_max_depth, PPT_parameters))
+summary(lm(lambda_const~mean_duration_wk, PPT_parameters))
 
-parenthesis <- function(x){
-    x[i] <- paste("(" , x[i]) %>%
-            paste(., ")")
-}
-p1 <- c(summary(lm(lambda_const~Oct_Dec_cm, PPT_parameters))$coefficients[2,4],
-                summary(lm(lambda_const~Jan_March_cm, PPT_parameters))$coefficients[2,4],
-                summary(lm(lambda_const~Total_ppt_cm, PPT_parameters))$coefficients[2,4],
-                summary(lm(lambda_const~mean_max_depth, PPT_parameters))$coefficients[2,4],
-                summary(lm(lambda_const~mean_duration_wk, PPT_parameters))$coefficients[2,4])
-
-p2 <- c(summary(lm(alpha_LACO_const~Oct_Dec_cm, PPT_parameters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~Jan_March_cm, PPT_parameters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~Total_ppt_cm, PPT_parameters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~mean_max_depth, PPT_parameters))$coefficients[2,4],
-            summary(lm(alpha_LACO_const~mean_duration_wk, PPT_parameters))$coefficients[2,4])
+summary(lm(alpha_LACO_const~Oct_Dec_cm, PPT_parameters))
+summary(lm(alpha_LACO_const~Jan_March_cm, PPT_parameters))
+summary(lm(alpha_LACO_const~Total_ppt_cm, PPT_parameters))
+summary(lm(alpha_LACO_const~mean_max_depth, PPT_parameters))
+summary(lm(alpha_LACO_const~mean_duration_wk, PPT_parameters))
 
 summary(lm(alpha_EG_const~Oct_Dec_cm, PPT_parameters))
 summary(lm(alpha_EG_const~Jan_March_cm, PPT_parameters))
@@ -214,5 +214,5 @@ summary(lm(alpha_EG_ref~mean_duration_wk, PPT_parameters))
 summary(lm(alpha_ERVA_ref~mean_duration_wk, PPT_parameters))
 summary(lm(alpha_NF_ref~mean_duration_wk, PPT_parameters))
 
-stargazer(dt, type = "text")
+#stargazer(dt, type = "text")
 
