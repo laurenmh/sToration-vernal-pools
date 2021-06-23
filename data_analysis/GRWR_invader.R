@@ -244,78 +244,77 @@ GRWR_LACO_ref_alpha <- log(LACO_ref_alpha)
 LACO_ref_epsilon_alpha <- mean(GRWR_LACO_ref_alpha) - LACO_ref_epsilon_0 #0.128182
 
 #Step 4. Vary belowground parameters (survival and germination) while keeping everything else constant
-sim_LACO <- matrix(nrow = 17, ncol = 1)
-LACO_const_bg <- bh.sim.control(
-                        LACO = 1,
-                        EG = const_com_control$avg_sumEG,
-                        ERVA = const_com_control$avg_ERVA,
-                        NF = const_com_control$avg_sumNF,
-                        aii = alpha_LACO_knot,
-                        a1 = alpha_EG_knot,
-                        a2 = alpha_ERVA_knot,
-                        a3 = alpha_NF_knot,
-                        lambda = lambda_mean_knot,
-                        s = s_mean[,5],
-                        g = 0.7,
-                        glow = 0.2)
-GRWR_LACO_const_bg <- log(LACO_const_bg)
-LACO_const_epsilon_bg <- mean(GRWR_LACO_const_bg) - LACO_const_epsilon_0 # 0.1116214
-sim_LACO <- matrix(nrow = 13, ncol = 1)
-LACO_ref_bg <- bh.sim.control(
-                        LACO = 1,
-                        EG = const_com_control$avg_sumEG,
-                        ERVA = const_com_control$avg_ERVA,
-                        NF = const_com_control$avg_sumNF,
-                        aii = refalpha_LACO_knot,
-                        a1 = refalpha_EG_knot,
-                        a2 = refalpha_ERVA_knot,
-                        a3 = refalpha_NF_knot,
-                        lambda = reflambda_knot,
-                        s = refs_mean[,5],
-                        g = 0.7,
-                        glow = 0.2)
-GRWR_LACO_ref_bg <- log(LACO_ref_bg)
-LACO_ref_epsilon_bg <- mean(GRWR_LACO_ref_bg) - LACO_ref_epsilon_0 # -0.002154302
+# sim_LACO <- matrix(nrow = 17, ncol = 1)
+# LACO_const_bg <- bh.sim.control(
+#                         LACO = 1,
+#                         EG = const_com_control$avg_sumEG,
+#                         ERVA = const_com_control$avg_ERVA,
+#                         NF = const_com_control$avg_sumNF,
+#                         aii = alpha_LACO_knot,
+#                         a1 = alpha_EG_knot,
+#                         a2 = alpha_ERVA_knot,
+#                         a3 = alpha_NF_knot,
+#                         lambda = lambda_mean_knot,
+#                         s = s_mean[,5],
+#                         g = 0.7,
+#                         glow = 0.2)
+# GRWR_LACO_const_bg <- log(LACO_const_bg)
+# LACO_const_epsilon_bg <- mean(GRWR_LACO_const_bg) - LACO_const_epsilon_0 # 0.1116214
+# sim_LACO <- matrix(nrow = 13, ncol = 1)
+# LACO_ref_bg <- bh.sim.control(
+#                         LACO = 1,
+#                         EG = const_com_control$avg_sumEG,
+#                         ERVA = const_com_control$avg_ERVA,
+#                         NF = const_com_control$avg_sumNF,
+#                         aii = refalpha_LACO_knot,
+#                         a1 = refalpha_EG_knot,
+#                         a2 = refalpha_ERVA_knot,
+#                         a3 = refalpha_NF_knot,
+#                         lambda = reflambda_knot,
+#                         s = refs_mean[,5],
+#                         g = 0.7,
+#                         glow = 0.2)
+# GRWR_LACO_ref_bg <- log(LACO_ref_bg)
+# LACO_ref_epsilon_bg <- mean(GRWR_LACO_ref_bg) - LACO_ref_epsilon_0 # -0.002154302
 
 #Step 5. Interactive effect from simultaneous variation in lambda, alpha, and belowground after accounting for each main effect
-GRWR_LACO_const_interaction <- mean(GRWR_LACO_const) - (LACO_const_epsilon_0 + LACO_const_epsilon_alpha + LACO_const_epsilon_lambda + LACO_const_epsilon_bg)
-GRWR_LACO_ref_interaction <- mean(GRWR_LACO_ref) - (LACO_ref_epsilon_0 + LACO_ref_epsilon_alpha + LACO_ref_epsilon_lambda + LACO_ref_epsilon_bg)
+GRWR_LACO_const_interaction <- mean(GRWR_LACO_const) - (LACO_const_epsilon_0 + LACO_const_epsilon_alpha + LACO_const_epsilon_lambda)
+GRWR_LACO_ref_interaction <- mean(GRWR_LACO_ref) - (LACO_ref_epsilon_0 + LACO_ref_epsilon_alpha + LACO_ref_epsilon_lambda)
 
 #plot partitioned GRWR
-Partitioning_GRWR_LACO_const <- as.data.frame(c(mean(GRWR_LACO_const), LACO_const_epsilon_0, LACO_const_epsilon_alpha, LACO_const_epsilon_lambda, LACO_const_epsilon_bg, GRWR_LACO_const_interaction)) %>%
-  mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+Partitioning_GRWR_LACO_const <- as.data.frame(c(mean(GRWR_LACO_const), LACO_const_epsilon_0, LACO_const_epsilon_alpha, LACO_const_epsilon_lambda, GRWR_LACO_const_interaction)) %>%
+  mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
 colnames(Partitioning_GRWR_LACO_const) <- c("Partitioned_GRWR_LACO_const","Mechanism") 
-Partitioning_GRWR_LACO_const$Mechanism <- ordered(Partitioning_GRWR_LACO_const$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+Partitioning_GRWR_LACO_const$Mechanism <- ordered(Partitioning_GRWR_LACO_const$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
 xlabels <- c("r_overall" = expression(bar("r")[i]^" "), 
              "epsilon_0" = expression(epsilon[i]^0), 
              "epsilon_alpha" = expression(epsilon[i]^alpha),
              "epsilon_lambda" = expression(epsilon[i]^lambda),
-             "epsilon_bg" = expression(epsilon[i]^B),
-             "epsilon_int" = expression(epsilon[i]^{alpha*lambda*B}))
+             "epsilon_int" = expression(epsilon[i]^{alpha*lambda}))
 Part_const <- ggplot(Partitioning_GRWR_LACO_const, aes(x = Mechanism, y = Partitioned_GRWR_LACO_const, fill = Mechanism))+
             geom_bar(stat = "identity")+
             theme_classic(base_size = 14)+
             theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
-            scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60", "grey60"))+
+            scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
             ylim(-1.4, 0.8)+
             scale_x_discrete(labels = xlabels)
 
-Partitioning_GRWR_LACO_ref <- as.data.frame(c(mean(GRWR_LACO_ref), LACO_ref_epsilon_0, LACO_ref_epsilon_alpha, LACO_ref_epsilon_lambda, LACO_ref_epsilon_bg, GRWR_LACO_ref_interaction)) %>%
-  mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+Partitioning_GRWR_LACO_ref <- as.data.frame(c(mean(GRWR_LACO_ref), LACO_ref_epsilon_0, LACO_ref_epsilon_alpha, LACO_ref_epsilon_lambda, GRWR_LACO_ref_interaction)) %>%
+  mutate(mechanism = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
 colnames(Partitioning_GRWR_LACO_ref) <- c("Partitioned_GRWR_LACO_ref","Mechanism") 
-Partitioning_GRWR_LACO_ref$Mechanism <- ordered(Partitioning_GRWR_LACO_ref$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_bg", "epsilon_int"))
+Partitioning_GRWR_LACO_ref$Mechanism <- ordered(Partitioning_GRWR_LACO_ref$Mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
 Part_ref <- ggplot(Partitioning_GRWR_LACO_ref, aes(x = Mechanism, y = Partitioned_GRWR_LACO_ref, fill = Mechanism))+
             geom_bar(stat = "identity")+
             theme_classic(base_size = 14)+
             theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
-            scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60", "grey60"))+
+            scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
             ylim(-1.4, 0.8)+
             scale_x_discrete(labels = xlabels)
 figure_partitioning <- ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", 
-                                  labels = c("(a) Reference LACO", "(b) Constructed LACO"), font.label = list(size = 11))
-annotate_figure(figure_partitioning, bottom = "Mechanism", left = "Partitioning of average population growth rate")
+                                  labels = c("(a) Reference", "(b) Constructed"), font.label = list(size = 11))
+annotate_figure(figure_partitioning, bottom = "Mechanisms", left = "Partitioning of average population growth rate")
  #-----------------------
 #Goal: Simulate exotic grasses (EG) removal to promote LACO persistence
 
@@ -627,14 +626,14 @@ mean(GRWR_LACO_100EG_all) # 1.313785
 
 #Plot simulated GRWR
 GRWR_simulated_all <- cbind(GRWR_LACO, GRWR_LACO_25EG_all, GRWR_LACO_50EG_all, GRWR_LACO_75EG_all, GRWR_LACO_100EG_all) 
-colnames(GRWR_simulated_all) <- c("0% grass removed", "Year", "reference", "25% grass removed", "50% grass removed", "75% grass removed", "100% grass removed")
+colnames(GRWR_simulated_all) <- c("0% removed", "Year", "reference", "25% removed", "50% removed", "75% removed", "100% removed")
 GRWR_simulated_all <- GRWR_simulated_all %>% 
   gather(key = "treatment", "GRWR", -Year)
 
-GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("reference", "0% grass removed", "25% grass removed", "50% grass removed", "75% grass removed", "100% grass removed"))
+GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("reference", "0% removed", "25% removed", "50% removed", "75% removed", "100% removed"))
 
 
-ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% grass removed", "100% grass removed")), aes(x = Year, y = GRWR, group = treatment))+
+ggplot(GRWR_simulated_all%>%filter(!treatment %in% c("25% removed", "100% removed")), aes(x = Year, y = GRWR, group = treatment))+
   geom_rect(aes(xmin = c(2001.5), xmax = c(2003.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
   geom_rect(aes(xmin = c(2004.5), xmax = c(2006.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
   geom_rect(aes(xmin = c(2010.5), xmax = c(2011.5), ymin = -4, ymax = 4), fill = "#f2f2f2")+
@@ -657,10 +656,19 @@ AvgGRWR_all <- GRWR_simulated_all %>%
   group_by(treatment) %>%
   summarize(overall_GRWR = mean(GRWR))
 
-ggplot(AvgGRWR_all %>% filter(!treatment %in% c("reference",
-  "25% grass removed", "100% grass removed")), aes(x = treatment, y = overall_GRWR))+
-  geom_bar(stat = "identity")+
-  theme_classic(base_size = 14)+
-  labs(y = "Overall GRWR", x = "Treatment")+
-  geom_hline(yintercept = 0)
-         
+sim_GRWR <- ggplot(AvgGRWR_all %>% filter(!treatment %in% c("reference",
+                    "25% removed", "100% removed")), aes(x = treatment, y = overall_GRWR))+
+                    geom_bar(stat = "identity")+
+                    theme(text = element_text(size=16),
+                          panel.grid.major = element_blank(),
+                          panel.grid.minor = element_blank(),
+                          panel.background = element_blank(),
+                          axis.text = element_text(size = 18),
+                          axis.line = element_line(colour = "black"),
+                          legend.position = "bottom")+
+                    labs(y = "Average GRWR", x = "Grass Removal Treatment")+
+                    geom_hline(yintercept = 0) +
+                    annotate("text", x = 1, y = 0.05, label = "Does not persist", size = 5)+
+                    annotate("text", x = 2, y = 0.05, label = "Does not persist", size = 5)+
+                    annotate("text", x = 3, y = 0.35, label = "Persists", size = 5)
+                           

@@ -182,7 +182,8 @@ Fig1 <- ggarrange(fabundance, fexoticgrass, frain,  ncol=1, nrow=3, align = "v",
 #annotate_figure(Fig1, bottom = text_grob("Time (year)", size = 14))
 
 #FIGURE 2
-Fig2 <- ggarrange(flambda, fGRWR, ncol = 1, nrow = 2, align = "v", labels = c("(a)", "(b)"), font.label = list(size = 11))
+Fig2 <- ggarrange(flambda, fGRWR, ncol = 1, nrow = 2, align = "v", 
+                  labels = c("(a)", "(b)"), font.label = list(size = 14))
 
 # Visualize timeseries of observed LACO growth rate
 #observed Nt/Nt-1 constructed vs. reference

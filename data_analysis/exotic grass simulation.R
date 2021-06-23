@@ -6,6 +6,7 @@
 
 library(tidyverse)
 library(ggplot2)
+library(ggpubr)
 
 # Simulation model:
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of LACO stem counts
@@ -184,22 +185,22 @@ summary_grass_sim_LACO <- grass_sim_LACO %>%
             sd_LACO = sd(LACO))
 
 ##########
-#Figure 3# 
+#Figure 4# 
 ##########
-ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time, y = mean_LACO, group = type)) +
-  geom_point() +
-  geom_line(aes(linetype = type), size = 1) +
-  geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
-  theme(text = element_text(size=16),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = c(0.8, 0.8)) +
-  labs(x = "Time (year)", y = "Mean LACO density") +
-  scale_linetype_manual(name = "Treatment", 
-                       labels = c("0% grass removal", "50% grass removed", "75% grass removed"),
-                       values = c("solid", "twodash", "dotted"))
+sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time, y = mean_LACO, group = type)) +
+                          geom_point() +
+                          geom_line(aes(linetype = type), size = 1) +
+                          geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
+                          theme(text = element_text(size=16),
+                                panel.grid.major = element_blank(),
+                                panel.grid.minor = element_blank(),
+                                panel.background = element_blank(),
+                                axis.line = element_line(colour = "black"),
+                                legend.position = c(0.8, 0.8)) +
+                          labs(x = "Year", y = bquote(~italic(L.~conj.)~density~(stems/m^2))) +
+                          scale_linetype_manual(name = "Grass Removal Treatment", 
+                                               labels = c("0% removed", "50% removed", "75% removed"),
+                                               values = c("solid", "twodash", "dotted"))
 
 summary_grass_sim_LACO %>%
   group_by(type) %>%
@@ -207,6 +208,10 @@ summary_grass_sim_LACO %>%
 
 anova(lm(mean_LACO ~ time, data = summary_grass_sim_LACO))
 
+ggarrange(sim_timeseries, sim_GRWR,  ncol = 1, nrow = 2, 
+          labels = c("a)", "b)"), 
+          #common.legend = TRUE, legend = "bottom", 
+          font.label = list(size = 18))
 ################################################
 #Which year had the greatest effect of removal?#
 ################################################
