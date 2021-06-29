@@ -118,7 +118,6 @@ parameters{
     vector<lower = 0, upper = 1>[n_years-1] alpha_EG; // competition term for LACO-exotic grass
     vector<lower = 0, upper = 1>[n_years-1] alpha_ERVA;// competition term for LACO-ERVA
     vector<lower = 0, upper = 1>[n_years-1] alpha_NF; // competition term for LACO-non-native forb
-    real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
     real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
 }
 transformed parameters{
@@ -177,10 +176,10 @@ model{
                 germ_LACO = low_germ_LACO;
             else
                 germ_LACO = high_germ_LACO;
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
         for(b in 4:(n_years-1)){
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
         }
     }
     lambda ~ normal(60,20); //get partially-informed priors from lit
@@ -188,8 +187,7 @@ model{
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
     alpha_NF ~ normal(0,1);
-    sigma ~ normal(0,0.01);
-    survival_LACO ~ normal(0,1);
+    survival_LACO ~ beta(0.5,0.5);
 }"
 
 BH_model <- stan_model(model_code = BH_model_block)
