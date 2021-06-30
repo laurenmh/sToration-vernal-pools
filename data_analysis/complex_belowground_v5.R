@@ -124,20 +124,24 @@ transformed parameters{
     matrix [n_pools, n_years-1] mu_LACO;// mean expected value of seed LACO at time t from a discrete BH model
     matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of seed LACO at time t-1 estimated from values at t-2
     real germ_LACO;
-      if (obs_EG[i,j-1] > 100)
-                germ_LACO = low_germ_LACO;
-      else
-                germ_LACO = high_germ_LACO;
     for(i in 1:n_pools){  
         for(j in 1:1){
             mu_LACO[i,j] = 100;
         }
         for(j in 2:2){
+            if (obs_EG[i,j-1] > 100)
+                germ_LACO = low_germ_LACO;
+            else
+                germ_LACO = high_germ_LACO;
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
                             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
         for(j in 3:n_years-1){
+            if (obs_EG[i,j-1] > 100)
+                germ_LACO = low_germ_LACO;
+            else
+                germ_LACO = high_germ_LACO;
             if (obs_LACO[i,j-1] > 0){
                 int_LACO[i,j-2] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
                                   obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
