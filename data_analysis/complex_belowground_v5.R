@@ -121,29 +121,23 @@ parameters{
     real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
 }
 transformed parameters{
-    matrix [n_pools, n_years-1] mu_LACO;// mean expected value of LACO at time t from a discrete BH model
-    matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of LACO at time t-1 estimated from values at t-2
-    
+    matrix [n_pools, n_years-1] mu_LACO;// mean expected value of seed LACO at time t from a discrete BH model
+    matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of seed LACO at time t-1 estimated from values at t-2
+    real germ_LACO;
+      if (obs_EG[i,j-1] > 100)
+                germ_LACO = low_germ_LACO;
+      else
+                germ_LACO = high_germ_LACO;
     for(i in 1:n_pools){  
         for(j in 1:1){
             mu_LACO[i,j] = 100;
         }
         for(j in 2:2){
-            real germ_LACO;
-            if (obs_EG[i,j-1] > 100)
-                germ_LACO = low_germ_LACO;
-            else
-                germ_LACO = high_germ_LACO;
             mu_LACO[i,j] = (obs_LACO[i,j-1] * lambda[j-1])./(1 + obs_LACO[i,j-1] * alpha_LACO[j-1] + 
                             obs_EG[i,j-1] * alpha_EG[j-1] + obs_ERVA[i,j-1] * alpha_ERVA[j-1] + obs_NF[i,j-1] * alpha_NF[j-1]) +
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
         for(j in 3:n_years-1){
-            real germ_LACO;
-            if (obs_EG[i,j-1] > 100)
-                germ_LACO = low_germ_LACO;
-            else
-                germ_LACO = high_germ_LACO;
             if (obs_LACO[i,j-1] > 0){
                 int_LACO[i,j-2] = (obs_LACO[i,j-2] * lambda[j-2])./(1 + obs_LACO[i,j-2] * alpha_LACO[j-2] + 
                                   obs_EG[i,j-2] * alpha_EG[j-2] + obs_ERVA[i,j-2] * alpha_ERVA[j-2] + obs_NF[i,j-2] * alpha_NF[j-2]) +
@@ -164,53 +158,56 @@ transformed parameters{
     }
 }
 model{
+    real germ_LACO;
+    matrix[n_pools, n_years] stems_LACO;
     for(a in 1:n_pools){
         for(b in 1:1){
-            real germ_LACO;
             germ_LACO = high_germ_LACO;
+            stems_LACO[a,b] = mu_LACO[a,b] * germ_LACO;
             obs_LACO[a,b] ~ binomial(seeds_added[a,b], germ_LACO); //the first year's obs_LACO is the initial germination of seeds added in 1999
         }
         for(b in 2:3){
-            real germ_LACO;
             if (obs_EG[a,b-1] > 100)
                 germ_LACO = low_germ_LACO;
             else
                 germ_LACO = high_germ_LACO;
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO + seeds_added[a,b] * germ_LACO+0.01); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
+            stems_LACO[a,b] = mu_LACO[a,b] * germ_LACO;
+            if(stems_LACO[a,b] >0)
+            obs_LACO[a,b] ~ poisson(stems_LACO[a,b] + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
         for(b in 4:(n_years-1)){
-            real germ_LACO;
             if (obs_EG[a,b-1] > 100)
                 germ_LACO = low_germ_LACO;
             else
                 germ_LACO = high_germ_LACO;
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO + 0.01); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+            stems_LACO[a,b] = mu_LACO[a,b] * germ_LACO;
+            if(stems_LACO[a,b] > 0)
+            obs_LACO[a,b] ~ poisson(stems_LACO[a,b]); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
         }
     }
-    lambda ~ normal(60,20); //get partially-informed priors from lit
+    lambda ~ normal(60,20); //partially informed prior from literature 
     alpha_LACO ~ normal(0,1);
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
     alpha_NF ~ normal(0,1);
-    survival_LACO ~ beta(0.5,0.5);
+    survival_LACO ~ beta(0.5,0.5);//Jeffery's prior
 }"
 
 BH_model <- stan_model(model_code = BH_model_block)
-
 ### RUN THE MODEL ###
 
 ## Option 1: run with simulated data
-BH_fit <- sampling(BH_model,
-                   data = list(n_pools = sim_n_pools,
-                               n_years = sim_n_years,
-                               obs_LACO = sim_obs_LACO,
-                               obs_EG = sim_obs_EG,
-                               obs_ERVA = sim_obs_ERVA,
-                               obs_NF = sim_obs_NF,
-                               seeds_added = sim_seedtrt,
-                               low_germ_LACO = 0.2,
-                               high_germ_LACO = 0.7), 
-                   iter= 1000)
+# BH_fit <- sampling(BH_model,
+#                    data = list(n_pools = sim_n_pools,
+#                                n_years = sim_n_years,
+#                                obs_LACO = sim_obs_LACO,
+#                                obs_EG = sim_obs_EG,
+#                                obs_ERVA = sim_obs_ERVA,
+#                                obs_NF = sim_obs_NF,
+#                                seeds_added = sim_seedtrt,
+#                                low_germ_LACO = 0.2,
+#                                high_germ_LACO = 0.7), 
+#                    iter= 1000)
 
 ## Option 2: run with real data 
 ## See data prep file before running this
@@ -252,47 +249,47 @@ s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
 library(tidyr)
 library(ggplot2)
 
-#Option 1: use simulated data
-#make a table of predicted LACO from estimated parameters
-predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
-                         seedtrt = sim_seedtrt,
-                         EG = sim_obs_EG,
-                         ERVA = sim_obs_ERVA,
-                         NF = sim_obs_NF,
-                         aii = alpha_LACO_mean[,5],
-                         a1 = alpha_EG_mean[,5],
-                         a2 = alpha_ERVA_mean[,5], 
-                         a3 = alpha_NF_mean[,5],
-                         lambda = lambda_mean[,5],
-                         s = s_mean[,5],
-                         g = 0.7,
-                         glow = 0.2)
-
-#plot simulated LACOdens vs predicted_LACO_sim to check model fit
-colnames(predicted_LACO_sim) <- c(1:18)
-predicted_LACO_sim <- as.data.frame(predicted_LACO_sim) %>% 
-  mutate(Pool = row_number()) %>%
-  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = predicted_LACO)
-colnames(sim_obs_LACO) <- c(1:18)
-sim_obs_LACO <- as.data.frame(sim_obs_LACO) %>% 
-  mutate(Pool = row_number()) %>%
-  gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = sim_LACO)
-join_sim_LACO <- left_join(predicted_LACO_sim, sim_obs_LACO, by = c("Pool", "time"))
-
-summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.8644
-ggplot(join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
-  geom_point() +
-  annotate("text", label = "R^2 = 0.8644", x = 50, y = 150) + #looks like a good fit 
-  geom_smooth(method = "lm") +
-  labs(x = "simulated LACO counts", y = "predicted LACO counts")
-
-#plot timeseries of simulated LACOdens and predicted_LACO_sim
-long_join_sim <- join_sim_LACO %>% gather(`predicted_LACO`, `sim_LACO`, key = type, value = LACO)
-ggplot(long_join_sim, aes(x = time, y = LACO, color = type)) +
-  geom_jitter() +
-  labs(y = "LACO count") +
-  scale_color_discrete(breaks = c("predicted_LACO", "sim_LACO"),
-                       labels = c("predicted", "simulated"))
+# #Option 1: use simulated data
+# #make a table of predicted LACO from estimated parameters
+# predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
+#                          seedtrt = sim_seedtrt,
+#                          EG = sim_obs_EG,
+#                          ERVA = sim_obs_ERVA,
+#                          NF = sim_obs_NF,
+#                          aii = alpha_LACO_mean[,5],
+#                          a1 = alpha_EG_mean[,5],
+#                          a2 = alpha_ERVA_mean[,5], 
+#                          a3 = alpha_NF_mean[,5],
+#                          lambda = lambda_mean[,5],
+#                          s = s_mean[,5],
+#                          g = 0.7,
+#                          glow = 0.2)
+# 
+# #plot simulated LACOdens vs predicted_LACO_sim to check model fit
+# colnames(predicted_LACO_sim) <- c(1:18)
+# predicted_LACO_sim <- as.data.frame(predicted_LACO_sim) %>% 
+#   mutate(Pool = row_number()) %>%
+#   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = predicted_LACO)
+# colnames(sim_obs_LACO) <- c(1:18)
+# sim_obs_LACO <- as.data.frame(sim_obs_LACO) %>% 
+#   mutate(Pool = row_number()) %>%
+#   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = sim_LACO)
+# join_sim_LACO <- left_join(predicted_LACO_sim, sim_obs_LACO, by = c("Pool", "time"))
+# 
+# summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.8644
+# ggplot(join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
+#   geom_point() +
+#   annotate("text", label = "R^2 = 0.8644", x = 50, y = 150) + #looks like a good fit 
+#   geom_smooth(method = "lm") +
+#   labs(x = "simulated LACO counts", y = "predicted LACO counts")
+# 
+# #plot timeseries of simulated LACOdens and predicted_LACO_sim
+# long_join_sim <- join_sim_LACO %>% gather(`predicted_LACO`, `sim_LACO`, key = type, value = LACO)
+# ggplot(long_join_sim, aes(x = time, y = LACO, color = type)) +
+#   geom_jitter() +
+#   labs(y = "LACO count") +
+#   scale_color_discrete(breaks = c("predicted_LACO", "sim_LACO"),
+#                        labels = c("predicted", "simulated"))
 
 #Option 2: use real data
 predicted_LACO <- bh.sim(n_pools = n_pools,
