@@ -55,7 +55,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
                                 EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
                                 aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                 lambda = lambda[j-1], s = s, g = g)
-      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] + seedtrt[i,j] * g))
+      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] *g + seedtrt[i,j] * g))
     }
     for(j in 4:ncol(sim_mu)){
       if (EG[i,j-1]> 100){
@@ -74,7 +74,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
                                   aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                   lambda = lambda[j-1], s = s, g = g)
       }
-      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j])
+      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j]*g)
     }
   }
   return(sim_obs_LACO)
@@ -176,10 +176,15 @@ model{
                 germ_LACO = low_germ_LACO;
             else
                 germ_LACO = high_germ_LACO;
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO + seeds_added[a,b] * germ_LACO); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO + seeds_added[a,b] * germ_LACO+0.01); //the second and third year's obs_LACO is the sum of germination of seeds added in 2000 and 2001 and previous year's population. 
         }
         for(b in 4:(n_years-1)){
-            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
+            real germ_LACO;
+            if (obs_EG[a,b-1] > 100)
+                germ_LACO = low_germ_LACO;
+            else
+                germ_LACO = high_germ_LACO;
+            obs_LACO[a,b] ~ poisson(mu_LACO[a,b] * germ_LACO + 0.01); //the rest of the year's obs_LACO is from a poisson distribution of mu_LACO. 
         }
     }
     lambda ~ normal(60,20); //get partially-informed priors from lit

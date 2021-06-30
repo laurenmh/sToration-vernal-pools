@@ -43,7 +43,9 @@ const_com_control <- const_com %>% #use constructed pools data
 
 #Step 2. Calculate the annual growth rate of LACO in restored pools when one LACO is introduced into a stable community.
 
-#Extract parameters for restored pools. Run "complex_belowground_v5.R".
+#Extract parameters for restored pools. 
+load("complex_belowground_v5.R")
+Post <- rstan::extract(BH_fit)
 alpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
 alpha_EG_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
 alpha_ERVA_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_ERVA")))
