@@ -38,7 +38,7 @@ bh.sim <- function(n_pools, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
   for(i in 1:nrow(sim_ref_mu)){
     for(j in 1:1){
       sim_ref_mu[i,j] <- 100
-      sim_ref_LACO[i,j] <- rpois(1, lambda = (sim_ref_mu[i,j]))
+      sim_ref_LACO[i,j] <- rpois(1, lambda = (sim_ref_mu[i,j]*g))
     }
     for(j in 2:3){
       if (EG[i,j-1]> 100){
@@ -49,7 +49,7 @@ bh.sim <- function(n_pools, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
                                 EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
                                 aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                 lambda = lambda[j-1], s = s, g = g)
-      sim_ref_LACO[i,j] <- rpois(1, lambda = (sim_ref_mu[i,j]))
+      sim_ref_LACO[i,j] <- rpois(1, lambda = (sim_ref_mu[i,j]*g))
     }
     for(j in 4:ncol(sim_ref_mu)){
       if (EG[i,j-1]> 100){
@@ -68,7 +68,7 @@ bh.sim <- function(n_pools, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
                                   aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                   lambda = lambda[j-1], s = s, g = g)
       }
-      sim_ref_LACO[i,j] <- rpois(1, lambda = sim_ref_mu[i,j])
+      sim_ref_LACO[i,j] <- rpois(1, lambda = sim_ref_mu[i,j]*g)
     }
   }
   return(sim_ref_LACO)
@@ -110,11 +110,11 @@ parameters{
       vector<lower = 0, upper = 1>[n_years-1] alpha_EG; // competition term for LACO-exotic grass
       vector<lower = 0, upper = 1>[n_years-1] alpha_ERVA;// competition term for LACO-ERVA
       vector<lower = 0, upper = 1>[n_years-1] alpha_NF; // competition term for LACO-non-native forb
-      real <lower = 0, upper = 0.1> sigma; // error term for expected value of LACO
       real <lower = 0, upper = 1> survival_LACO; // survival rate of LACO seeds in the seedbank
 }
 transformed parameters{
       matrix [n_pools, n_years-1] mu_LACO;// mean expected value of LACO at time t from a discrete BH model
+      matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of LACO at time t-1 estimated from values at t-2
       for(i in 1:n_pools){  
           for(j in 1:1){
               mu_LACO[i,j] = 100;
@@ -130,7 +130,6 @@ transformed parameters{
                               survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
           }
           for(j in 3:(n_years-1)){
-              matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of LACO at time t-1 estimated from values at t-2
               real germ_LACO;
               if (obs_EG[i,j-1] > 100)
                       germ_LACO = low_germ_LACO;
@@ -154,9 +153,13 @@ transformed parameters{
       }
 }
 model{
+    real germ_LACO;
+    matrix[n_pools, n_years] stems_LACO;
     for(a in 1:n_pools){
         for(b in 1:n_years-1){
-             obs_LACO[a,b] ~ poisson(mu_LACO[a,b] + sigma); // obs_LACO is from a poisson distribution of mu_LACO.
+             stems_LACO[a,b] = mu_LACO[a,b] * germ_LACO;
+             if(stems_LACO[a,b] > 0)
+             obs_LACO[a,b] ~ poisson(stems_LACO[a,b]); // obs_LACO is from a poisson distribution of mu_LACO.
         }
     }
     lambda ~ normal(60,20); //get partially-informed priors from lit
@@ -164,8 +167,7 @@ model{
     alpha_EG ~ normal(0,1);
     alpha_ERVA ~ normal(0,1);
     alpha_NF ~ normal(0,1);
-    sigma ~ normal(0,0.01);
-    survival_LACO ~ normal(0,1);
+    survival_LACO ~ beta(0.5,0.5);
 }"
 
 BH_ref_model <- stan_model(model_code = BH_ref_model_block)

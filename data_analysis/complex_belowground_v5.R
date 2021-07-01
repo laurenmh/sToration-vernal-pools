@@ -123,12 +123,12 @@ parameters{
 transformed parameters{
     matrix [n_pools, n_years-1] mu_LACO;// mean expected value of seed LACO at time t from a discrete BH model
     matrix [n_pools, n_years-3] int_LACO;// intermediate matrix of seed LACO at time t-1 estimated from values at t-2
-    real germ_LACO;
     for(i in 1:n_pools){  
         for(j in 1:1){
             mu_LACO[i,j] = 100;
         }
         for(j in 2:2){
+            real germ_LACO;
             if (obs_EG[i,j-1] > 100)
                 germ_LACO = low_germ_LACO;
             else
@@ -138,6 +138,7 @@ transformed parameters{
                             survival_LACO * (1-germ_LACO) * obs_LACO[i,j-1] ./ germ_LACO; // modified Beverton-Holt model
         }
         for(j in 3:n_years-1){
+            real germ_LACO;
             if (obs_EG[i,j-1] > 100)
                 germ_LACO = low_germ_LACO;
             else

@@ -13,6 +13,7 @@ library(dplyr)
 library(ggplot2)
 library(stargazer)
 library(ggpubr)
+library(HDInterval)
 #--------------------------
 #Goal: Calculate the long-term growth rate when rare (r_invader) of LACO 
 
@@ -39,46 +40,50 @@ const_com_control <- const_com %>% #use constructed pools data
   summarize(avg_ERVA = round(mean(ERVA), digits = 0),
             avg_sumEG = round(mean(sumEG), digits = 0),
             avg_sumNF = round(mean(sumNF), digits = 0)) %>%#take the average freq.
-  filter(Year != "2017") #filter out 2017
+  filter(Year != "2017") %>% #filter out 2017
+  pivot_longer(-Year)%>%
+  pivot_wider(names_from = Year, values_from = value)
 
 #Step 2. Calculate the annual growth rate of LACO in restored pools when one LACO is introduced into a stable community.
 
 #Extract parameters for restored pools. 
 load("complex_belowground_v5.R")
 Post <- rstan::extract(BH_fit)
-alpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_LACO")))
-alpha_EG_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_EG")))
-alpha_ERVA_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_ERVA")))
-alpha_NF_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("alpha_NF")))
-lambda_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
-s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
-sim_LACO <- matrix(nrow = 17, ncol = 1)
+alpha_LACO <- as.matrix(Post$alpha_LACO)
+alpha_EG <- as.matrix(Post$alpha_EG)
+alpha_ERVA <- as.matrix(Post$alpha_ERVA)
+alpha_NF <- as.matrix(Post$alpha_NF)
+lambda <- as.matrix(Post$lambda)
+s <- as.matrix(Post$survival_LACO)
+sim_LACO <- matrix(nrow = 2000, ncol = 17)
 #Set up the population model for LACO
 bh.sim.control <- function(LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
-  for(i in 1:1){
-    sim_LACO[i] <- LACO*lambda[i]/(1+LACO*aii[i]+EG[i]*a1[i]+ERVA[i]*a2[i]+NF[i]*a3[i])+s*(1-g)*LACO/g #this is the modified Beverton-Holt model we'll use for LACO stem counts
-  }
-  for(i in 2:nrow(sim_LACO)){
-    if (EG[i-1]> 100){
+  for(i in 1:nrow(sim_LACO)){
+    for(j in 1:1){
+    sim_LACO[i,j] <- LACO*lambda[i,j]/(1+LACO*aii[i,j]+EG[j]*a1[i,j]+ERVA[j]*a2[i,j]+NF[j]*a3[i,j])+s[i]*(1-g)*LACO/g #this is the modified Beverton-Holt model we'll use for LACO stem counts
+    }
+    for(j in 2:17){
+    if (EG[j-1]> 100){
       g = glow
     }
     else{g = g}
-    sim_LACO[i] <- LACO*lambda[i]/(1+LACO*aii[i]+EG[i]*a1[i]+ERVA[i]*a2[i]+NF[i]*a3[i])+s*(1-g)*LACO/g 
+    sim_LACO[i,j] <- LACO*lambda[i,j]/(1+LACO*aii[i,j]+EG[j]*a1[i,j]+ERVA[j]*a2[i,j]+NF[j]*a3[i,j])+s[i]*(1-g)*LACO/g 
+    }
   }
  return(sim_LACO)
 }
 #Plug in the stable equilibrium freq and parameters in the model
 LACO_const <- bh.sim.control(
                       LACO = 1,
-                      EG = const_com_control$avg_sumEG,
-                      ERVA = const_com_control$avg_ERVA,
-                      NF = const_com_control$avg_sumNF,
-                      aii = alpha_LACO_mean[,5],
-                      a1 = alpha_EG_mean[,5],
-                      a2 = alpha_ERVA_mean[,5],
-                      a3 = alpha_NF_mean[,5],
-                      lambda = lambda_mean[,5],
-                      s = s_mean[,5],
+                      EG = as.numeric(const_com_control[2,2:18]),
+                      ERVA = as.numeric(const_com_control[1,2:18]),
+                      NF = as.numeric(const_com_control[3,2:18]),
+                      aii = alpha_LACO,
+                      a1 = alpha_EG,
+                      a2 = alpha_ERVA,
+                      a3 = alpha_NF,
+                      lambda = lambda,
+                      s = s,
                       g = 0.7,
                       glow = 0.2)
 GRWR_LACO_const <- log(LACO_const) #2000-2016
@@ -86,12 +91,12 @@ GRWR_LACO_const <- log(LACO_const) #2000-2016
 #Step 3. Do the same step for the reference pools.
 
 #Extract parameters for reference pools. Run "reference_pool_model.R".
-refalpha_LACO_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_LACO")))
-refalpha_EG_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_EG")))
-refalpha_ERVA_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_ERVA")))
-refalpha_NF_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("alpha_NF")))
-reflambda_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("lambda")))
-refs_mean <- as.data.frame(get_posterior_mean(BH_ref_fit, pars = c("survival_LACO")))
+refalpha_LACO <- as.data.frame(BH_ref_fit$alpha_LACO)
+refalpha_EG <- as.data.frame(BH_ref_fit$alpha_EG)
+refalpha_ERVA <- as.data.frame(BH_ref_fit$alpha_ERVA)
+refalpha_NF <- as.data.frame(BH_ref_fit$alpha_NF)
+reflambda <- as.data.frame(BH_ref_fit$lambda)
+refs <- as.data.frame(BH_ref_fit$survival_LACO)
 sim_LACO <- matrix(nrow = 13, ncol = 1)
 #Plug in the stable equilibrium freq and parameters in the model.
 LACO_ref <- bh.sim.control(
@@ -99,12 +104,12 @@ LACO_ref <- bh.sim.control(
                     EG = const_com_control$avg_sumEG,
                     ERVA = const_com_control$avg_ERVA,
                     NF = const_com_control$avg_sumNF,
-                    aii = refalpha_LACO_mean[,5],
-                    a1 = refalpha_EG_mean[,5],
-                    a2 = refalpha_ERVA_mean[,5],
-                    a3 = refalpha_NF_mean[,5],
-                    lambda = reflambda_mean[,5],
-                    s = refs_mean[,5],
+                    aii = refalpha_LACO,
+                    a1 = refalpha_EG,
+                    a2 = refalpha_ERVA,
+                    a3 = refalpha_NF,
+                    lambda = reflambda,
+                    s = refs,
                     g = 0.7,
                     glow = 0.2)
 GRWR_LACO_ref <- log(LACO_ref) #2002-2014
@@ -125,20 +130,20 @@ mean(GRWR_LACO_ref) #Average GRWR LACO for reference pools = 0.02065058
 #Step 1. Contribution to the overall GRWR when all variation is removed
 
 #calculate mean of each parameter over the whole time series
-alpha_LACO_knot <- rep(mean(alpha_LACO_mean[,5]), 17)
-alpha_EG_knot <- rep(mean(alpha_EG_mean[,5]), 17)
-alpha_ERVA_knot <- rep(mean(alpha_ERVA_mean[,5]), 17)
-alpha_NF_knot <- rep(mean(alpha_NF_mean[,5]), 17)
-lambda_mean_knot <- rep(mean(lambda_mean[,5]), 17)
-s_mean_knot <- mean(s_mean[,5])
+alpha_LACO_knot <- rep(mean(alpha_LACO), 17)
+alpha_EG_knot <- rep(mean(alpha_EG), 17)
+alpha_ERVA_knot <- rep(mean(alpha_ERVA), 17)
+alpha_NF_knot <- rep(mean(alpha_NF), 17)
+lambda_mean_knot <- rep(mean(lambda), 17)
+s_mean_knot <- mean(s[,5])
 g_knot <- (0.7+0.2)/2
 
-refalpha_LACO_knot <- rep(mean(refalpha_LACO_mean[,5]), 13)
-refalpha_EG_knot <- rep(mean(refalpha_EG_mean[,5]), 13)
-refalpha_ERVA_knot <- rep(mean(refalpha_ERVA_mean[,5]), 13)
-refalpha_NF_knot <- rep(mean(refalpha_NF_mean[,5]), 13)
-reflambda_knot <- rep(mean(reflambda_mean[,5]), 13)
-refs_knot <- mean(refs_mean[,5])
+refalpha_LACO_knot <- rep(mean(refalpha_LACO), 13)
+refalpha_EG_knot <- rep(mean(refalpha_EG), 13)
+refalpha_ERVA_knot <- rep(mean(refalpha_ERVA), 13)
+refalpha_NF_knot <- rep(mean(refalpha_NF), 13)
+reflambda_knot <- rep(mean(reflambda), 13)
+refs_knot <- mean(refs)
 refg_knot <- (0.7+0.2)/2
 
 #modify the model with constant g
@@ -192,7 +197,7 @@ LACO_const_lambda <- bh.sim.control.knot(
                         a1 = alpha_EG_knot,
                         a2 = alpha_ERVA_knot,
                         a3 = alpha_NF_knot,
-                        lambda = lambda_mean[,5],
+                        lambda = lambda,
                         s = s_mean_knot,
                         g = g_knot)
 GRWR_LACO_const_lambda <- log(LACO_const_lambda) 
@@ -207,7 +212,7 @@ LACO_ref_lambda <- bh.sim.control.knot(
                         a1 = refalpha_EG_knot,
                         a2 = refalpha_ERVA_knot,
                         a3 = refalpha_NF_knot,
-                        lambda = reflambda_mean[,5],
+                        lambda = reflambda,
                         s = refs_knot,
                         g = refg_knot)
 GRWR_LACO_ref_lambda <- log(LACO_ref_lambda) 
