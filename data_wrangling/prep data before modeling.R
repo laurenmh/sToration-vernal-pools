@@ -486,7 +486,7 @@ ref_sumNFcover <-  ref_com_join  %>%
 # 
 # ref_com_LACO <- ref_com_mean %>%
 #   select(Year, Pool, LACO) %>%
-#   spread(key = Year, value = LACO) %>%  
+#   spread(key = Year, value = LACO) %>%
 #   filter(Pool %in% c(9, 20, 34, 38, 52, 63, 77)) %>%
 #   mutate_each(funs(as.integer(.)))
 # 
