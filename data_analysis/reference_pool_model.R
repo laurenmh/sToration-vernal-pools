@@ -156,7 +156,17 @@ model{
     real germ_LACO;
     matrix[n_pools, n_years] stems_LACO;
     for(a in 1:n_pools){
-        for(b in 1:n_years-1){
+        for(b in 1:1){
+             germ_LACO = high_germ_LACO;
+             stems_LACO[a,b] = mu_LACO[a,b] * germ_LACO;
+             if(stems_LACO[a,b] > 0)
+             obs_LACO[a,b] ~ poisson(stems_LACO[a,b]); 
+        }
+        for(b in 2:(n_years-1)){
+             if (obs_EG[a,b-1] > 100)
+                      germ_LACO = low_germ_LACO;
+              else
+                      germ_LACO = high_germ_LACO;
              stems_LACO[a,b] = mu_LACO[a,b] * germ_LACO;
              if(stems_LACO[a,b] > 0)
              obs_LACO[a,b] ~ poisson(stems_LACO[a,b]); // obs_LACO is from a poisson distribution of mu_LACO.
