@@ -67,7 +67,7 @@ fabundance <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type
         axis.line = element_line(colour = "black"),
         legend.position = c(.2, .3),
         axis.title = element_text(size = 14))+
-  ylab(bquote(~italic(L.~conj.)~Density~(stems/m^2))) +
+  ylab(bquote(~italic(L.conj.)~Density~(stems/m^2))) +
   scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
@@ -126,5 +126,5 @@ frain <- ggplot(PPT_long %>%filter(Year  %in%  c(2000:2017)), aes(fill = season,
 
 #FIGURE 1
 Fig1 <- ggarrange(fabundance, fexoticgrass, frain,  ncol=1, nrow=3, align = "v", 
-                  font.label = list(size = 14), hjust = 0.9)
+                  font.label = list(size = 14),  labels = c("(a)", "(b)", "(c)"))
 #annotate_figure(Fig1, bottom = text_grob("Time (year)", size = 14))
