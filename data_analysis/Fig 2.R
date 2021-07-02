@@ -12,6 +12,11 @@ library(ggplot2)
 library(ggpubr)
 library(HDInterval)
 
+# Function for standard error
+se <- function(x){
+  sd(x)/sqrt(length(x))# this is a function for calculating standard error
+} 
+
 # Visualize timeseries of predicted LACO lambda 
 Post_ref_00_01 <- rstan::extract(BH_ref_fit) #Run the model with 2000-2015 data (7 pools)
 Post_ref_02_14 <- rstan::extract(BH_ref_fit) #Run the model with 2002-2015 data (9 pools)
@@ -55,7 +60,7 @@ lambda_const_ref$Year <- as.numeric(lambda_const_ref$Year)
 flambda <- ggplot(lambda_const_ref, aes(x = Year, y = mean, col = type))+
   geom_point() +
   geom_line(size=2)+
-  geom_errorbar(aes(ymin = mean-lowCI, ymax = mean+upCI), width = 0.4, alpha = 0.9, size = 1) +
+  geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
@@ -103,7 +108,7 @@ GRWR_time$Year <- as.numeric(GRWR_time$Year)
 fGRWR <- ggplot(GRWR_time, aes(x = Year, y = mean, col = type))+
   geom_point() +
   geom_line(size=2)+
-  geom_errorbar(aes(ymin = mean-lowCI, ymax = mean+upCI), width = 0.4, alpha = 0.9, size = 1) +
+  geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
