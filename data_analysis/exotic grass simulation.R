@@ -31,7 +31,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
                                 EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
                                 aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                 lambda = lambda[j-1], s = s, g = g)
-      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] + seedtrt[i,j] * g ))
+      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] *g + seedtrt[i,j] * g))
     }
     for(j in 4:ncol(sim_mu)){
       if (EG[i,j-1]> 100){
@@ -50,7 +50,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
                                   aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                   lambda = lambda[j-1], s = s, g = g)
       }
-      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j])
+      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j]*g)
     }
   }
   return(sim_obs_LACO)
@@ -187,19 +187,19 @@ summary_grass_sim_LACO <- grass_sim_LACO %>%
 ##########
 #Figure 4# 
 ##########
-sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = time, y = mean_LACO, group = type)) +
+sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = as.numeric(time), y = mean_LACO, group = type)) +
                           geom_point() +
-                          geom_line(aes(linetype = type), size = 1) +
+                          geom_line(aes(linetype = type), size = 1.4) +
                           geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
-                          theme(text = element_text(size=16),
+                          theme(text = element_text(size=15),
                                 panel.grid.major = element_blank(),
                                 panel.grid.minor = element_blank(),
                                 panel.background = element_blank(),
                                 axis.line = element_line(colour = "black"),
-                                legend.position = c(0.8, 0.8)) +
-                          labs(x = "Year", y = bquote(~italic(L.~conj.)~density~(stems/m^2))) +
-                          scale_linetype_manual(name = "Grass Removal Treatment", 
-                                               labels = c("0% removed", "50% removed", "75% removed"),
+                                legend.position = c(0.7, 0.8)) +
+                          labs(x = "Year", y = bquote(Modeled~italic(L.~conj.)~Density~(stems/m^2))) +
+                          scale_linetype_manual(name = "Percent Reduction in Exotic Grasses", 
+                                               labels = c("0%", "50%", "75%"),
                                                values = c("solid", "twodash", "dotted"))
 
 summary_grass_sim_LACO %>%
@@ -208,10 +208,10 @@ summary_grass_sim_LACO %>%
 
 anova(lm(mean_LACO ~ time, data = summary_grass_sim_LACO))
 
-ggarrange(sim_timeseries, sim_GRWR,  ncol = 1, nrow = 2, 
-          labels = c("a)", "b)"), 
+ggarrange(sim_timeseries, sim_GRWR,  ncol = 2, nrow = 1, 
+          labels = c("a)", "b)"), widths = c(0.6, 0.4),
           #common.legend = TRUE, legend = "bottom", 
-          font.label = list(size = 18))
+          font.label = list(size = 15))
 ################################################
 #Which year had the greatest effect of removal?#
 ################################################
