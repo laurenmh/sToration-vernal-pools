@@ -376,6 +376,7 @@ Part_const <- ggplot(Partitioning_GRWR_LACO_const, aes(x = mechanism, y = mean, 
             geom_hline(yintercept = 0)+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
             ylim(-1.2, 0.8)+
+            annotate("text", x = 1.6, y = 0.8, label = "Constructed", size = 6)+
             scale_x_discrete(labels = xlabels)
 
 Partitioning_GRWR_LACO_ref <- as.data.frame(rbind(GRWR_LACO_ref_summary, LACO_ref_epsilon_0_summary, LACO_ref_epsilon_alpha_summary, LACO_ref_epsilon_lambda_summary, LACO_ref_interaction_summary)) %>%
@@ -389,9 +390,10 @@ Part_ref <- ggplot(Partitioning_GRWR_LACO_ref, aes(x = mechanism, y = mean, fill
             geom_hline(yintercept = 0)+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
             ylim(-1.2, 0.8)+
+            annotate("text", x = 1.5, y = 0.8, label = "Reference", size = 6)+
             scale_x_discrete(labels = xlabels)
 figure_partitioning <- ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", 
-                                  labels = c("(a) Reference", "(b) Constructed"), font.label = list(size = 20))
+                                  labels = c("(a)", "(b)"), font.label = list(size = 20))
 annotate_figure(figure_partitioning, bottom = text_grob("Mechanisms", size = 20),
                 left = text_grob("Partitioning of Low Density Growth Rate", size = 18, rot = 90))
 
@@ -512,13 +514,14 @@ GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c
 
 sim_GRWR <- ggplot(GRWR_simulated_all , aes(x = treatment, y = mean))+
                     geom_bar(stat = "identity")+
-                    theme(text = element_text(size=16),
+                    theme(text = element_text(size=18),
                           panel.grid.major = element_blank(),
                           panel.grid.minor = element_blank(),
                           panel.background = element_blank(),
                           axis.text = element_text(size = 18),
                           axis.line = element_line(colour = "black"),
                           legend.position = "bottom")+
+                    geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
                     labs(y = "Average Low Density Growth Rate", x = "Percent Reduction in Exotic Grasses")+
                     geom_hline(yintercept = 0)
                            

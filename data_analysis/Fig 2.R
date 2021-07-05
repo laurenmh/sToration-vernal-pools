@@ -59,7 +59,7 @@ lambda_const_ref$Year <- as.numeric(lambda_const_ref$Year)
 
 flambda <- ggplot(lambda_const_ref, aes(x = Year, y = mean, col = type))+
   geom_point() +
-  geom_line(size=2)+
+  geom_line(size=1.5)+
   geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
@@ -107,7 +107,7 @@ GRWR_time$Year <- as.numeric(GRWR_time$Year)
   
 fGRWR <- ggplot(GRWR_time, aes(x = Year, y = mean, col = type))+
   geom_point() +
-  geom_line(size=2)+
+  geom_line(size=1.5)+
   geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),

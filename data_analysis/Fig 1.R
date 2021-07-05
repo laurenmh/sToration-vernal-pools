@@ -57,7 +57,7 @@ mean_join_LACO$Year <- as.numeric(mean_join_LACO$Year)
 
 fabundance <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
   geom_point()+
-  geom_line(size=2)+
+  geom_line(size=1.5)+
   scale_y_log10()+
   geom_errorbar(aes(ymin = mean_LACOdens-se_LACOdens, ymax = mean_LACOdens+se_LACOdens), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
@@ -94,7 +94,7 @@ EG_all$Year <- as.numeric(EG_all$Year)
 
 fexoticgrass <- ggplot(EG_all, aes(x = Year, y = mean_EG, col = type)) +
   geom_point() +
-  geom_line(size = 2) +
+  geom_line(size = 1.5) +
   geom_errorbar(aes(ymin = mean_EG-se_EG, ymax = mean_EG+se_EG), width = 0.4, alpha = 0.9, size = 1) +
   ylab(bquote(Exotic~Grass~Cover~('%'))) +
   scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
@@ -115,14 +115,15 @@ frain <- ggplot(PPT_long %>%filter(Year  %in%  c(2000:2017)), aes(fill = season,
   geom_bar(position = "stack", stat = "identity") +
   ylab(bquote(Precipitation~(cm)))+
   scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
-  scale_fill_manual(name = "", labels = c("January-March", "October-December"), values = c("#000000", "#888888")) +
+  scale_fill_manual(name = "", labels = c("January-March", "October-December"), values = c("#888888", "#000000")) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         legend.position = c(0.7, 0.85), 
-        axis.title = element_text(size = 14))
+        axis.title = element_text(size = 14)) +
+  guides(fill = guide_legend(reverse = TRUE))
 
 #FIGURE 1
 Fig1 <- ggarrange(fabundance, fexoticgrass, frain,  ncol=1, nrow=3, align = "v", 

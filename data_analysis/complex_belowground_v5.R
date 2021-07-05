@@ -32,8 +32,9 @@ sim_seedtrt[,1] <- sample(c(100,100,100,100), sim_n_pools, replace = TRUE)
 sim_seedtrt[,2] <- sample(c(0,100,100,100), sim_n_pools, replace = TRUE)
 sim_seedtrt[,3] <- sample(c(0,0,0,100), sim_n_pools, replace = TRUE)
 
-sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of LACO stem counts
-sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of mean LACO stem counts
+sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of LACO seed counts
+sim_mu <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of mean LACO seed counts
+sim_stem_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) # empty metrix of LACO stem counts
 
 bh.formula <- function(sim_obs_LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g){
   sim_obs_LACO*lambda/(1+sim_obs_LACO*aii+EG*a1+ERVA*a2+NF*a3)+s*(1-g)*sim_obs_LACO/g
@@ -44,6 +45,7 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
   for(i in 1:nrow(sim_mu)){
     for(j in 1:1){
       sim_mu[i,j] <- 100
+      sim_stem_LACO[i,j] <- sim_mu[i,j] * g
       sim_obs_LACO[i,j] <- rbinom(1,100,g)
     }
     for(j in 2:3){
@@ -55,7 +57,13 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
                                 EG = EG[i,j-1], ERVA = ERVA[i,j-1], NF = NF[i,j-1],
                                 aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                 lambda = lambda[j-1], s = s, g = g)
-      sim_obs_LACO[i,j] <- rpois(1, lambda = (sim_mu[i,j] *g + seedtrt[i,j] * g))
+      sim_stem_LACO[i,j] <- sim_mu[i,j] *g
+      if(sim_stem_LACO[i,j] > 0){
+        sim_obs_LACO[i,j] <- rpois(1, lambda = (seedtrt[i,j] * g + sim_stem_LACO[i,j]))
+      }
+      else{
+        sim_obs_LACO[i,j] <- rpois(1, lambda = seedtrt[i,j] * g)
+      }
     }
     for(j in 4:ncol(sim_mu)){
       if (EG[i,j-1]> 100){
@@ -74,7 +82,13 @@ bh.sim <- function(n_pools, seedtrt, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g
                                   aii = aii[j-1], a1 = a1[j-1], a2 = a2[j-1], a3 = a3[j-1],
                                   lambda = lambda[j-1], s = s, g = g)
       }
-      sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j]*g)
+      sim_stem_LACO[i,j] <- sim_mu[i,j] *g
+      if(sim_stem_LACO[i,j] > 0){
+        sim_obs_LACO[i,j] <- rpois(1, lambda = sim_mu[i,j]*g)
+      }
+      else{
+        sim_obs_LACO[i,j] = 0
+      }
     }
   }
   return(sim_obs_LACO)
