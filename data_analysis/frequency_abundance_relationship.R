@@ -94,10 +94,8 @@ ggplot(lasth_pres) +
   xlab("LACO frequency (log)") +
   ylab("LACO density (log)") +
   theme_bw() +
-  theme(axis.text = element_text(size = 18,
-                                 family = "Garamond"),
-        axis.title = element_text(size = 18,
-                                  family = "Garamond")) +
+  theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 18)) +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
   
