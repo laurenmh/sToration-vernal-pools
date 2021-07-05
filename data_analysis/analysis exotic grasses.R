@@ -8,9 +8,17 @@ library(ggplot2)
 library(gridExtra)
 
 #EG group - LOMU, BRHO, HOMA
-ggplot(const_dummy_join, aes(x = sum_EG, y = log(LACOdens))) +
+ggplot(const_dummy_join, aes(x = sum_EG, y = LACOdens)) +
+  scale_y_log10()+
   geom_point()+ 
-  geom_smooth(se= FALSE, method = "gam", formula = y ~ poly(x, 2))
+  geom_smooth(se= TRUE, method = "lm")+
+  xlab("Sum of Exotic Grass Cover (%)") +
+  ylab("LACO Density (log)") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 18)) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
 
 plot1 <- ggplot(const_dummy_join, aes(x = as.factor(Year))) +
             geom_boxplot(aes(y = LACOdens)) + 
