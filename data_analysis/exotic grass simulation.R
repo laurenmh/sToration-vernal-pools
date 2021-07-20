@@ -7,6 +7,133 @@
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
+#-----------------------
+#Goal: Simulate exotic grasses (EG) removal to promote LACO persistence
+
+#Step 1. Simulate EG removal
+#Step 2. Average the growth rates of LACO over time for all simulation scenarios
+#Step 3. Plot simulated GRWR
+
+#Step 1. Remove EG in all years
+
+#Remove 25% of EG in all years
+sim_LACO <- matrix(nrow = 2000, ncol = 17)
+mult.25 <- function(x)(x*0.75)
+reduced25EGcover_all <- const_com_control[2,2:18] %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.25)
+LACO_25EG_all <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(reduced25EGcover_all),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO,
+  a1 = alpha_EG,
+  a2 = alpha_ERVA,
+  a3 = alpha_NF,
+  lambda = lambda,
+  s = s,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_25EG_all <- log(LACO_25EG_all)
+
+#Remove 50% of EG in all years
+mult.5 <- function(x)(x*0.5)
+reduced50EGcover_all <- const_com_control[2,2:18] %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.5)
+LACO_50EG_all <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(reduced50EGcover_all),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO,
+  a1 = alpha_EG,
+  a2 = alpha_ERVA,
+  a3 = alpha_NF,
+  lambda = lambda,
+  s = s,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_50EG_all <- log(LACO_50EG_all)
+
+#Remove 75% of EG in all years
+mult.75 <- function(x)(x*0.25)
+reduced75EGcover_all <- const_com_control[2,2:18] %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.75)
+LACO_75EG_all <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(reduced75EGcover_all),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO,
+  a1 = alpha_EG,
+  a2 = alpha_ERVA,
+  a3 = alpha_NF,
+  lambda = lambda,
+  s = s,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_75EG_all <- log(LACO_75EG_all)
+
+#Remove 100% of EG in all years
+mult.100 <- function(x)(x*0)
+reduced100EGcover_all <- const_com_control[2,2:18] %>%
+  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
+              "2012", "2013", "2014", "2015", "2016"), mult.100)
+LACO_100EG_all <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(reduced100EGcover_all),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO,
+  a1 = alpha_EG,
+  a2 = alpha_ERVA,
+  a3 = alpha_NF,
+  lambda = lambda,
+  s = s,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_100EG_all <- log(LACO_100EG_all)
+
+#Average the growth rates of LACO over time for all simulation scenarios.
+GRWR_LACO_25EG_all_summary <- as.data.frame(GRWR_LACO_25EG_all) %>%
+  magrittr::set_colnames(c(2000:2016)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "GRWR")) %>%
+  summarise(mean = mean(GRWR),
+            se = se(GRWR))# -0.02672747
+GRWR_LACO_50EG_all_summary <- as.data.frame(GRWR_LACO_50EG_all) %>% 
+  magrittr::set_colnames(c(2000:2016)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "GRWR")) %>%
+  summarise(mean = mean(GRWR),
+            se = se(GRWR)) # 0.2306799
+GRWR_LACO_75EG_all_summary <- as.data.frame(GRWR_LACO_75EG_all) %>%
+  magrittr::set_colnames(c(2000:2016)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "GRWR")) %>%
+  summarise(mean = mean(GRWR),
+            se = se(GRWR)) # 0.612166
+
+#FIGURE4
+GRWR_simulated_all <- as.data.frame(rbind(GRWR_LACO_const_summary, GRWR_LACO_50EG_all_summary,  GRWR_LACO_75EG_all_summary)) %>%
+  mutate(treatment = c("0%", "50%", "75%"))
+GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("0%", "50%", "75%"))
+
+sim_GRWR <- ggplot(GRWR_simulated_all , aes(x = treatment, y = mean))+
+  geom_bar(stat = "identity")+
+  theme(text = element_text(size=18),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_text(size = 18),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom")+
+  geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
+  labs(y = "Average Low Density Growth Rate", x = "Percent Reduction in Exotic Grasses")+
+  geom_hline(yintercept = 0)
 
 # Simulation model:
 sim_obs_LACO <- matrix(nrow = sim_n_pools, ncol = sim_n_years) #empty matrix of LACO seed counts
