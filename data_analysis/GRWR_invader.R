@@ -110,9 +110,9 @@ sim_LACO <- matrix(nrow = 2000, ncol = 13)
 #Plug in the stable equilibrium freq and parameters in the model.
 LACO_ref <- bh.sim.control(
                     LACO = 1,
-                    EG = as.numeric(const_com_control[2,2:18]),
-                    ERVA = as.numeric(const_com_control[1,2:18]),
-                    NF = as.numeric(const_com_control[3,2:18]),
+                    EG = as.numeric(const_com_control[2,4:16]),
+                    ERVA = as.numeric(const_com_control[1,4:16]),
+                    NF = as.numeric(const_com_control[3,4:16]),
                     aii = refalpha_LACO,
                     a1 = refalpha_EG,
                     a2 = refalpha_ERVA,
@@ -129,14 +129,15 @@ GRWR_LACO_const_summary <- as.data.frame(GRWR_LACO_const) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) #Average GRWR LACO for constructed pools = -0.2203983
+            se = se(GRWR)) #Average GRWR LACO for constructed pools = -0.2218259
 
 GRWR_LACO_ref_summary <- as.data.frame(GRWR_LACO_ref) %>%
   magrittr::set_colnames(c(2002:2014)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) #Average GRWR LACO for reference pools = 0.3754354
+            se = se(GRWR)) #Average GRWR LACO for reference pools = 0.2780329
+
 #-----------------------
 #Goal: Partition r_LACO by Ellner et al. (2019) method
 
@@ -149,21 +150,24 @@ GRWR_LACO_ref_summary <- as.data.frame(GRWR_LACO_ref) %>%
 #Step 1. Contribution to the overall GRWR when all variation is removed
 
 #calculate mean of each parameter over the whole time series
-alpha_LACO_knot <- matrix(rep(mean(alpha_LACO), 17), ncol = 17, nrow = 2000)
-alpha_EG_knot <- matrix(rep(mean(alpha_EG), 17), ncol = 17, nrow = 2000)
-alpha_ERVA_knot <- matrix(rep(mean(alpha_ERVA), 17), ncol = 17, nrow = 2000)
-alpha_NF_knot <- matrix(rep(mean(alpha_NF), 17), ncol = 17, nrow = 2000)
-lambda_mean_knot <- matrix(rep(mean(lambda), 17), ncol = 17, nrow = 2000)
-s_mean_knot <- matrix(mean(s), ncol = 1, nrow = 2000)
+alpha_LACO_knot <- matrix(rep(rowMeans(alpha_LACO), 17), ncol = 17, nrow = 2000)
+alpha_EG_knot <- matrix(rep(rowMeans(alpha_EG), 17), ncol = 17, nrow = 2000)
+alpha_ERVA_knot <- matrix(rep(rowMeans(alpha_ERVA), 17), ncol = 17, nrow = 2000)
+alpha_NF_knot <- matrix(rep(rowMeans(alpha_NF), 17), ncol = 17, nrow = 2000)
+lambda_mean_knot <- matrix(rep(rowMeans(lambda), 17), ncol = 17, nrow = 2000)
 g_knot <- (0.7+0.2)/2
 
-refalpha_LACO_knot <- matrix(rep(mean(refalpha_LACO), 13), ncol = 13, nrow = 2000)
-refalpha_EG_knot <- matrix(rep(mean(refalpha_EG), 13), ncol = 13, nrow = 2000)
-refalpha_ERVA_knot <- matrix(rep(mean(refalpha_ERVA), 13), ncol = 13, nrow = 2000)
-refalpha_NF_knot <- matrix(rep(mean(refalpha_NF), 13), ncol = 13, nrow = 2000)
-reflambda_knot <- matrix(rep(mean(reflambda), 13), ncol = 13, nrow = 2000)
-refs_knot <- matrix(mean(refs), ncol = 1, nrow = 2000)
+refalpha_LACO_knot <- matrix(rep(rowMeans(refalpha_LACO), 13), ncol = 13, nrow = 2000)
+refalpha_EG_knot <- matrix(rep(rowMeans(refalpha_EG), 13), ncol = 13, nrow = 2000)
+refalpha_ERVA_knot <- matrix(rep(rowMeans(refalpha_ERVA), 13), ncol = 13, nrow = 2000)
+refalpha_NF_knot <- matrix(rep(rowMeans(refalpha_NF), 13), ncol = 13, nrow = 2000)
+reflambda_knot <- matrix(rep(rowMeans(reflambda), 13), ncol = 13, nrow = 2000)
 refg_knot <- (0.7+0.2)/2
+
+#calculate mean of each plant group over the whole time series
+EG_knot <- as.numeric(rep(rowMeans(const_com_control[2,2:18]), 17))
+ERVA_knot <- as.numeric(rep(rowMeans(const_com_control[1,2:18]), 17))
+NF_knot <- as.numeric(rep(rowMeans(const_com_control[3,2:18]), 17))
 
 #modify the model with constant g
 bh.sim.control.knot <- function(LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, glow){
@@ -175,19 +179,19 @@ bh.sim.control.knot <- function(LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, 
   return(sim_LACO)
 }
 
-#run the model with constant parameters
+#run the model with constant parameters and constant equilibrium community
 sim_LACO <- matrix(nrow = 2000, ncol = 17)
 LACO_const_knot <- bh.sim.control.knot(
                         LACO = 1,
-                        EG = as.numeric(const_com_control[2,2:18]),
-                        ERVA = as.numeric(const_com_control[1,2:18]),
-                        NF = as.numeric(const_com_control[3,2:18]),
+                        EG = EG_knot,
+                        ERVA = ERVA_knot,
+                        NF = NF_knot,
                         aii = alpha_LACO_knot,
                         a1 = alpha_EG_knot,
                         a2 = alpha_ERVA_knot,
                         a3 = alpha_NF_knot,
                         lambda = lambda_mean_knot,
-                        s = s_mean_knot,
+                        s = s,
                         g = g_knot)
 GRWR_LACO_const_knot <- log(LACO_const_knot) 
 LACO_const_epsilon_0_summary <- as.data.frame(GRWR_LACO_const_knot) %>%
@@ -200,15 +204,15 @@ LACO_const_epsilon_0_summary <- as.data.frame(GRWR_LACO_const_knot) %>%
 sim_LACO <- matrix(nrow = 2000, ncol = 13)
 LACO_ref_knot <- bh.sim.control.knot(
                         LACO = 1,
-                        EG = as.numeric(const_com_control[2,2:18]),
-                        ERVA = as.numeric(const_com_control[1,2:18]),
-                        NF = as.numeric(const_com_control[3,2:18]),
+                        EG = EG_knot[1:13],
+                        ERVA = ERVA_knot[1:13],
+                        NF = NF_knot[1:13],
                         aii = refalpha_LACO_knot,
                         a1 = refalpha_EG_knot,
                         a2 = refalpha_ERVA_knot,
                         a3 = refalpha_NF_knot,
                         lambda = reflambda_knot,
-                        s = refs_knot,
+                        s = refs,
                         g = refg_knot)
 GRWR_LACO_ref_knot <- log(LACO_ref_knot) 
 LACO_ref_epsilon_0_summary <- as.data.frame(GRWR_LACO_ref_knot) %>%
@@ -222,15 +226,15 @@ LACO_ref_epsilon_0_summary <- as.data.frame(GRWR_LACO_ref_knot) %>%
 sim_LACO <- matrix(nrow = 2000, ncol = 17)
 LACO_const_lambda <- bh.sim.control.knot(
                         LACO = 1,
-                        EG = as.numeric(const_com_control[2,2:18]),
-                        ERVA = as.numeric(const_com_control[1,2:18]),
-                        NF = as.numeric(const_com_control[3,2:18]),
+                        EG = EG_knot,
+                        ERVA = ERVA_knot,
+                        NF = NF_knot,
                         aii = alpha_LACO_knot,
                         a1 = alpha_EG_knot,
                         a2 = alpha_ERVA_knot,
                         a3 = alpha_NF_knot,
                         lambda = lambda,
-                        s = s_mean_knot,
+                        s = s,
                         g = g_knot)
 GRWR_LACO_const_lambda <- log(LACO_const_lambda) 
 LACO_const_epsilon_lambda <- GRWR_LACO_const_lambda - GRWR_LACO_const_knot 
@@ -244,15 +248,15 @@ LACO_const_epsilon_lambda_summary <- as.data.frame(LACO_const_epsilon_lambda) %>
 sim_LACO <- matrix(nrow = 2000, ncol = 13)
 LACO_ref_lambda <- bh.sim.control.knot(
                         LACO = 1,
-                        EG = as.numeric(const_com_control[2,2:18]),
-                        ERVA = as.numeric(const_com_control[1,2:18]),
-                        NF = as.numeric(const_com_control[3,2:18]),
+                        EG = EG_knot[1:13],
+                        ERVA = ERVA_knot[1:13],
+                        NF = NF_knot[1:13],
                         aii = refalpha_LACO_knot,
                         a1 = refalpha_EG_knot,
                         a2 = refalpha_ERVA_knot,
                         a3 = refalpha_NF_knot,
                         lambda = reflambda,
-                        s = refs_knot,
+                        s = refs,
                         g = refg_knot)
 GRWR_LACO_ref_lambda <- log(LACO_ref_lambda) 
 LACO_ref_epsilon_lambda <- GRWR_LACO_ref_lambda - GRWR_LACO_ref_knot 
@@ -275,7 +279,7 @@ LACO_const_alpha <- bh.sim.control.knot(
                         a2 = alpha_ERVA,
                         a3 = alpha_NF,
                         lambda = lambda_mean_knot,
-                        s = s_mean_knot,
+                        s = s,
                         g = g_knot)
 GRWR_LACO_const_alpha <- log(LACO_const_alpha) 
 LACO_const_epsilon_alpha <- GRWR_LACO_const_alpha - GRWR_LACO_const_knot 
@@ -289,15 +293,15 @@ LACO_const_epsilon_alpha_summary <- as.data.frame(LACO_const_epsilon_alpha) %>%
 sim_LACO <- matrix(nrow = 2000, ncol = 13)
 LACO_ref_alpha <- bh.sim.control.knot(
                         LACO = 1,
-                        EG = as.numeric(const_com_control[2,2:18]),
-                        ERVA = as.numeric(const_com_control[1,2:18]),
-                        NF = as.numeric(const_com_control[3,2:18]),
+                        EG = as.numeric(const_com_control[2,4:16]),
+                        ERVA = as.numeric(const_com_control[1,4:16]),
+                        NF = as.numeric(const_com_control[3,4:16]),
                         aii = refalpha_LACO,
                         a1 = refalpha_EG,
                         a2 = refalpha_ERVA,
                         a3 = refalpha_NF,
                         lambda = reflambda_knot,
-                        s = refs_knot,
+                        s = refs,
                         g = refg_knot)
 GRWR_LACO_ref_alpha <- log(LACO_ref_alpha)
 LACO_ref_epsilon_alpha <- GRWR_LACO_ref_alpha - GRWR_LACO_ref_knot
@@ -370,13 +374,13 @@ xlabels <- c("r_overall" = expression(bar("r")[i]^" "),
              "epsilon_int" = expression(epsilon[i]^{alpha*lambda}))
 Part_const <- ggplot(Partitioning_GRWR_LACO_const, aes(x = mechanism, y = mean, fill = mechanism))+
             geom_bar(stat = "identity")+
-            geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
+            geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 0.8) +
             theme_classic(base_size = 20)+
             theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
-            ylim(-1.2, 0.8)+
-            annotate("text", x = 1.6, y = 0.8, label = "Constructed", size = 6)+
+            ylim(-1.2, 1.2)+
+            annotate("text", x = 2, y = 1.0, label = "Constructed", size = 6)+
             scale_x_discrete(labels = xlabels)
 
 Partitioning_GRWR_LACO_ref <- as.data.frame(rbind(GRWR_LACO_ref_summary, LACO_ref_epsilon_0_summary, LACO_ref_epsilon_alpha_summary, LACO_ref_epsilon_lambda_summary, LACO_ref_interaction_summary)) %>%
@@ -384,144 +388,16 @@ Partitioning_GRWR_LACO_ref <- as.data.frame(rbind(GRWR_LACO_ref_summary, LACO_re
 Partitioning_GRWR_LACO_ref$mechanism <- ordered(Partitioning_GRWR_LACO_ref$mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
 Part_ref <- ggplot(Partitioning_GRWR_LACO_ref, aes(x = mechanism, y = mean, fill = mechanism))+
             geom_bar(stat = "identity")+
-            geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
+            geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 0.8) +
             theme_classic(base_size = 20)+
             theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
-            ylim(-1.2, 0.8)+
-            annotate("text", x = 1.5, y = 0.8, label = "Reference", size = 6)+
+            ylim(-1.2, 1.2)+
+            annotate("text", x = 2, y = 1.0, label = "Reference", size = 6)+
             scale_x_discrete(labels = xlabels)
 figure_partitioning <- ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", 
                                   labels = c("(a)", "(b)"), font.label = list(size = 20))
 annotate_figure(figure_partitioning, bottom = text_grob("Mechanisms", size = 20),
                 left = text_grob("Partitioning of Low Density Growth Rate", size = 18, rot = 90))
 
-#-----------------------
-#Goal: Simulate exotic grasses (EG) removal to promote LACO persistence
-
-  #Step 1. Simulate EG removal
-  #Step 2. Average the growth rates of LACO over time for all simulation scenarios
-  #Step 3. Plot simulated GRWR
-
-#Step 1. Remove EG in all years
-
-#Remove 25% of EG in all years
-sim_LACO <- matrix(nrow = 2000, ncol = 17)
-mult.25 <- function(x)(x*0.75)
-reduced25EGcover_all <- const_com_control[2,2:18] %>%
-  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
-              "2012", "2013", "2014", "2015", "2016"), mult.25)
-LACO_25EG_all <- bh.sim.control(
-                      LACO = 1,
-                      EG = as.numeric(reduced25EGcover_all),
-                      ERVA = as.numeric(const_com_control[1,2:18]),
-                      NF = as.numeric(const_com_control[3,2:18]),
-                      aii = alpha_LACO,
-                      a1 = alpha_EG,
-                      a2 = alpha_ERVA,
-                      a3 = alpha_NF,
-                      lambda = lambda,
-                      s = s,
-                      g = 0.7,
-                      glow = 0.2)
-GRWR_LACO_25EG_all <- log(LACO_25EG_all)
-
-#Remove 50% of EG in all years
-mult.5 <- function(x)(x*0.5)
-reduced50EGcover_all <- const_com_control[2,2:18] %>%
-  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
-              "2012", "2013", "2014", "2015", "2016"), mult.5)
-LACO_50EG_all <- bh.sim.control(
-                      LACO = 1,
-                      EG = as.numeric(reduced50EGcover_all),
-                      ERVA = as.numeric(const_com_control[1,2:18]),
-                      NF = as.numeric(const_com_control[3,2:18]),
-                      aii = alpha_LACO,
-                      a1 = alpha_EG,
-                      a2 = alpha_ERVA,
-                      a3 = alpha_NF,
-                      lambda = lambda,
-                      s = s,
-                      g = 0.7,
-                      glow = 0.2)
-GRWR_LACO_50EG_all <- log(LACO_50EG_all)
-
-#Remove 75% of EG in all years
-mult.75 <- function(x)(x*0.25)
-reduced75EGcover_all <- const_com_control[2,2:18] %>%
-  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
-              "2012", "2013", "2014", "2015", "2016"), mult.75)
-LACO_75EG_all <- bh.sim.control(
-                      LACO = 1,
-                      EG = as.numeric(reduced75EGcover_all),
-                      ERVA = as.numeric(const_com_control[1,2:18]),
-                      NF = as.numeric(const_com_control[3,2:18]),
-                      aii = alpha_LACO,
-                      a1 = alpha_EG,
-                      a2 = alpha_ERVA,
-                      a3 = alpha_NF,
-                      lambda = lambda,
-                      s = s,
-                      g = 0.7,
-                      glow = 0.2)
-GRWR_LACO_75EG_all <- log(LACO_75EG_all)
-
-#Remove 100% of EG in all years
-mult.100 <- function(x)(x*0)
-reduced100EGcover_all <- const_com_control[2,2:18] %>%
-  mutate_at(c("2000", "2001", "2002", "2003", "2004", "2005","2006", "2007", "2008", "2009", "2010", "2011", 
-              "2012", "2013", "2014", "2015", "2016"), mult.100)
-LACO_100EG_all <- bh.sim.control(
-                      LACO = 1,
-                      EG = as.numeric(reduced100EGcover_all),
-                      ERVA = as.numeric(const_com_control[1,2:18]),
-                      NF = as.numeric(const_com_control[3,2:18]),
-                      aii = alpha_LACO,
-                      a1 = alpha_EG,
-                      a2 = alpha_ERVA,
-                      a3 = alpha_NF,
-                      lambda = lambda,
-                      s = s,
-                      g = 0.7,
-                      glow = 0.2)
-GRWR_LACO_100EG_all <- log(LACO_100EG_all)
-
-#Average the growth rates of LACO over time for all simulation scenarios.
-GRWR_LACO_25EG_all_summary <- as.data.frame(GRWR_LACO_25EG_all) %>%
-  magrittr::set_colnames(c(2000:2016)) %>%
-  pivot_longer(cols = everything()) %>%
-  magrittr::set_colnames(c("Year", "GRWR")) %>%
-  summarise(mean = mean(GRWR),
-            se = se(GRWR))# -0.02672747
-GRWR_LACO_50EG_all_summary <- as.data.frame(GRWR_LACO_50EG_all) %>% 
-  magrittr::set_colnames(c(2000:2016)) %>%
-  pivot_longer(cols = everything()) %>%
-  magrittr::set_colnames(c("Year", "GRWR")) %>%
-  summarise(mean = mean(GRWR),
-            se = se(GRWR)) # 0.2306799
-GRWR_LACO_75EG_all_summary <- as.data.frame(GRWR_LACO_75EG_all) %>%
-  magrittr::set_colnames(c(2000:2016)) %>%
-  pivot_longer(cols = everything()) %>%
-  magrittr::set_colnames(c("Year", "GRWR")) %>%
-  summarise(mean = mean(GRWR),
-            se = se(GRWR)) # 0.612166
-
-#FIGURE4
-GRWR_simulated_all <- as.data.frame(rbind(GRWR_LACO_const_summary, GRWR_LACO_50EG_all_summary,  GRWR_LACO_75EG_all_summary)) %>%
-  mutate(treatment = c("0%", "50%", "75%"))
-GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("0%", "50%", "75%"))
-
-sim_GRWR <- ggplot(GRWR_simulated_all , aes(x = treatment, y = mean))+
-                    geom_bar(stat = "identity")+
-                    theme(text = element_text(size=18),
-                          panel.grid.major = element_blank(),
-                          panel.grid.minor = element_blank(),
-                          panel.background = element_blank(),
-                          axis.text = element_text(size = 18),
-                          axis.line = element_line(colour = "black"),
-                          legend.position = "bottom")+
-                    geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
-                    labs(y = "Average Low Density Growth Rate", x = "Percent Reduction in Exotic Grasses")+
-                    geom_hline(yintercept = 0)
-                           
