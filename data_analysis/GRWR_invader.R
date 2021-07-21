@@ -1,7 +1,6 @@
 #PARTS:
 #I. Long-term growth rate when rare (r_invader) of LACO
 #II. r_invader partitioning
-#III. EG removal simulation
 
 # Remember to set your data pathway first!
 
