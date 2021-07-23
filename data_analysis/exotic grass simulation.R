@@ -234,7 +234,7 @@ bh.sim.control <- function(LACO, EG, ERVA, NF, aii, a1, a2, a3, lambda, s, g, gl
   }
   return(sim_LACO)
 }
-
+sim_LACO <- matrix(nrow = 2000, ncol = 17)
 #Use the control plots in reference pools (no LACO present) to calculate the stable equilibrium frequency of non-LACO species in the model each year. 
     #Non-LACO species in our model:
     #ERVA
@@ -352,25 +352,33 @@ GRWR_LACO_const_summary <- as.data.frame(GRWR_LACO_const) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) # -0.2218259
+            CI = hdi(GRWR, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI) 
 GRWR_LACO_25EG_all_summary <- as.data.frame(GRWR_LACO_25EG_all) %>%
   magrittr::set_colnames(c(2000:2016)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR))# -0.02672747
+            CI = hdi(GRWR, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI) 
 GRWR_LACO_50EG_all_summary <- as.data.frame(GRWR_LACO_50EG_all) %>% 
   magrittr::set_colnames(c(2000:2016)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) # 0.2306799
+            CI = hdi(GRWR, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI) 
 GRWR_LACO_75EG_all_summary <- as.data.frame(GRWR_LACO_75EG_all) %>%
   magrittr::set_colnames(c(2000:2016)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) # 0.612166
+            CI = hdi(GRWR, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI) 
 GRWR_simulated_all <- as.data.frame(rbind(GRWR_LACO_const_summary, GRWR_LACO_50EG_all_summary,  GRWR_LACO_75EG_all_summary)) %>%
   mutate(treatment = c("0%", "50%", "75%"))
 GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c("0%", "50%", "75%"))
@@ -381,7 +389,7 @@ GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c
 sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(type != "reduced25EG_LACO"), aes(x = as.numeric(time), y = mean_LACO, group = type)) +
                           geom_point() +
                           geom_line(aes(linetype = type), size = 1.4) +
-                          geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
+                          geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
                           theme(text = element_text(size=18),
                                 panel.grid.major = element_blank(),
                                 panel.grid.minor = element_blank(),
@@ -403,7 +411,7 @@ sim_GRWR <- ggplot(GRWR_simulated_all , aes(x = treatment, y = mean))+
                                 axis.text = element_text(size = 18),
                                 axis.line = element_line(colour = "black"),
                                 legend.position = "bottom")+
-                          geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 1) +
+                          geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
                           labs(y = "Average Low Density Growth Rate", x = "Percent Reduction in Exotic Grasses")+
                           geom_hline(yintercept = 0)
 
