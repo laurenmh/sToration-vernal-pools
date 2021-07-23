@@ -17,11 +17,6 @@ library(stargazer)
 library(ggpubr)
 library(HDInterval)
 
-# Function for standard error
-se <- function(x){
-  sd(x)/sqrt(length(x))# this is a function for calculating standard error
-} 
-
 #--------------------------
 #Goal: Calculate the long-term growth rate when rare (r_invader) of LACO 
 
@@ -128,14 +123,18 @@ GRWR_LACO_const_summary <- as.data.frame(GRWR_LACO_const) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) #Average GRWR LACO for constructed pools = -0.2218259
+            CI = hdi(GRWR, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)#Average GRWR LACO for constructed pools = -0.2204419
 
 GRWR_LACO_ref_summary <- as.data.frame(GRWR_LACO_ref) %>%
   magrittr::set_colnames(c(2002:2014)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   summarise(mean = mean(GRWR),
-            se = se(GRWR)) #Average GRWR LACO for reference pools = 0.2780329
+            CI = hdi(GRWR, credMass = 0.95))%>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI) #Average GRWR LACO for reference pools = 0.2770058
 
 #-----------------------
 #Goal: Partition r_LACO by Ellner et al. (2019) method
@@ -198,7 +197,9 @@ LACO_const_epsilon_0_summary <- as.data.frame(GRWR_LACO_const_knot) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon)) 
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)
 
 sim_LACO <- matrix(nrow = 2000, ncol = 13)
 LACO_ref_knot <- bh.sim.control.knot(
@@ -219,7 +220,9 @@ LACO_ref_epsilon_0_summary <- as.data.frame(GRWR_LACO_ref_knot) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon))
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)
 
 #Step 2. Vary lambda while keeping everything else constant
 sim_LACO <- matrix(nrow = 2000, ncol = 17)
@@ -242,7 +245,9 @@ LACO_const_epsilon_lambda_summary <- as.data.frame(LACO_const_epsilon_lambda) %>
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon)) 
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI) 
 
 sim_LACO <- matrix(nrow = 2000, ncol = 13)
 LACO_ref_lambda <- bh.sim.control.knot(
@@ -264,7 +269,9 @@ LACO_ref_epsilon_lambda_summary <- as.data.frame(LACO_ref_epsilon_lambda) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon))
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)
 
 #Step 3. Vary alphas while keeping everything else constant
 sim_LACO <- matrix(nrow = 2000, ncol = 17)
@@ -287,7 +294,9 @@ LACO_const_epsilon_alpha_summary <- as.data.frame(LACO_const_epsilon_alpha) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon))  
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)
   
 sim_LACO <- matrix(nrow = 2000, ncol = 13)
 LACO_ref_alpha <- bh.sim.control.knot(
@@ -309,7 +318,9 @@ LACO_ref_epsilon_alpha_summary <- as.data.frame(LACO_ref_epsilon_alpha) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon))  
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)  
 
 #Step 4. Vary belowground parameters (survival and germination) while keeping everything else constant
 # sim_LACO <- matrix(nrow = 17, ncol = 1)
@@ -352,7 +363,9 @@ LACO_const_interaction_summary <- as.data.frame(GRWR_LACO_const_interaction) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon))  
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)  
 
 GRWR_LACO_ref_interaction <- GRWR_LACO_ref - (GRWR_LACO_ref_knot + LACO_ref_epsilon_alpha + LACO_ref_epsilon_lambda)
 LACO_ref_interaction_summary <- as.data.frame(GRWR_LACO_ref_interaction) %>%
@@ -360,7 +373,9 @@ LACO_ref_interaction_summary <- as.data.frame(GRWR_LACO_ref_interaction) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "epsilon")) %>%
   summarise(mean = mean(epsilon),
-            se = se(epsilon))  
+            CI = hdi(epsilon, credMass = 0.95)) %>%
+  mutate(name = c("lowCI", "upCI")) %>%
+  pivot_wider(names_from = name, values_from = CI)
 
 #FIGURE 3
 Partitioning_GRWR_LACO_const <- as.data.frame(rbind(GRWR_LACO_const_summary, LACO_const_epsilon_0_summary, LACO_const_epsilon_alpha_summary, LACO_const_epsilon_lambda_summary, LACO_const_interaction_summary)) %>%
@@ -373,12 +388,12 @@ xlabels <- c("r_overall" = expression(bar("r")[i]^" "),
              "epsilon_int" = expression(epsilon[i]^{alpha*lambda}))
 Part_const <- ggplot(Partitioning_GRWR_LACO_const, aes(x = mechanism, y = mean, fill = mechanism))+
             geom_bar(stat = "identity")+
-            geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 0.8) +
+            geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 0.8) +
             theme_classic(base_size = 20)+
             theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
-            ylim(-1.2, 1.2)+
+            #ylim(-1.2, 1.2)+
             annotate("text", x = 2, y = 1.0, label = "Constructed", size = 6)+
             scale_x_discrete(labels = xlabels)
 
@@ -387,12 +402,12 @@ Partitioning_GRWR_LACO_ref <- as.data.frame(rbind(GRWR_LACO_ref_summary, LACO_re
 Partitioning_GRWR_LACO_ref$mechanism <- ordered(Partitioning_GRWR_LACO_ref$mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
 Part_ref <- ggplot(Partitioning_GRWR_LACO_ref, aes(x = mechanism, y = mean, fill = mechanism))+
             geom_bar(stat = "identity")+
-            geom_errorbar(aes(ymin = mean-se, ymax = mean+se), width = 0.4, alpha = 0.9, size = 0.8) +
+            geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 0.8) +
             theme_classic(base_size = 20)+
             theme(axis.title.y = element_blank(), axis.title.x = element_blank())+
             geom_hline(yintercept = 0)+
             scale_fill_manual(values = c("grey27", "grey60", "grey60", "grey60", "grey60"))+
-            ylim(-1.2, 1.2)+
+            #ylim(-1.2, 1.2)+
             annotate("text", x = 2, y = 1.0, label = "Reference", size = 6)+
             scale_x_discrete(labels = xlabels)
 figure_partitioning <- ggarrange(Part_ref, Part_const, ncol = 2, nrow = 1, legend = "none", 
