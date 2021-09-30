@@ -198,7 +198,7 @@ BH_ref_fit <- sampling(BH_ref_model,
 
 ## Option 2: run with real data 
 ## See data prep file before running this
-BH_ref_fit <- sampling(BH_ref_model,
+BH_ref_fit_00_15 <- sampling(BH_ref_model,
                    data = list(n_pools = ref_n_pools,
                                n_years = ref_n_years,
                                obs_LACO = ref_LACOcover,
@@ -209,6 +209,16 @@ BH_ref_fit <- sampling(BH_ref_model,
                                high_germ_LACO = 0.8), 
                    iter= 1000)
 
+BH_ref_fit <- sampling(BH_ref_model,
+                             data = list(n_pools = ref_n_pools,
+                                         n_years = ref_n_years,
+                                         obs_LACO = ref_LACOcover,
+                                         obs_EG = ref_sumEGcover,
+                                         obs_ERVA = ref_ERVAcover,
+                                         obs_NF = ref_sumNFcover,
+                                         low_germ_LACO = 0.2,
+                                         high_germ_LACO = 0.8), 
+                             iter= 1000)
 ### EXTRACT MODEL OUTPUT ###
 
 # Check there is enough iteration
