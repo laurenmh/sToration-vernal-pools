@@ -67,11 +67,12 @@ flambda <- ggplot(lambda_const_ref, aes(x = Year, y = mean, col = type))+
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        legend.position = "none", 
+        legend.position = c(0.1, 0.9), 
         axis.title = element_text(size = 14))+
   ylab(bquote(Intrinsic~Growth~Rate ~(lambda[t])))+
   scale_x_continuous(name = NULL,
-                     limits = c(1999.5,2016.5))+
+                     limits = c(1999.5,2015.5))+
+  ylim(0,140)+
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 #Visualize timeseries of GRWR (see 'GRWR_invader.R')
@@ -116,12 +117,12 @@ fGRWR <- ggplot(GRWR_time, aes(x = Year, y = mean, col = type))+
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        legend.position = "none",
+        legend.position = c(0.1,0.2),
         axis.title = element_text(size = 14))+
   ylab(bquote(Low~Density~Growth~Rate~(italic(r[t]))))+
   geom_hline(yintercept = 0, linetype = "dashed")+
   scale_x_continuous(name = NULL,
-                     limits = c(1999.5,2016.5))+
+                     limits = c(1999.5,2015.5))+
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 #FIGURE 2

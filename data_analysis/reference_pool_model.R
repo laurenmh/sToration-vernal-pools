@@ -206,7 +206,7 @@ BH_ref_fit_00_15 <- sampling(BH_ref_model,
                                obs_ERVA = ref_ERVAcover,
                                obs_NF = ref_sumNFcover,
                                low_germ_LACO = 0.2,
-                               high_germ_LACO = 0.8), 
+                               high_germ_LACO = 0.7), 
                    iter= 1000)
 
 BH_ref_fit <- sampling(BH_ref_model,
@@ -217,7 +217,7 @@ BH_ref_fit <- sampling(BH_ref_model,
                                          obs_ERVA = ref_ERVAcover,
                                          obs_NF = ref_sumNFcover,
                                          low_germ_LACO = 0.2,
-                                         high_germ_LACO = 0.8), 
+                                         high_germ_LACO = 0.7), 
                              iter= 1000)
 ### EXTRACT MODEL OUTPUT ###
 

@@ -88,7 +88,8 @@ LACO_const <- bh.sim.control(
                       s = s,
                       g = 0.7,
                       glow = 0.2)
-GRWR_LACO_const <- log(LACO_const) #2000-2016
+GRWR_LACO_const_all <- log(LACO_const) #2000-2016
+GRWR_LACO_const <- GRWR_LACO_const_all[,1:15] #2000-2014
 
 #Step 3. Do the same step for the reference pools.
 
@@ -118,14 +119,19 @@ LACO_ref <- bh.sim.control(
 GRWR_LACO_ref <- log(LACO_ref) #2002-2014
 
 #Step 4. Average the growth rates of LACO over time for restored and reference pools.
-GRWR_LACO_const_summary <- as.data.frame(GRWR_LACO_const) %>%
-  magrittr::set_colnames(c(2000:2016)) %>%
-  pivot_longer(cols = everything()) %>%
-  magrittr::set_colnames(c("Year", "GRWR")) %>%
-  summarise(mean = mean(GRWR),
-            CI = hdi(GRWR, credMass = 0.95)) %>%
+GRWR_LACO_const_mean <- as.data.frame(GRWR_LACO_const) %>%
+  magrittr::set_colnames(c(2000:2014)) %>%
+  rownames_to_column(., var = "iteration") %>%
+  pivot_longer(!iteration, names_to = "Year", values_to = "GRWR") %>%
+  group_by(iteration) %>%
+  summarize(mean_GRWR = mean(GRWR)) 
+
+GRWR_LACO_const_summary <- GRWR_LACO_const_mean %>%
+  summarize(Mean = mean(mean_GRWR), CI = hdi(mean_GRWR, credMass = 0.95)) %>%
   mutate(name = c("lowCI", "upCI")) %>%
-  pivot_wider(names_from = name, values_from = CI)#Average GRWR LACO for constructed pools = -0.2204419
+  pivot_wider(names_from = name, values_from = CI)#Average GRWR LACO for constructed pools = -0.4274569
+
+##FIX THE 95% CI on REFERENCE avg GRWR:
 
 GRWR_LACO_ref_summary <- as.data.frame(GRWR_LACO_ref) %>%
   magrittr::set_colnames(c(2002:2014)) %>%
