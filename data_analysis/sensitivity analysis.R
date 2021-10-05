@@ -252,7 +252,7 @@ seedtrt_test <- rbind(seedtrt, seedtrt)
 
 ### RUN THE MODEL ###
 
-for(i in 3:20){
+for(i in 3:23){
 BH_fit_ <- sampling(BH_model,
                    data = list(n_pools = n_pools_test,
                                n_years = 16,
