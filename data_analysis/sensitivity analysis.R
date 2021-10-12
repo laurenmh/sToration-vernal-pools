@@ -252,7 +252,7 @@ seedtrt_test <- rbind(seedtrt, seedtrt)
 
 ### RUN THE MODEL ###
 
-for(i in 3:23){
+for(i in 101:120){
 BH_fit_ <- sampling(BH_model,
                    data = list(n_pools = n_pools_test,
                                n_years = 16,
@@ -269,7 +269,7 @@ assign(paste0("BH_fit_", i), BH_fit_)
 
 ### CHECK ESTIMATES ###
 get_posterior_mean(BH_fit_1, pars = c("alpha_LACO"))
-get_posterior_mean(BH_fit_2, pars = c("alpha_LACO"))
+get_posterior_mean(BH_fit_21, pars = c("alpha_LACO"))
 get_posterior_mean(BH_fit_1, pars = c("lambda"))
-get_posterior_mean(BH_fit_2, pars = c("lambda"))
+get_posterior_mean(BH_fit_100, pars = c("lambda"))
 
