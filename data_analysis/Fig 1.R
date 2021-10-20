@@ -128,6 +128,6 @@ frain <- ggplot(PPT_long %>%filter(Year  %in%  c(2000:2017)), aes(fill = season,
   guides(fill = guide_legend(reverse = TRUE))
 
 #FIGURE 1
-Fig1 <- ggarrange(fabundance, fexoticgrass, frain,  ncol=1, nrow=3, align = "v", 
-                  font.label = list(size = 14),  labels = c("(a)", "(b)", "(c)"))
+SuppFig_EG_PPT <- ggarrange(fexoticgrass, frain,  ncol=1, nrow=2, align = "v", 
+                  font.label = list(size = 14),  labels = c("(a)", "(b)"))
 #annotate_figure(Fig1, bottom = text_grob("Time (year)", size = 14))

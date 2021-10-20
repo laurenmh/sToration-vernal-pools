@@ -68,7 +68,7 @@ mean_join_LACO <- join_LACO %>%
             se_LACOdens = se(LACOdens))
 mean_join_LACO$Year <- as.numeric(mean_join_LACO$Year)
 
-fabundance <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type)) +
+fabundance <- ggplot(mean_join_LACO%>%filter(Year %in% c(2000:2015)), aes(x = Year, y = mean_LACOdens, col = type)) +
   geom_point()+
   geom_line(size=1.5)+
   scale_y_log10()+
@@ -81,7 +81,7 @@ fabundance <- ggplot(mean_join_LACO, aes(x = Year, y = mean_LACOdens, col = type
         legend.position = c(.2, .3),
         axis.title = element_text(size = 14))+
   ylab(bquote(Density~(stems/m^2))) +
-  scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
+  scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 # Visualize timeseries of predicted LACO lambda 
@@ -137,9 +137,8 @@ flambda <- ggplot(lambda_const_ref, aes(x = Year, y = mean, col = type))+
         legend.position = c(0.2, 0.9), 
         axis.title = element_text(size = 14))+
   ylab(bquote(Intrinsic~Growth~Rate ~(lambda[t])))+
-  scale_x_continuous(name = NULL,
-                     limits = c(2000,2015))+
-  ylim(0,140)+
+  scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
+  ylim(0,150)+
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 #Visualize timeseries of GRWR (see 'GRWR_invader.R')
@@ -192,7 +191,7 @@ fGRWR <- ggplot(GRWR_time, aes(x = Year, y = mean, col = type))+
   ylab(bquote(Low~Density~Growth~Rate~(italic(r[t]))))+
   geom_hline(yintercept = 0, linetype = "dashed")+
   scale_x_continuous(name = NULL,
-                     limits = c(2000,2015))+
+                     limits = c(1999.5,2015.5))+
   scale_color_manual(name = "", values = c("#000000", "#888888"))
 
 #FIGURE 1
