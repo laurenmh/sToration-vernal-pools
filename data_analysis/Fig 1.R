@@ -14,13 +14,14 @@ library(ggpubr)
 ref_LACO <- ref_com_LACO %>% #9 reference pools that have consecutive data on LACO abundance from 2002 to 2015
   group_by(Pool) %>%
   gather(key = "Year", value = "LACO" , - Pool) 
+ref_LACO$Pool <- as.character(ref_LACO$Pool)
 
 ref_LACOden_edge <- ref_com %>% #any reference LACO abundance data in 2000, 2001, 2016, 2017
   select(Year, Pool, LACO) %>%
   group_by(Year, Pool) %>%
   filter(Year %in% c(2000, 2001, 2016, 2017)) %>% 
-  summarise_each(funs(mean)) %>%
-  mutate_each(funs(as.integer(.)))
+  summarise_each(funs(mean))
+ref_LACOden_edge$LACO <- as.integer(ref_LACOden_edge$LACO)
 
 ref_LACOdens <- full_join(ref_LACOden_edge, ref_LACO)%>% #join reference LACO abundance data 2000-2017
   mutate(LACOdens = round(exp(-0.42)+LACO^1.36)) %>% # Convert LACO frequency to density 
@@ -36,7 +37,8 @@ const_LACOden <- const_com_noNA %>% #72 pools
 const_LACO <- left_join(const_LACOden, (const_com %>% select (Year, Pool, LACO, Treatment.1999, Treatment.2000)))
 
 const_LACO$Year <- as.numeric(const_LACO$Year)
-const_LACO$LACO <- as.numeric(const_LACO$LACO)
+const_LACO$LACO <- as.integer(const_LACO$LACO)
+const_LACO$Pool <- as.character(const_LACO$Pool)
 
 # Join tables
 join_LACO <- full_join(ref_LACOdens, const_LACO, all = TRUE) %>%
