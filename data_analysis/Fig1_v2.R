@@ -70,7 +70,7 @@ mean_join_LACO$Year <- as.numeric(mean_join_LACO$Year)
 
 fabundance <- ggplot(mean_join_LACO%>%filter(Year %in% c(2000:2015)), aes(x = Year, y = mean_LACOdens, col = type)) +
   geom_point()+
-  geom_line(size=1.5)+
+  geom_line(size=1)+
   scale_y_log10()+
   geom_errorbar(aes(ymin = mean_LACOdens-se_LACOdens, ymax = mean_LACOdens+se_LACOdens), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
@@ -88,17 +88,17 @@ fabundance <- ggplot(mean_join_LACO%>%filter(Year %in% c(2000:2015)), aes(x = Ye
 Post_ref_00_01 <- rstan::extract(BH_ref_fit_00_15) #Run the model with 2000-2015 data (7 pools)
 Post_ref_02_14 <- rstan::extract(BH_ref_fit) #Run the model with 2002-2015 data (9 pools)
 CI_lambda_ref <- as.data.frame(HDInterval::hdi(Post_ref_00_01$lambda[,1:2], credMass = 0.95)) %>% #Calculate 95% credible interval of lambda estimates
-  magrittr::set_colnames(c(2000:2001)) %>%
+  magrittr::set_colnames(c(2001:2002)) %>%
   cbind(., as.data.frame(HDInterval::hdi(Post_ref_02_14$lambda, credMass = 0.95))) %>% #piece together 2000-2001 data with 2002-2014 data
-  magrittr::set_colnames(c(2000:2014))%>%
+  magrittr::set_colnames(c(2001:2015))%>%
   mutate(CI = c("lowCI", "upCI")) %>%
   pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
   pivot_wider( names_from = CI, values_from = CI_values)
 
 lambda_ref <- as.data.frame(Post_ref_00_01$lambda[,1:2])%>% #2000-2001 lambda data 
-  magrittr::set_colnames(c(2000:2001))%>%
+  magrittr::set_colnames(c(2001:2002))%>%
   cbind(., as.data.frame(Post_ref_02_14$lambda)) %>%#piece together 2000-2001 data with 2002-2014 data
-  magrittr::set_colnames(c(2000:2014))%>%
+  magrittr::set_colnames(c(2001:2015))%>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "lambda")) %>%
   group_by(Year) %>%
@@ -108,12 +108,12 @@ lambda_ref <- as.data.frame(Post_ref_00_01$lambda[,1:2])%>% #2000-2001 lambda da
 
 Post <- rstan::extract(BH_fit) #Extract parameter estimates from 'complex_belowground_v5.R'
 CI_lambda <-  as.data.frame(HDInterval::hdi(Post$lambda, credMass = 0.95)) %>% #Calculate 95% credible interval of lambda estimates
-  magrittr::set_colnames(c(2000:2016)) %>%
+  magrittr::set_colnames(c(2001:2017)) %>%
   mutate(CI = c("lowCI", "upCI")) %>%
   pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
   pivot_wider( names_from = CI, values_from = CI_values)
 lambda_const <- as.data.frame(Post$lambda) %>% #Calculate mean lambda each year
-  magrittr::set_colnames(c(2000:2016)) %>%
+  magrittr::set_colnames(c(2001:2017)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "lambda")) %>%
   group_by(Year) %>%
@@ -122,12 +122,12 @@ lambda_const <- as.data.frame(Post$lambda) %>% #Calculate mean lambda each year
   full_join(., CI_lambda)
 
 lambda_const_ref <- rbind(lambda_ref, lambda_const) %>% #combine lambda tables
-  filter(Year < 2015) # cut the last two points in constructed pools to match reference pools
+  filter(Year < 2016) # cut the last two points in constructed pools to match reference pools
 lambda_const_ref$Year <- as.numeric(lambda_const_ref$Year)
 
 flambda <- ggplot(lambda_const_ref, aes(x = Year, y = mean, col = type))+
   geom_point() +
-  geom_line(size=1.5)+
+  geom_line(size=1)+
   geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
@@ -143,15 +143,15 @@ flambda <- ggplot(lambda_const_ref, aes(x = Year, y = mean, col = type))+
 
 #Visualize timeseries of GRWR (see 'GRWR_invader.R')
 CI_GRWR_ref <-  as.data.frame(HDInterval::hdi(GRWR_LACO_ref_00_15[,1:2], credMass = 0.95)) %>% #Calculate 95% credible interval of GRWR
-  magrittr::set_colnames(c(2000:2001)) %>%
+  magrittr::set_colnames(c(2001:2002)) %>%
   cbind(., as.data.frame(HDInterval::hdi(GRWR_LACO_ref, credMass = 0.95))) %>% #piece together 2000-2001 data with 2002-2014 data
-  magrittr::set_colnames(c(2000:2014)) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
   mutate(CI = c("lowCI", "upCI")) %>%
   pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
   pivot_wider( names_from = CI, values_from = CI_values)
 GRWR_time_ref <- as.data.frame(GRWR_LACO_ref_00_15[,1:2]) %>%
   cbind(., as.data.frame(GRWR_LACO_ref))%>% #piece together 2000-2001 data with 2002-2014 data
-  magrittr::set_colnames(c(2000:2014)) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   group_by(Year) %>%
@@ -160,12 +160,12 @@ GRWR_time_ref <- as.data.frame(GRWR_LACO_ref_00_15[,1:2]) %>%
   full_join(., CI_GRWR_ref)
 
 CI_GRWR <-  as.data.frame(HDInterval::hdi(GRWR_LACO_const, credMass = 0.95)) %>% #Calculate 95% credible interval of GRWR
-  magrittr::set_colnames(c(2000:2016)) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
   mutate(CI = c("lowCI", "upCI")) %>%
   pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
   pivot_wider( names_from = CI, values_from = CI_values)
 GRWR_time_const <- as.data.frame(GRWR_LACO_const) %>%
-  magrittr::set_colnames(c(2000:2016)) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
   pivot_longer(cols = everything()) %>%
   magrittr::set_colnames(c("Year", "GRWR")) %>%
   group_by(Year) %>%
@@ -174,12 +174,12 @@ GRWR_time_const <- as.data.frame(GRWR_LACO_const) %>%
   full_join(., CI_GRWR)
 
 GRWR_time <- rbind(GRWR_time_ref, GRWR_time_const) %>% #combine lambda tables
-  filter(Year < 2015) # cut the last two points in constructed pools to match reference pools
+  filter(Year < 2016) # cut the last two points in constructed pools to match reference pools
 GRWR_time$Year <- as.numeric(GRWR_time$Year)
 
 fGRWR <- ggplot(GRWR_time, aes(x = Year, y = mean, col = type))+
   geom_point() +
-  geom_line(size=1.5)+
+  geom_line(size=1)+
   geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
