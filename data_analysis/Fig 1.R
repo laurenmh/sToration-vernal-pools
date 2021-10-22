@@ -91,15 +91,16 @@ const_EG <- const_dummy_join %>%
   group_by(Year, type) %>%
   summarise(mean_EG = mean(sum_EG),
             se_EG = se(sum_EG))
-EG_all <- rbind(ref_EG, const_EG) 
+EG_all <- rbind(ref_EG, const_EG) %>%
+  filter(Year < 2016)
 EG_all$Year <- as.numeric(EG_all$Year)
 
 fexoticgrass <- ggplot(EG_all, aes(x = Year, y = mean_EG, col = type)) +
   geom_point() +
-  geom_line(size = 1.5) +
+  geom_line(size = 1) +
   geom_errorbar(aes(ymin = mean_EG-se_EG, ymax = mean_EG+se_EG), width = 0.4, alpha = 0.9, size = 1) +
   ylab(bquote(Exotic~Grass~Cover~('%'))) +
-  scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
+  scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
   scale_color_manual(name = "", values = c("#000000", "#888888")) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
@@ -113,10 +114,10 @@ fexoticgrass <- ggplot(EG_all, aes(x = Year, y = mean_EG, col = type)) +
 PPT_long <- PPT %>% select(Year, Jan_March_cm, Oct_Dec_cm) %>% 
   pivot_longer(cols = c('Jan_March_cm', 'Oct_Dec_cm'),names_to = "season", values_to= "rain") #Oct_Dec_cm rain is calculated from t-1, while Jan_March_cm is calculated from t.
 PPT_long$season <- as.factor(PPT_long$season)
-frain <- ggplot(PPT_long %>%filter(Year  %in%  c(2000:2017)), aes(fill = season, y = rain, x = Year)) +
+frain <- ggplot(PPT_long %>%filter(Year  %in%  c(2000:2015)), aes(fill = season, y = rain, x = Year)) +
   geom_bar(position = "stack", stat = "identity") +
   ylab(bquote(Precipitation~(cm)))+
-  scale_x_continuous(name = NULL, limits = c(1999.5,2017.5))+
+  scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
   scale_fill_manual(name = "", labels = c("January-March", "October-December"), values = c("#888888", "#000000")) +
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),

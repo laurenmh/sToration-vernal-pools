@@ -17,7 +17,8 @@ FunctionalGroup_timeseries <- const_com %>%
   select(Year, BRHO, HOMA, LOMU, PLST, DOCO, ERVA, LACO) %>%
   pivot_longer(!Year, names_to = "Species", values_to = "frequency") %>%
   group_by(Year, Species) %>%
-  summarize(mean=mean(frequency), se=calcSE(frequency)) 
+  summarize(mean=mean(frequency), se=calcSE(frequency)) %>%
+  filter(Year < 2016)
 
 FunctionalGroup_timeseries$Species <- ordered(as.factor(FunctionalGroup_timeseries$Species), levels = c("LACO", "BRHO","HOMA","LOMU", "ERVA",
                                                                                                         "PLST", "DOCO"))
