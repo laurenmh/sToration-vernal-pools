@@ -458,8 +458,8 @@ sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(time %in% c(2000:2015))
                                 axis.line = element_line(colour = "black"),
                                 legend.position = c(0.4, 0.2)) +
                           scale_y_log10()+
-                          labs(x = "Year", y = bquote(Predicted~italic(L.~conj.)~Density~(stems/m^2))) +
-                          scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
+                          labs(y = bquote(Predicted~italic(L.~conj.)~Density~(stems/m^2))) +
+                          scale_x_continuous(name = "Year", limits = c(1999.5,2015.5))+
                           scale_colour_manual(name = "Reduction in Exotic Grasses",
                                               labels = c("0%", "50%", "75%"),                       
                                               values = c("#440154", "#21908c", "#fde725"))
