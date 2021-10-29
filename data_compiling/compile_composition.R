@@ -27,7 +27,7 @@ ref_com_2000 <- read_csv(paste(datpath, "Aboveground annual vegetation data/2000
 ref_com <- rbind(ref_com, ref_com_2000)
 
 ## Read in the species list and traits - constructed
-const_spp <- read_csv(paste(datpath, "Aboveground annual vegetation data/Constructed pool metadata.csv", sep=""), skip = 29) %>%
+const_spp <- read_csv(paste(datpath, "Aboveground annual vegetation data/Constructed pool metadata.csv", sep=""), skip = 30) %>%
   filter(!is.na(Genus))
 
 ## Read in the species list and traits - reference
