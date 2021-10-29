@@ -1,6 +1,7 @@
 ## Make sure to manually set your data pathway in set_pathway.R first!!
 
 library(tidyverse)
+library(readxl)
 
 ## Read in data from the constructed vernal pools
 const_com <- read_csv(paste(datpath, "Aboveground annual vegetation data/dat_csv_constructed_pools.csv", sep="")) %>%

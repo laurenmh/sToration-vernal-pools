@@ -35,3 +35,6 @@ datpath<-"C:/Users/Benjamin/Dropbox (Personal)/Research/SDiv coexistence restora
 
 #Talapas
 datpath <- "/gpfs/home/laoyama/hallettlab/"
+
+#Oscar
+datpath <- "/Users/oscargodoy/Dropbox/sToration/VP_data/"
