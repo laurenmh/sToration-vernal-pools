@@ -446,10 +446,10 @@ GRWR_simulated_all$treatment <- ordered(GRWR_simulated_all$treatment, levels = c
 #Step 3. Plot modeled abundance and GRWR
 
 #FIGURE4
-sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(time %in% c(2000:2015)), aes(x = as.numeric(time), y = mean_LACO, col = type)) +
+sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(time %in% c(2000:2015)), aes(x = as.numeric(time), y = mean_LACO)) +
                           geom_point() +
-                          geom_line(size = 1.4) +
-                          geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO, col = type), width = 0.4, alpha = 0.9, size = 1) +
+                          geom_line(size = 1.4, aes(linetype = type)) +
+                          geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 1) +
                           theme(text = element_text(size=18),
                                 panel.grid.major = element_blank(),
                                 panel.grid.minor = element_blank(),
@@ -460,12 +460,12 @@ sim_timeseries <- ggplot(summary_grass_sim_LACO%>%filter(time %in% c(2000:2015))
                           scale_y_log10()+
                           labs(y = bquote(Predicted~italic(L.~conj.)~Density~(stems/m^2))) +
                           scale_x_continuous(name = "Year", limits = c(1999.5,2015.5))+
-                          scale_colour_manual(name = "Reduction in Exotic Grasses",
-                                              labels = c("0%", "50%", "75%"),                       
-                                              values = c("#440154", "#21908c", "#fde725"))
+                          scale_linetype_manual(values=c("solid", "twodash", "dotted"),
+                                                name = "Reduction in Exotic Grasses",
+                                                labels = c("0%", "50%", "75%"))
 
-sim_GRWR <- ggplot(GRWR_simulated_all , aes(x = treatment, y = Mean, fill = treatment))+
-                          geom_bar(stat = "identity")+
+sim_GRWR <- ggplot(GRWR_simulated_all , aes(x = treatment, y = Mean))+
+                          geom_bar(stat = "identity", col = "grey27")+
                           theme(text = element_text(size=18),
                                 panel.grid.major = element_blank(),
                                 panel.grid.minor = element_blank(),
