@@ -38,6 +38,13 @@ ggplot(FunctionalGroup_timeseries, aes(x = as.numeric(Year), y = mean))+
   ylab("Mean Frequency (%)")+
   xlab("Year")
 
+# What percentage of the total frequency is the six species we included in the model?
+per_freq <- ref_com %>%
+  mutate(total_freq = select(., ACMO:VUBR) %>% rowSums(na.rm = TRUE)) %>%
+  mutate(frac_freq = BRHO+ERVA+LOMU+HOMA+PLST+DOCO) %>%
+  mutate(ratio = frac_freq/total_freq)
+
+sum(per_freq$frac_freq)/sum(per_freq$total_freq)
 
 # #Native forb frequency timeseries
 # NF_timeseries <- const_com %>%
