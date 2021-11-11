@@ -199,12 +199,12 @@ BH_ref_fit <- sampling(BH_ref_model,
 ## Option 2: run with real data 
 ## See data prep file before running this
 BH_ref_fit_00_15 <- sampling(BH_ref_model,
-                   data = list(n_pools = ref_n_pools,
-                               n_years = ref_n_years,
-                               obs_LACO = ref_LACOcover,
-                               obs_EG = ref_sumEGcover,
-                               obs_ERVA = ref_ERVAcover,
-                               obs_NF = ref_sumNFcover,
+                   data = list(n_pools = ref_n_pools_00_15,
+                               n_years = ref_n_years_00_15,
+                               obs_LACO = ref_LACOcover_00_15,
+                               obs_EG = ref_sumEGcover_00_15,
+                               obs_ERVA = ref_ERVAcover_00_15,
+                               obs_NF = ref_sumNFcover_00_15,
                                low_germ_LACO = 0.2,
                                high_germ_LACO = 0.7), 
                    iter= 1000)
