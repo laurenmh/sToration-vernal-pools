@@ -368,5 +368,51 @@ s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
 #   scale_color_discrete(breaks = c("predicted_LACO", "observed_LACO"),
 #                        labels = c("predicted", "observed"))
 
+#COMPARE SEEDING TREATMENTS
+BH_fit_AB <- sampling(BH_model,
+                   data = list(n_pools = n_pools_AB,
+                               n_years = n_years_AB,
+                               obs_LACO = LACOdens_AB,
+                               obs_EG = sumEGcover_AB,
+                               obs_ERVA = ERVAdens_AB,
+                               obs_NF = sumNFcover_AB,
+                               seeds_added = seedtrt_AB[,4:6],
+                               low_germ_LACO = 0.2,
+                               high_germ_LACO = 0.7), 
+                   iter= 1000)
 
+BH_fit_BA <- sampling(BH_model,
+                      data = list(n_pools = n_pools_BA,
+                                  n_years = n_years_BA,
+                                  obs_LACO = LACOdens_BA,
+                                  obs_EG = sumEGcover_BA,
+                                  obs_ERVA = ERVAdens_BA,
+                                  obs_NF = sumNFcover_BA,
+                                  seeds_added = seedtrt_BA[,4:6],
+                                  low_germ_LACO = 0.2,
+                                  high_germ_LACO = 0.7), 
+                      iter= 1000)
 
+BH_fit_LALA <- sampling(BH_model,
+                      data = list(n_pools = n_pools_LALA,
+                                  n_years = n_years_LALA,
+                                  obs_LACO = LACOdens_LALA,
+                                  obs_EG = sumEGcover_LALA,
+                                  obs_ERVA = ERVAdens_LALA,
+                                  obs_NF = sumNFcover_LALA,
+                                  seeds_added = seedtrt_LALA[,4:6],
+                                  low_germ_LACO = 0.2,
+                                  high_germ_LACO = 0.7), 
+                      iter= 1000)
+
+BH_fit_LANo <- sampling(BH_model,
+                        data = list(n_pools = n_pools_LANo,
+                                    n_years = n_years_LANo,
+                                    obs_LACO = LACOdens_LANo,
+                                    obs_EG = sumEGcover_LANo,
+                                    obs_ERVA = ERVAdens_LANo,
+                                    obs_NF = sumNFcover_LANo,
+                                    seeds_added = seedtrt_LANo[,4:6],
+                                    low_germ_LACO = 0.2,
+                                    high_germ_LACO = 0.7), 
+                        iter= 1000)
