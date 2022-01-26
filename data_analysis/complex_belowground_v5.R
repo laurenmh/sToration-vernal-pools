@@ -416,3 +416,40 @@ BH_fit_LANo <- sampling(BH_model,
                                     low_germ_LACO = 0.2,
                                     high_germ_LACO = 0.7), 
                         iter= 1000)
+
+#COMPARE POOL SIZES
+BH_fit_Pool_s <- sampling(BH_model,
+                        data = list(n_pools = n_pools_s,
+                                    n_years = n_years_s,
+                                    obs_LACO = LACOdens_s,
+                                    obs_EG = sumEGcover_s,
+                                    obs_ERVA = ERVAdens_s,
+                                    obs_NF = sumNFcover_s,
+                                    seeds_added = seedtrt_s[,4:6],
+                                    low_germ_LACO = 0.2,
+                                    high_germ_LACO = 0.7), 
+                        iter= 1000)
+
+BH_fit_Pool_m <- sampling(BH_model,
+                          data = list(n_pools = n_pools_m,
+                                      n_years = n_years_m,
+                                      obs_LACO = LACOdens_m,
+                                      obs_EG = sumEGcover_m,
+                                      obs_ERVA = ERVAdens_m,
+                                      obs_NF = sumNFcover_m,
+                                      seeds_added = seedtrt_m[,4:6],
+                                      low_germ_LACO = 0.2,
+                                      high_germ_LACO = 0.7), 
+                          iter= 1000)
+
+BH_fit_Pool_l <- sampling(BH_model,
+                          data = list(n_pools = n_pools_l,
+                                      n_years = n_years_l,
+                                      obs_LACO = LACOdens_l,
+                                      obs_EG = sumEGcover_l,
+                                      obs_ERVA = ERVAdens_l,
+                                      obs_NF = sumNFcover_l,
+                                      seeds_added = seedtrt_l[,4:6],
+                                      low_germ_LACO = 0.2,
+                                      high_germ_LACO = 0.7), 
+                          iter= 1000)

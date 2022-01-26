@@ -6,6 +6,7 @@
 # Option c. fill in the missing data 
 # Option d. fill in 2007 data and subset complete data 2000-2017 - use this to parameterize
 # Option e. follow option d and subset by seeding treatment
+# Option f. follow option d and subset by pool size
 # For each option, I am doing the following:
 # 1. subset the data
 # 2. count the number of pools 
@@ -423,6 +424,112 @@ seedtrt_LANo <- LANo %>%
   mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
   mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
   mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
+
+############################################################ 
+#Option f. Follow Option d. step 1 and subset by pool size#
+############################################################
+#1f. subset by pool size
+Pool_s <- const_dummy_join %>%
+  filter(Size == "s")
+Pool_m <- const_dummy_join %>%
+  filter(Size == "m")
+Pool_l <- const_dummy_join %>%
+  filter(Size == "l")
+
+#2f. count the number of pools
+n_pools_s <- length(unique(Pool_s$Pool))
+n_pools_m <- length(unique(Pool_m$Pool))
+n_pools_l <- length(unique(Pool_l$Pool))
+
+#3f. count the number of years
+n_years_s <- length(unique(Pool_s$Year))
+n_years_m <- length(unique(Pool_m$Year))
+n_years_l <- length(unique(Pool_l$Year))
+
+#4f. sum frequency data
+#Exotic grass (EG) group contains BRHO, HOMA, and LOMU:
+Pool_s$sum_EG <- rowSums(cbind(Pool_s$BRHO, Pool_s$HOMA, Pool_s$LOMU))
+Pool_m$sum_EG <- rowSums(cbind(Pool_m$BRHO, Pool_m$HOMA, Pool_m$LOMU))
+Pool_l$sum_EG <- rowSums(cbind(Pool_l$BRHO, Pool_l$HOMA, Pool_l$LOMU))
+
+#Native forb (NF) group contains PLST and DOCO:
+Pool_s$sum_NF <- rowSums(cbind(Pool_s$PLST, Pool_s$DOCO))
+Pool_m$sum_NF <- rowSums(cbind(Pool_m$PLST, Pool_m$DOCO))
+Pool_l$sum_NF <- rowSums(cbind(Pool_l$PLST, Pool_l$DOCO))
+
+#5f. spread the dataset
+#each matrix should have a [n_pools x n_years] dimension
+LACOdens_s <- Pool_s %>%
+  select(Year, Pool, LACOdens) %>%
+  spread(key = Year, value = LACOdens) %>%
+  select(-Pool)
+ERVAdens_s <- Pool_s %>%
+  select(Year, Pool, ERVAdens) %>%
+  spread(key = Year, value = ERVAdens) %>%
+  select(-Pool)
+sumEGcover_s <- Pool_s %>%
+  select(Year, Pool, sum_EG) %>%
+  spread(key = Year, value = sum_EG) %>%
+  select(-Pool)
+sumNFcover_s <- Pool_s %>%
+  select(Year, Pool, sum_NF) %>%
+  spread(key = Year, value = sum_NF) %>%
+  select(-Pool)
+
+LACOdens_m <- Pool_m %>%
+  select(Year, Pool, LACOdens) %>%
+  spread(key = Year, value = LACOdens) %>%
+  select(-Pool)
+ERVAdens_m <- Pool_m %>%
+  select(Year, Pool, ERVAdens) %>%
+  spread(key = Year, value = ERVAdens) %>%
+  select(-Pool)
+sumEGcover_m <- Pool_m %>%
+  select(Year, Pool, sum_EG) %>%
+  spread(key = Year, value = sum_EG) %>%
+  select(-Pool)
+sumNFcover_m <- Pool_m %>%
+  select(Year, Pool, sum_NF) %>%
+  spread(key = Year, value = sum_NF) %>%
+  select(-Pool)
+
+LACOdens_l <- Pool_l %>%
+  select(Year, Pool, LACOdens) %>%
+  spread(key = Year, value = LACOdens) %>%
+  select(-Pool)
+ERVAdens_l <- Pool_l %>%
+  select(Year, Pool, ERVAdens) %>%
+  spread(key = Year, value = ERVAdens) %>%
+  select(-Pool)
+sumEGcover_l <- Pool_l %>%
+  select(Year, Pool, sum_EG) %>%
+  spread(key = Year, value = sum_EG) %>%
+  select(-Pool)
+sumNFcover_l <- Pool_l %>%
+  select(Year, Pool, sum_NF) %>%
+  spread(key = Year, value = sum_NF) %>%
+  select(-Pool)
+
+#6f. create a matrix of seeds added each year
+seedtrt_s <- Pool_s %>%
+  select(Pool, Treatment.1999, Treatment.2000) %>%
+  unique(Pool_s$Pool, incomparables = FALSE) %>%
+  mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
+  mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
+  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
+seedtrt_m <- Pool_m %>%
+  select(Pool, Treatment.1999, Treatment.2000) %>%
+  unique(Pool_s$Pool, incomparables = FALSE) %>%
+  mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
+  mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
+  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
+seedtrt_l <- Pool_l %>%
+  select(Pool, Treatment.1999, Treatment.2000) %>%
+  unique(Pool_s$Pool, incomparables = FALSE) %>%
+  mutate(Y1 = ifelse(Treatment.1999 == "Control", 0, 100)) %>%
+  mutate(Y2 = ifelse(Treatment.2000 %in% c("Control", "NO Lasthenia"), 0, 100)) %>%
+  mutate(Y3 = ifelse(Treatment.2000 == "Lasthenia", 100, 0))
+
 
 #----------------------
 # REFERENCE POOLS:
