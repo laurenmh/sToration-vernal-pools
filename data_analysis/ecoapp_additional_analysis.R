@@ -14,8 +14,8 @@ se <- function(x){
 
 
 #Data: 
-#Run "prep data before modeling.R" to get 'const_dummy_join'
-#Run "analysis/complex_belowground_v5.R" to get 'BH_fit_AB', 'BH_fit_BA', 'BH_fit_LALA', and 'BH_fit_LANo'
+#Run "prep data before modeling.R" 
+#Run "analysis/complex_belowground_v5.R" 
 
 
 ###Compare the effects of pool size and seed addition treatments on restoration outcomes
@@ -37,7 +37,7 @@ const_LACO_size <- const_dummy_join %>%
 fig_LACO_size <- ggplot(const_LACO_size, aes(x = Year, y = mean_LACO, col = Size))+
                     geom_point()+
                     geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 0.8) +
-                    geom_line()+
+                    geom_line(size=1)+
                     theme(text = element_text(size=16),
                           panel.grid.major = element_blank(),
                           panel.grid.minor = element_blank(),
@@ -57,7 +57,7 @@ const_LACO_trt <- const_dummy_join %>%
 fig_LACO_trt <- ggplot(const_LACO_trt, aes(x = Year, y = mean_LACO, col = Treatment))+
                     geom_point()+
                     geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 0.8) +
-                    geom_line()+
+                    geom_line(size=1)+
                     theme(text = element_text(size=16),
                           panel.grid.major = element_blank(),
                           panel.grid.minor = element_blank(),
@@ -69,7 +69,29 @@ fig_LACO_trt <- ggplot(const_LACO_trt, aes(x = Year, y = mean_LACO, col = Treatm
                     #scale_y_log10()+
                     ylab(bquote(LACO~Density~(stems/m^2)))
 
+const_LACO_depth <- left_join(const_dummy_join, pool_depth_average) %>%
+  mutate(Depth = case_when(avg_max_depth <= 3.875000 ~ "shallow",
+         avg_max_depth  >= 3.875000 & avg_max_depth < 8.008333 ~ "medium", 
+         avg_max_depth >= 8.008333 ~ "deep")) %>%
+  select(LACOdens, Year, Depth, Pool) %>%
+  group_by(Depth, Year) %>%
+  summarise(mean_LACO = mean(LACOdens), se_LACO = se(LACOdens))
+const_LACO_depth$Year <- as.numeric(const_LACO_depth$Year)
 
+fig_LACO_depth <- ggplot(const_LACO_depth, aes(x = Year, y = mean_LACO, col = Depth))+
+  geom_point()+
+  geom_errorbar(aes(ymin = mean_LACO-se_LACO, ymax = mean_LACO+se_LACO), width = 0.4, alpha = 0.9, size = 0.8) +
+  geom_line(size=1)+
+  theme(text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        legend.position = c(0.8,0.8),
+        axis.line = element_line(colour = "black"))+
+  scale_x_continuous(name = NULL,
+                     limits = c(1999.5,2015.5))+
+  #scale_y_log10()+
+  ylab(bquote(LACO~Density~(stems/m^2)))
 
 ##LACO lambda
 
@@ -220,6 +242,73 @@ fig_lambda_size <- ggplot(lambda_const_size%>%filter(Year < 2016), aes(x = Year,
   ylab(bquote(Intrinsic~Growth~Rate ~(lambda[t])))+
   scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
   scale_color_discrete(name = "Pool Size")
+
+#Extract lambda estimates for shallow pools
+Post_shallow <- rstan::extract(BH_fit_depth_s) 
+CI_lambda_shallow <-  as.data.frame(HDInterval::hdi(Post_shallow$lambda, credMass = 0.95)) %>% #Calculate 95% credible interval of lambda estimates
+  magrittr::set_colnames(c(2001:2017)) %>%
+  mutate(CI = c("lowCI", "upCI")) %>%
+  pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
+  pivot_wider( names_from = CI, values_from = CI_values)
+lambda_const_shallow <- as.data.frame(Post_shallow$lambda) %>% #Calculate mean lambda each year
+  magrittr::set_colnames(c(2001:2017)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "lambda")) %>%
+  group_by(Year) %>%
+  summarise(mean = mean(lambda)) %>%
+  mutate(Depth = "shallow") %>%
+  full_join(., CI_lambda_shallow) %>%#LACO abundance goes to 0 from 2007, so remove lambda from 2008 
+  filter(Year < 2008)
+
+#Extract lambda estimates for medium depth pools
+Post_medium <- rstan::extract(BH_fit_depth_m) 
+CI_lambda_medium <-  as.data.frame(HDInterval::hdi(Post_medium$lambda, credMass = 0.95)) %>% #Calculate 95% credible interval of lambda estimates
+  magrittr::set_colnames(c(2001:2017)) %>%
+  mutate(CI = c("lowCI", "upCI")) %>%
+  pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
+  pivot_wider( names_from = CI, values_from = CI_values)
+lambda_const_medium <- as.data.frame(Post_medium$lambda) %>% #Calculate mean lambda each year
+  magrittr::set_colnames(c(2001:2017)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "lambda")) %>%
+  group_by(Year) %>%
+  summarise(mean = mean(lambda)) %>%
+  mutate(Depth = "medium") %>%
+  full_join(., CI_lambda_medium)
+
+#Extract lambda estimates for deep pools
+Post_deep <- rstan::extract(BH_fit_depth_d) 
+CI_lambda_deep <-  as.data.frame(HDInterval::hdi(Post_deep$lambda, credMass = 0.95)) %>% #Calculate 95% credible interval of lambda estimates
+  magrittr::set_colnames(c(2001:2017)) %>%
+  mutate(CI = c("lowCI", "upCI")) %>%
+  pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
+  pivot_wider( names_from = CI, values_from = CI_values)
+lambda_const_deep <- as.data.frame(Post_deep$lambda) %>% #Calculate mean lambda each year
+  magrittr::set_colnames(c(2001:2017)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "lambda")) %>%
+  group_by(Year) %>%
+  summarise(mean = mean(lambda)) %>%
+  mutate(Depth = "deep") %>%
+  full_join(., CI_lambda_deep) 
+
+lambda_const_depth <- rbind(lambda_const_shallow, lambda_const_medium, lambda_const_deep)
+lambda_const_depth$Year <- as.numeric(lambda_const_depth$Year)
+
+fig_lambda_depth <- ggplot(lambda_const_depth%>%filter(Year < 2016), aes(x = Year, y = mean, col = Depth))+
+  geom_point() +
+  geom_line(size=1)+
+  geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
+  theme(text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "none", 
+        axis.title = element_text(size = 14))+
+  ylab(bquote(Intrinsic~Growth~Rate ~(lambda[t])))+
+  scale_x_continuous(name = NULL, limits = c(1999.5,2015.5))+
+  scale_color_discrete(name = "Pool Depth")
 
 ##LACO low-density growth rate
 
@@ -646,6 +735,190 @@ GRWR_LACO_const_l_summary <- GRWR_LACO_const_l_mean %>%
 # Plot LACO density, lambda, and GRWR timeseries by trt
 ggarrange(fig_LACO_size, fig_lambda_size, fig_GRWR_size,  ncol = 1, labels = c("(a)", "(b)", "(c)"))
 
+
+#Extract parameters for each pool depth class
+alpha_LACO_shallow <- as.matrix(Post_shallow$alpha_LACO)
+alpha_EG_shallow <- as.matrix(Post_shallow$alpha_EG)
+alpha_ERVA_shallow <- as.matrix(Post_shallow$alpha_ERVA)
+alpha_NF_shallow <- as.matrix(Post_shallow$alpha_NF)
+lambda_shallow <- as.matrix(Post_shallow$lambda)
+s_shallow <- as.matrix(Post_shallow$survival_LACO)
+sim_LACO_shallow <- matrix(nrow = 2000, ncol = 17)
+
+alpha_LACO_medium <- as.matrix(Post_medium$alpha_LACO)
+alpha_EG_medium <- as.matrix(Post_medium$alpha_EG)
+alpha_ERVA_medium <- as.matrix(Post_medium$alpha_ERVA)
+alpha_NF_medium <- as.matrix(Post_medium$alpha_NF)
+lambda_medium <- as.matrix(Post_medium$lambda)
+s_medium <- as.matrix(Post_medium$survival_LACO)
+sim_LACO_medium <- matrix(nrow = 2000, ncol = 17)
+
+alpha_LACO_deep <- as.matrix(Post_deep$alpha_LACO)
+alpha_EG_deep <- as.matrix(Post_deep$alpha_EG)
+alpha_ERVA_deep <- as.matrix(Post_deep$alpha_ERVA)
+alpha_NF_deep <- as.matrix(Post_deep$alpha_NF)
+lambda_deep <- as.matrix(Post_deep$lambda)
+s_deep <- as.matrix(Post_deep$survival_LACO)
+sim_LACO_deep <- matrix(nrow = 2000, ncol = 17)
+
+#Plug in the stable equilibrium freq and parameters in the model
+LACO_const_shallow <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(const_com_control[2,2:18]),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO_shallow,
+  a1 = alpha_EG_shallow,
+  a2 = alpha_ERVA_shallow,
+  a3 = alpha_NF_shallow,
+  lambda = lambda_shallow,
+  s = s_shallow,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_const_shallow_all <- log(LACO_const_shallow) #2000-2016 #log transform
+GRWR_LACO_const_shallow <- GRWR_LACO_const_shallow_all[,1:15] #2000-2008 truncate the last two points 
+
+LACO_const_medium <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(const_com_control[2,2:18]),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO_medium,
+  a1 = alpha_EG_medium,
+  a2 = alpha_ERVA_medium,
+  a3 = alpha_NF_medium,
+  lambda = lambda_medium,
+  s = s_medium,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_const_medium_all <- log(LACO_const_medium) #2000-2016 #log transform
+GRWR_LACO_const_medium <- GRWR_LACO_const_medium_all[,1:15] #2000-2014 truncate the last two points
+
+LACO_const_deep <- bh.sim.control(
+  LACO = 1,
+  EG = as.numeric(const_com_control[2,2:18]),
+  ERVA = as.numeric(const_com_control[1,2:18]),
+  NF = as.numeric(const_com_control[3,2:18]),
+  aii = alpha_LACO_deep,
+  a1 = alpha_EG_deep,
+  a2 = alpha_ERVA_deep,
+  a3 = alpha_NF_deep,
+  lambda = lambda_deep,
+  s = s_deep,
+  g = 0.7,
+  glow = 0.2)
+GRWR_LACO_const_deep_all <- log(LACO_const_deep) #2000-2016 #log transform
+GRWR_LACO_const_deep <- GRWR_LACO_const_deep_all[,1:15] #2000-2014 truncate the last two points
+
+#calculate 95% CI and mean GRWR
+CI_GRWR_shallow <-  as.data.frame(HDInterval::hdi(GRWR_LACO_const_shallow, credMass = 0.95)) %>% #Calculate 95% credible interval of GRWR
+  magrittr::set_colnames(c(2001:2015)) %>%
+  mutate(CI = c("lowCI", "upCI")) %>%
+  pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
+  pivot_wider( names_from = CI, values_from = CI_values)
+GRWR_time_const_shallow <- as.data.frame(GRWR_LACO_const_shallow) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "GRWR")) %>%
+  group_by(Year) %>%
+  summarise(mean = mean(GRWR)) %>%
+  mutate(Depth = "shallow") %>%
+  full_join(., CI_GRWR_shallow) %>%#LACO abundance goes to 0 from 2007, so remove GRWR from 2008 
+  filter(Year < 2008) 
+
+CI_GRWR_medium <-  as.data.frame(HDInterval::hdi(GRWR_LACO_const_medium, credMass = 0.95)) %>% #Calculate 95% credible interval of GRWR
+  magrittr::set_colnames(c(2001:2015)) %>%
+  mutate(CI = c("lowCI", "upCI")) %>%
+  pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
+  pivot_wider( names_from = CI, values_from = CI_values)
+GRWR_time_const_medium <- as.data.frame(GRWR_LACO_const_medium) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "GRWR")) %>%
+  group_by(Year) %>%
+  summarise(mean = mean(GRWR)) %>%
+  mutate(Depth = "medium") %>%
+  full_join(., CI_GRWR_medium)
+
+CI_GRWR_deep <-  as.data.frame(HDInterval::hdi(GRWR_LACO_const_deep, credMass = 0.95)) %>% #Calculate 95% credible interval of GRWR
+  magrittr::set_colnames(c(2001:2015)) %>%
+  mutate(CI = c("lowCI", "upCI")) %>%
+  pivot_longer(!CI, names_to = "Year", values_to = "CI_values") %>%
+  pivot_wider( names_from = CI, values_from = CI_values)
+GRWR_time_const_deep <- as.data.frame(GRWR_LACO_const_deep) %>%
+  magrittr::set_colnames(c(2001:2015)) %>%
+  pivot_longer(cols = everything()) %>%
+  magrittr::set_colnames(c("Year", "GRWR")) %>%
+  group_by(Year) %>%
+  summarise(mean = mean(GRWR)) %>%
+  mutate(Depth = "deep") %>%
+  full_join(., CI_GRWR_deep)
+
+GRWR_time_depth <- rbind(GRWR_time_const_shallow, GRWR_time_const_medium, GRWR_time_const_deep) 
+GRWR_time_depth$Year <- as.numeric(GRWR_time_depth$Year)
+
+fig_GRWR_depth <- ggplot(GRWR_time_depth, aes(x = Year, y = mean, col = Depth))+
+  geom_point() +
+  geom_line(size=1)+
+  geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
+  theme(text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "none",
+        axis.title = element_text(size = 14))+
+  ylab(bquote(Low~Density~Growth~Rate~(italic(r[t]))))+
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  scale_x_continuous(name = NULL,
+                     limits = c(1999.5,2015.5))#+
+#scale_color_manual(name = "", values = c("#000000", "#888888"))
+
+# Average the growth rates of LACO over time for each pool depth.
+GRWR_LACO_const_shallow_mean <- as.data.frame(GRWR_LACO_const_shallow) %>%
+  magrittr::set_colnames(c(2000:2014)) %>%
+  rownames_to_column(., var = "iteration") %>% #2000 iterations from Bayesian modeling
+  pivot_longer(!iteration, names_to = "Year", values_to = "GRWR") %>%
+  filter(Year < 2008) %>%
+  group_by(iteration) %>%
+  summarize(mean_GRWR = mean(GRWR)) #mean of GRWR across years 
+
+GRWR_LACO_const_shallow_summary <- GRWR_LACO_const_shallow_mean %>%
+  summarize(Mean = mean(mean_GRWR), CI = hdi(mean_GRWR, credMass = 0.95)) %>% #take the 95% CI across iterations
+  mutate(name = c("lowCI", "upCI")) %>% #top values is the low CI and bottom value is the high CI
+  pivot_wider(names_from = name, values_from = CI)#Average GRWR LACO for shallow pools = -0.6871294 (CI:-1.403675, -0.07246818)
+
+GRWR_LACO_const_medium_mean <- as.data.frame(GRWR_LACO_const_medium) %>%
+  magrittr::set_colnames(c(2000:2014)) %>%
+  rownames_to_column(., var = "iteration") %>% #2000 iterations from Bayesian modeling
+  pivot_longer(!iteration, names_to = "Year", values_to = "GRWR") %>%
+  group_by(iteration) %>%
+  summarize(mean_GRWR = mean(GRWR)) #mean of GRWR across years 
+
+GRWR_LACO_const_medium_summary <- GRWR_LACO_const_medium_mean %>%
+  summarize(Mean = mean(mean_GRWR), CI = hdi(mean_GRWR, credMass = 0.95)) %>% #take the 95% CI across iterations
+  mutate(name = c("lowCI", "upCI")) %>% #top values is the low CI and bottom value is the high CI
+  pivot_wider(names_from = name, values_from = CI)#Average GRWR LACO for medium pools = 0.8470256 (CI: 0.8209963, 0.8753031)
+
+GRWR_LACO_const_deep_mean <- as.data.frame(GRWR_LACO_const_deep) %>%
+  magrittr::set_colnames(c(2000:2014)) %>%
+  rownames_to_column(., var = "iteration") %>% #2000 iterations from Bayesian modeling
+  pivot_longer(!iteration, names_to = "Year", values_to = "GRWR") %>%
+  group_by(iteration) %>%
+  summarize(mean_GRWR = mean(GRWR)) #mean of GRWR across years 
+
+GRWR_LACO_const_deep_summary <- GRWR_LACO_const_deep_mean %>%
+  summarize(Mean = mean(mean_GRWR), CI = hdi(mean_GRWR, credMass = 0.95)) %>% #take the 95% CI across iterations
+  mutate(name = c("lowCI", "upCI")) %>% #top values is the low CI and bottom value is the high CI
+  pivot_wider(names_from = name, values_from = CI)#Average GRWR LACO for deep pools = -0.5701758 (CI: -0.6937427, -0.4449114)
+
+GRWR_depth_all <- rbind(GRWR_LACO_const_shallow_summary, GRWR_LACO_const_medium_summary, GRWR_LACO_const_deep_summary) %>%
+  mutate(Depth = c("shallow", "medium", "deep"))
+
+# Plot LACO density, lambda, and GRWR timeseries by depth
+ggarrange(fig_LACO_depth, fig_lambda_depth, fig_GRWR_depth,  ncol = 1, labels = c("(a)", "(b)", "(c)"))
+
+
 ###Exotic grass cover time series - were some pools more invaded than others?
 const_dummy_join$Year <- as.numeric(const_dummy_join$Year)
 summary(lmer(sum_EG~Pool + (1|Year), const_dummy_join)) #EG did not differ by Pool 
@@ -677,14 +950,15 @@ const_EG_trt <- const_dummy_join %>%
     group_by(Treatment, Year) %>%
     summarise(mean_EG = mean(sum_EG), se_EG = se(sum_EG))
 
-ggplot(const_EG_trt%>%filter(Year < 2016), aes(x = Year, y = mean_EG, col = Treatment))+
+fig_EG_trt <- ggplot(const_EG_trt%>%filter(Year < 2016), aes(x = Year, y = mean_EG, col = Treatment))+
   geom_point()+
   geom_line()+
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
-        axis.line = element_line(colour = "black"))+
+        axis.line = element_line(colour = "black"),
+        legend.position = c(0.7, 0.2))+
   geom_errorbar(aes(ymin = mean_EG-se_EG, ymax = mean_EG+se_EG), width = 0.4, alpha = 0.9, size = 0.8) + 
   ylab(bquote(Exotic~Grass~Cover~('%')))
 
@@ -693,17 +967,41 @@ const_EG_size <- const_dummy_join %>%
     group_by(Size, Year) %>%
     summarise(mean_EG = mean(sum_EG), se_EG = se(sum_EG))
 
-ggplot(const_EG_size%>%filter(Year < 2016), aes(x = Year, y = mean_EG, col = Size))+
+fig_EG_size <-ggplot(const_EG_size%>%filter(Year < 2016), aes(x = Year, y = mean_EG, col = Size))+
   geom_point()+
   geom_line()+
   theme(text = element_text(size=16),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
-        axis.line = element_line(colour = "black"))+
+        axis.line = element_line(colour = "black"),
+        legend.position = c(0.8,0.2))+
   geom_errorbar(aes(ymin = mean_EG-se_EG, ymax = mean_EG+se_EG), width = 0.4, alpha = 0.9, size = 0.8) + 
   ylab(bquote(Exotic~Grass~Cover~('%')))+
   scale_color_discrete(name = "Pool size", labels = c("large", "medium", "small")) 
+
+const_EG_depth <- left_join(const_dummy_join, pool_depth_average) %>%
+  mutate(Depth = case_when(avg_max_depth <= 3.875000 ~ "shallow",
+                           avg_max_depth  >= 3.875000 & avg_max_depth < 8.008333 ~ "medium", 
+                           avg_max_depth >= 8.008333 ~ "deep")) %>%
+  select(sum_EG, Year, Depth, Pool) %>%
+  group_by(Depth, Year) %>%
+  summarise(mean_EG = mean(sum_EG), se_EG = se(sum_EG))
+
+fig_EG_depth <-ggplot(const_EG_depth%>%filter(Year < 2016), aes(x = Year, y = mean_EG, col = Depth))+
+  geom_point()+
+  geom_line()+
+  theme(text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = c(0.8,0.2))+
+  geom_errorbar(aes(ymin = mean_EG-se_EG, ymax = mean_EG+se_EG), width = 0.4, alpha = 0.9, size = 0.8) + 
+  ylab(bquote(Exotic~Grass~Cover~('%')))+
+  scale_color_discrete(name = "Pool depth", labels = c("deep", "medium", "shallow")) 
+
+ggarrange(fig_EG_trt, fig_EG_size, fig_EG_depth, labels = c("(a)", "(b)", "(c)"), ncol = 1)
 
 #Effect of exotic grass on density, lambda, GRWR 
 const_EG_mean <- const_dummy_join %>%
@@ -761,7 +1059,7 @@ fig_GRWR_EG <-ggplot(join_means, aes(x = EG, y = GRWR))+
   ylab(bquote(Mean~Annual~Low~Density~Growth~Rate~(italic(r[t]))))+
   xlab(bquote(Mean~Annual~Exotic~Grass~Cover~('%')))
 
-ggarrange(fig_LACO_EG, fig_lambda_EG, fig_GRWR_EG, ncol = 1, align = "v")
+ggarrange(fig_LACO_EG, fig_lambda_EG, fig_GRWR_EG, ncol = 3,nrow =1, align = "v", labels = c("(a)", "(b)", "(c)"))
 
 
 #Effect of pool depth on each parameter

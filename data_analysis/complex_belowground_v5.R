@@ -265,108 +265,73 @@ lambda_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("lambda")))
 s_mean <- as.data.frame(get_posterior_mean(BH_fit, pars = c("survival_LACO")))
 
 # ### COMPARE OBSERVED AND PREDICTED LACO ###
-# library(tidyr)
-# library(ggplot2)
+ library(tidyr)
+ library(ggplot2)
 
-# #Option 1: use simulated data
-# #make a table of predicted LACO from estimated parameters
-# predicted_LACO_sim <- bh.sim(n_pools = sim_n_pools,
-#                          seedtrt = sim_seedtrt,
-#                          EG = sim_obs_EG,
-#                          ERVA = sim_obs_ERVA,
-#                          NF = sim_obs_NF,
-#                          aii = alpha_LACO_mean[,5],
-#                          a1 = alpha_EG_mean[,5],
-#                          a2 = alpha_ERVA_mean[,5], 
-#                          a3 = alpha_NF_mean[,5],
-#                          lambda = lambda_mean[,5],
-#                          s = s_mean[,5],
-#                          g = 0.7,
-#                          glow = 0.2)
-# 
-# #plot simulated LACOdens vs predicted_LACO_sim to check model fit
-# colnames(predicted_LACO_sim) <- c(1:18)
-# predicted_LACO_sim <- as.data.frame(predicted_LACO_sim) %>% 
-#   mutate(Pool = row_number()) %>%
-#   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = predicted_LACO)
-# colnames(sim_obs_LACO) <- c(1:18)
-# sim_obs_LACO <- as.data.frame(sim_obs_LACO) %>% 
-#   mutate(Pool = row_number()) %>%
-#   gather(`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`,`10`,`11`,`12`,`13`,`14`,`15`,`16`,`17`,`18`, key = time, value = sim_LACO)
-# join_sim_LACO <- left_join(predicted_LACO_sim, sim_obs_LACO, by = c("Pool", "time"))
-# 
-# summary(lm(predicted_LACO ~ sim_LACO, data = join_sim_LACO)) #R2 = 0.8644
-# ggplot(join_sim_LACO, aes(x = sim_LACO, y = predicted_LACO)) +
-#   geom_point() +
-#   annotate("text", label = "R^2 = 0.8644", x = 50, y = 150) + #looks like a good fit 
-#   geom_smooth(method = "lm") +
-#   labs(x = "simulated LACO counts", y = "predicted LACO counts")
-# 
-# #plot timeseries of simulated LACOdens and predicted_LACO_sim
-# long_join_sim <- join_sim_LACO %>% gather(`predicted_LACO`, `sim_LACO`, key = type, value = LACO)
-# ggplot(long_join_sim, aes(x = time, y = LACO, color = type)) +
-#   geom_jitter() +
-#   labs(y = "LACO count") +
-#   scale_color_discrete(breaks = c("predicted_LACO", "sim_LACO"),
-#                        labels = c("predicted", "simulated"))
-
-# #Option 2: use real data
-# predicted_LACO <- bh.sim(n_pools = n_pools,
-#                       seedtrt = as.matrix(seedtrt[,4:6]),
-#                       EG = as.matrix(sumEGcover),
-#                       ERVA = as.matrix(ERVAdens),
-#                       NF = as.matrix(sumNFcover),
-#                       aii = alpha_LACO_mean[,5],
-#                       a1 = alpha_EG_mean[,5],
-#                       a2 = alpha_ERVA_mean[,5], 
-#                       a3 = alpha_NF_mean[,5],
-#                       lambda = lambda_mean[,5],
-#                       s = s_mean[,5],
-#                       g = 0.7,
-#                       glow = 0.2)
+ predicted_LACO <- bh.sim(n_pools = n_pools,
+                       seedtrt = as.matrix(seedtrt[,4:6]),
+                       EG = as.matrix(sumEGcover),
+                       ERVA = as.matrix(ERVAdens),
+                       NF = as.matrix(sumNFcover),
+                       aii = alpha_LACO_mean[,5],
+                       a1 = alpha_EG_mean[,5],
+                       a2 = alpha_ERVA_mean[,5],
+                       a3 = alpha_NF_mean[,5],
+                       lambda = lambda_mean[,5],
+                       s = s_mean[,5],
+                       g = 0.7,
+                       glow = 0.2)
 
 # #plot LACOdens vs predicted_LACO for modelfit
-# colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
-#                               "2007", "2008", "2009", "2010", "2011", "2012", "2013",
-#                               "2014", "2015", "2016", "2017")
-# predicted_LACO <- as.data.frame(predicted_LACO) %>% 
-#   mutate(Pool = row_number()) %>%
-#   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
-#          `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = predicted_LACO)
-# obs_LACO <- LACOdens %>% 
-#   mutate(Pool = row_number()) %>%
-#   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,
-#          `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = observed_LACO)
-# 
-# join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time")) %>%
-#   mutate(log_predicted_LACO = log(predicted_LACO)) %>%
-#   mutate(log_observed_LACO = log(observed_LACO)) %>%
-#   mutate_if(is.numeric, ~replace(., is.infinite(.), 0))
-# 
-# summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.1806
-# ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
-#   geom_point()+
-#   annotate("text", label = "R^2 = 0.1208", x = 3000, y = 2500) +
-#   ylim(0, 4000) #most values are small, so try log scale
-# 
-# summary(lm(log_predicted_LACO ~ log_observed_LACO, data = join_real_LACO))
-# ggplot(join_real_LACO, aes(x = log_predicted_LACO, y = log_observed_LACO)) +
-#   geom_point()+
-#   annotate("text", label = "R^2 = 0.3009", x = 1.5, y = 8) +
-#   geom_abline(intercept = 0, slope =1) #there are a bunch of zeros that are predicted non-zero values.
-# 
-# #how many of the observed zeros have non-zero predicted values?
-# nonzero <- join_real_LACO %>%
-#   filter(observed_LACO == 0) %>%
-#   filter(predicted_LACO > 0) #851 out of 2556 observations
-# 
-# #plot timeseries of LACOdens and predicted_LACO 
-# long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
-# ggplot(long_join_real, aes(x = time, y = log(LACO), color = type)) +
-#   geom_jitter() +
-#   labs(y = "log LACO count") +
-#   scale_color_discrete(breaks = c("predicted_LACO", "observed_LACO"),
-#                        labels = c("predicted", "observed"))
+ colnames(predicted_LACO) <- c("2000", "2001", "2002", "2003", "2004", "2005", "2006",
+                               "2007", "2008", "2009", "2010", "2011", "2012", "2013",
+                               "2014", "2015", "2016", "2017")
+ predicted_LACO <- as.data.frame(predicted_LACO) %>%
+   mutate(Pool = row_number()) %>%
+   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`, `2007`, `2008`, `2009`, `2010`,
+          `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = predicted_LACO)
+ obs_LACO <- LACOdens %>%
+   mutate(Pool = row_number()) %>%
+   gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,
+          `2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`, key = time, value = observed_LACO)
+
+ join_real_LACO <- left_join(predicted_LACO, obs_LACO, by = c("Pool", "time")) %>%
+   mutate(log_predicted_LACO = log(predicted_LACO)) %>%
+   mutate(log_observed_LACO = log(observed_LACO)) %>%
+   mutate_if(is.numeric, ~replace(., is.infinite(.), 0))
+
+ summary(lm(predicted_LACO ~ observed_LACO, data = join_real_LACO)) #R2 = 0.1806
+ ggplot(join_real_LACO, aes(x = observed_LACO, y = predicted_LACO)) +
+   geom_point()+
+   annotate("text", label = "R^2 = 0.1208", x = 3000, y = 2500) +
+   ylim(0, 4000) #most values are small, so try log scale
+
+ summary(lm(log_predicted_LACO ~ log_observed_LACO, data = join_real_LACO))
+ ggplot(join_real_LACO, aes(x = log_predicted_LACO, y = log_observed_LACO)) +
+   geom_point()+
+   annotate("text", label = "R^2 = 0.3009", x = 1.5, y = 8) +
+   geom_abline(intercept = 0, slope =1) #there are a bunch of zeros that are predicted non-zero values.
+
+ #how many of the observed zeros have non-zero predicted values?
+ nonzero <- join_real_LACO %>%
+   filter(observed_LACO == 0) %>%
+   filter(predicted_LACO > 0) #851 out of 2556 observations
+
+ #plot timeseries of LACOdens and predicted_LACO
+ long_join_real <- join_real_LACO %>% gather(`predicted_LACO`, `observed_LACO`, key = type, value = LACO)
+ ggplot(long_join_real %>% filter(time < 2016), aes(x = time, y = LACO, color = type)) +
+   geom_jitter() +
+     theme(text = element_text(size=16),
+           panel.grid.major = element_blank(),
+           panel.grid.minor = element_blank(),
+           panel.background = element_blank(),
+           axis.line = element_line(colour = "black"),
+           legend.position = c(0.2,0.9))+
+     scale_y_log10()+
+     ylab(bquote(LACO~Density~(stems/m^2)))+
+     xlab(bquote(Year)) +
+   scale_color_discrete(breaks = c("predicted_LACO", "observed_LACO"),
+                        labels = c("Simulated", "Observed"), name = " ")
 
 #COMPARE SEEDING TREATMENTS
 BH_fit_AB <- sampling(BH_model,
@@ -453,3 +418,39 @@ BH_fit_Pool_l <- sampling(BH_model,
                                       low_germ_LACO = 0.2,
                                       high_germ_LACO = 0.7), 
                           iter= 1000)
+
+BH_fit_depth_s <- sampling(BH_model,
+                          data = list(n_pools = n_depth_s,
+                                      n_years = n_years_depth_s,
+                                      obs_LACO = LACOdens_depth_s,
+                                      obs_EG = sumEGcover_depth_s,
+                                      obs_ERVA = ERVAdens_depth_s,
+                                      obs_NF = sumNFcover_depth_s,
+                                      seeds_added = seedtrt_depth_s[,4:6],
+                                      low_germ_LACO = 0.2,
+                                      high_germ_LACO = 0.7), 
+                          iter= 1000)
+
+BH_fit_depth_m <- sampling(BH_model,
+                           data = list(n_pools = n_depth_m,
+                                       n_years = n_years_depth_m,
+                                       obs_LACO = LACOdens_depth_m,
+                                       obs_EG = sumEGcover_depth_m,
+                                       obs_ERVA = ERVAdens_depth_m,
+                                       obs_NF = sumNFcover_depth_m,
+                                       seeds_added = seedtrt_depth_m[,4:6],
+                                       low_germ_LACO = 0.2,
+                                       high_germ_LACO = 0.7), 
+                           iter= 1000)
+
+BH_fit_depth_d <- sampling(BH_model,
+                           data = list(n_pools = n_depth_d,
+                                       n_years = n_years_depth_d,
+                                       obs_LACO = LACOdens_depth_d,
+                                       obs_EG = sumEGcover_depth_d,
+                                       obs_ERVA = ERVAdens_depth_d,
+                                       obs_NF = sumNFcover_depth_d,
+                                       seeds_added = seedtrt_depth_d[,4:6],
+                                       low_germ_LACO = 0.2,
+                                       high_germ_LACO = 0.7), 
+                           iter= 1000)
