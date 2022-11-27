@@ -141,6 +141,24 @@ c <- ggplot(mean_join_LACO%>%filter(Year %in% c(2000:2015)),
         legend.background = element_blank(), legend.box.background = element_blank(),
         legend.key = element_blank()) 
 
+#(C) GRWR
+fGRWR <- ggplot(GRWR_time, aes(x = Year, y = mean, col = type))+
+  geom_point() +
+  geom_line(size=1.5)+
+  geom_errorbar(aes(ymin = lowCI, ymax = upCI), width = 0.4, alpha = 0.9, size = 1) +
+  theme(text = element_text(size=16),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = c(0.1,0.2),
+        axis.title = element_text(size = 14))+
+  ylab(bquote(Low~Density~Growth~Rate~(italic(r[t]))))+
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  scale_x_continuous(name = NULL,
+                     limits = c(2000,2015))+
+  scale_color_manual(name = "", values = c("#000000", "#888888"))
+
 #(D) GRWR partitioning
 #FIGURE 3
 Partitioning_GRWR_LACO_const$mechanism <- ordered(Partitioning_GRWR_LACO_const$mechanism, levels = c("r_overall", "epsilon_0", "epsilon_alpha", "epsilon_lambda", "epsilon_int"))
